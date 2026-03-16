@@ -21,8 +21,14 @@
 	<div class="flex flex-1 flex-col overflow-hidden">
 		<TopBar />
 
-		<main class="flex-1 overflow-hidden">
-			{@render children()}
-		</main>
+		<div class="flex flex-1 overflow-hidden">
+			<!-- {#if activePanel === 'panel'}
+
+			{/if} -->
+
+			<main class="flex-1 overflow-hidden">
+				{@render children()}
+			</main>
+		</div>
 	</div>
 </div>

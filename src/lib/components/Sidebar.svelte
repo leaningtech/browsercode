@@ -39,7 +39,7 @@
 	</button>
 {/snippet}
 
-<aside class="flex h-full w-sidebar flex-col border-r border-white/10">
+<aside class="flex h-full w-sidebar flex-col border-r border-white/10 bg-bc-sidebar">
 	<div class="flex items-center justify-center py-3">
 		<a href={resolve('/')} title="BrowserCode">
 			<img src={favicon} alt="BrowserCode" class="h-7 w-7" />
