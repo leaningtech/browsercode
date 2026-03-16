@@ -1,1 +1,42 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-bc-sidebar: #0a0a0b;
+	--color-bc-panel: #111113;
+	--color-bc-terminal: #0d0d0f;
+	--color-bc-topbar: #111113;
+	--color-bc-statusbar: #0a0a0b;
+	--width-sidebar: 3.5rem;
+	--width-panel: 15rem;
+}
+
+html,
+body {
+	background-color: #0d0d0f;
+	color: #e5e7eb;
+	overflow: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+/* Selection styling */
+::selection {
+	background-color: rgba(16, 185, 129, 0.3);
+}
