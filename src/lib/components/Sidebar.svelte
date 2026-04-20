@@ -8,7 +8,7 @@
 		onPanelToggle?: (panel: string) => void;
 	}
 
-	let { activePanel = 'terminal', onPanelToggle }: Props = $props();
+	let { activePanel = '', onPanelToggle }: Props = $props();
 
 	const navItems = [
 		{ id: 'terminal', icon: 'mingcute:terminal-line', label: 'Terminal' },
@@ -28,6 +28,8 @@
 			: 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}"
 	>
 		<Icon icon={item.icon} width="20" height="20" />
+
+		<!-- Side Labels which appear next to the icon-->
 		<span
 			class="pointer-events-none absolute left-full ml-2 flex items-center opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
 		>
@@ -42,7 +44,7 @@
 <aside class="flex h-full w-sidebar flex-col border-r border-white/10 bg-bc-sidebar">
 	<div class="flex items-center justify-center py-3">
 		<a href={resolve('/')} title="BrowserCode">
-			<img src={favicon} alt="BrowserCode" class="h-7 w-7" />
+			<img src={favicon} alt="BrowserCode" class="h-7 w-7 brightness-0 invert" />
 		</a>
 	</div>
 
