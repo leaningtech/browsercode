@@ -1,4 +1,4 @@
-export async function bootCLI() {
+export async function bootCLI(onPortalUrl?: (url: string) => void) {
 	const { BrowserPod } = await import('@leaningtech/browserpod');
 
 	const consoleElement = document.querySelector('#console');
@@ -9,6 +9,18 @@ export async function bootCLI() {
 	const projectPath = `${homePath}/project`;
 	await pod.createDirectory(projectPath);
 	await copyFile(pod, `project/package.json`, homePath);
+
+	let unsubscribe: (() => void) | undefined;
+
+	unsubscribe = pod.onPortal((portal) => {
+		if (portal?.url) {
+			console.log(`[portal] port=${portal.port} url=${portal.url}`);
+			onPortalUrl?.(portal.url);
+		} else {
+			console.log('[portal] update', portal);
+			onPortalUrl?.('');
+		}
+	});
 
 	await pod.run('npm', ['install', '--ignore-scripts'], {
 		echo: true,
