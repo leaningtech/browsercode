@@ -66,16 +66,16 @@
 	});
 </script>
 
-<div bind:this={containerEl} class="flex h-full min-h-0 w-full min-w-0 flex-row gap-2 p-2">
+<div bind:this={containerEl} class="flex h-full min-h-0 w-full min-w-0 flex-row">
 	<div
-		class="min-h-0 min-w-0 overflow-hidden rounded border border-zinc-700"
+		class="min-h-0 min-w-0 overflow-hidden bg-black"
 		style={`width: ${portalUrl || portalDebug ? 100 - portalWidthPercent : 100}%`}
 	>
 		<Terminal />
 	</div>
 
 	<div
-		class="relative min-h-0 min-w-0 overflow-hidden rounded border border-zinc-700 transition-opacity duration-300 ease-in-out"
+		class="relative min-h-0 min-w-0 overflow-hidden border-l border-zinc-700 transition-opacity duration-300 ease-in-out"
 		class:opacity-100={!!portalUrl || portalDebug}
 		class:opacity-0={!portalUrl && !portalDebug}
 		class:pointer-events-none={!portalUrl && !portalDebug}
