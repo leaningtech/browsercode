@@ -7,10 +7,12 @@
 
 	let { children } = $props();
 
-	let activePanel = $state('');
+	let activePanel = $state('gemini');
 
 	function handlePanelToggle(panel: string) {
-		activePanel = activePanel === panel ? '' : panel;
+		if (panel !== 'gemini') {
+			activePanel = activePanel === panel ? 'gemini' : panel;
+		}
 	}
 </script>
 

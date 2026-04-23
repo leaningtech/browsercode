@@ -11,9 +11,14 @@
 	let { activePanel = '', onPanelToggle }: Props = $props();
 
 	const navItems = [
-		//{ id: 'terminal', icon: 'mingcute:terminal-line', label: 'Terminal' },
-		//{ id: 'models', icon: 'mingcute:ai-line', label: 'Models' },
-		//{ id: 'sessions', icon: 'mingcute:history-line', label: 'Sessions' }
+		{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini', disabled: false },
+		{
+			id: 'claude',
+			icon: 'mingcute:claude-line',
+			label: 'Claude Code',
+			disabled: true
+		},
+		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true }
 	];
 
 	const bottomItems = [
@@ -23,13 +28,16 @@
 	];
 </script>
 
-{#snippet navButton(item: { id: string; icon: string; label: string })}
+{#snippet navButton(item: { id: string; icon: string; label: string; disabled: boolean })}
 	<button
-		onclick={() => onPanelToggle?.(item.id)}
+		onclick={() => !item.disabled && onPanelToggle?.(item.id)}
 		class="group relative flex items-center justify-center rounded-md p-2 transition-colors
 			{activePanel === item.id
 			? 'bg-white/10 text-white'
-			: 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}"
+			: item.disabled
+				? 'cursor-not-allowed text-gray-600'
+				: 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}"
+		disabled={item.disabled}
 	>
 		<Icon icon={item.icon} width="20" height="20" />
 
@@ -38,8 +46,13 @@
 			class="pointer-events-none absolute left-full z-10 ml-2 flex items-center opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
 		>
 			<span class="h-2 w-2 rotate-45 bg-gray-800"></span>
-			<span class="-ml-1 rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-gray-100">
-				{item.label}
+			<span
+				class="-ml-1 flex items-center gap-2 rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-gray-100"
+			>
+				<span>{item.label}</span>
+				{#if item.disabled}
+					<span class="text-xxs"> (Coming soon) </span>
+				{/if}
 			</span>
 		</span>
 	</button>
