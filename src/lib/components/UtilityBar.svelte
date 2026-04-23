@@ -10,7 +10,7 @@
 	</div>
 	<div class="flex items-center gap-2">
 		<a
-			href="https://browserpod.io/blog/browserpod-2-0/"
+			href="https://labs.leaningtech.com/blog/browserpod-20"
 			target="_blank"
 			class="flex items-center gap-1 hover:text-gray-300"
 		>
