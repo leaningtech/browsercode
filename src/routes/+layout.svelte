@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import UtilityBar from '$lib/components/UtilityBar.svelte';
+	import Stepper from '$lib/components/Stepper.svelte';
 
 	let { children } = $props();
 
@@ -16,6 +17,7 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex h-screen w-screen overflow-hidden">
+	<Stepper />
 	<Sidebar {activePanel} onPanelToggle={handlePanelToggle} />
 
 	<div class="flex flex-1 flex-col overflow-hidden">
