@@ -6,7 +6,7 @@
 	class="flex h-10 items-center justify-between border-t border-white/10 px-4 text-xs text-gray-500"
 >
 	<div class="flex items-center gap-2">
-		<span>Made with Browserpod v2.2.1</span>
+		<span>Made with Browserpod v2.3.0</span>
 	</div>
 	<div class="flex items-center gap-2">
 		<a

@@ -39,7 +39,7 @@
 	"dependencies": {
 		"@iconify-json/mingcute": "^1.2.7",
 		"@iconify/svelte": "^5.2.1",
-		"@leaningtech/browserpod": "2.2.1",
+		"@leaningtech/browserpod": "2.3.0",
 		"qrcode": "^1.5.4"
 	}
 }
