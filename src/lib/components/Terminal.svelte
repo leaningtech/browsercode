@@ -1,10 +1,19 @@
-<div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-black">
+<script lang="ts">
+	import Icon from '@iconify/svelte';
+
+	export function triggerResize() {
+		window.dispatchEvent(new Event('resize'));
+	}
+</script>
+
+<div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-[#0d0d0e]">
 	<div
-		class="flex h-8 shrink-0 items-center justify-between border-b border-white/10 bg-zinc-900 px-3 text-[11px] font-medium tracking-wide text-white/70"
+		class="flex h-8 shrink-0 items-center border-b border-white/[0.06] bg-[#111111] px-3"
 	>
-		<div class="flex items-center gap-2">
-			<span>Terminal</span>
+		<div class="flex items-center gap-1.5 text-[11px] text-white/35">
+			<Icon icon="mingcute:terminal-line" width="11" height="11" />
+			<span class="font-medium tracking-wide">Terminal</span>
 		</div>
 	</div>
-	<div id="console" class="min-h-0 flex-1 px-5"></div>
+	<div id="console" class="min-h-0 flex-1 px-2"></div>
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Terminal from '$lib/components/Terminal.svelte';
 	import Portal from '$lib/components/Portal.svelte';
+	import Icon from '@iconify/svelte';
 
 	import { onMount, tick } from 'svelte';
 	import { bootCLI } from '$lib/utils/main';
@@ -20,6 +21,46 @@
 	let copiedTimeout: ReturnType<typeof setTimeout>;
 	let terminalComponent: any;
 
+	// ── Drag-to-resize ────────────────────────────────────────────────────────
+	let terminalFraction = 0.5;
+	let isDragging = false;
+	let containerEl: HTMLElement | null = null;
+
+	function startDrag(e: MouseEvent) {
+		e.preventDefault();
+		isDragging = true;
+		document.body.classList.add('col-dragging');
+
+		const startX = e.clientX;
+		const startFrac = terminalFraction;
+		const totalW = containerEl?.clientWidth ?? 1;
+
+		function onMove(ev: MouseEvent) {
+			const dx = ev.clientX - startX;
+			terminalFraction = Math.max(0.2, Math.min(0.8, startFrac + dx / totalW));
+			terminalComponent?.triggerResize();
+		}
+
+		function onUp() {
+			isDragging = false;
+			document.body.classList.remove('col-dragging');
+			window.removeEventListener('mousemove', onMove);
+			window.removeEventListener('mouseup', onUp);
+		}
+
+		window.addEventListener('mousemove', onMove);
+		window.addEventListener('mouseup', onUp);
+	}
+
+	// ── Mobile ────────────────────────────────────────────────────────────────
+	let isMobile = false;
+	let activeMobileView: 'terminal' | 'preview' = 'terminal';
+
+	function updateIsMobile() {
+		isMobile = window.matchMedia('(max-width: 768px)').matches;
+	}
+
+	// ── Portal state ──────────────────────────────────────────────────────────
 	function applyPortalUpdate(update: PortalUpdate) {
 		const next = [...portals];
 		const idx = next.findIndex((item) => item.port === update.port);
@@ -37,7 +78,11 @@
 			selectedPort = update.port;
 			portalUrl = update.url;
 
-			// Trigger terminal resize after portal appears
+			// On mobile, auto-switch to preview when portal first comes online
+			if (isMobile && next.length === 1) {
+				activeMobileView = 'preview';
+			}
+
 			tick().then(() => {
 				terminalComponent?.triggerResize();
 			});
@@ -77,32 +122,10 @@
 		qrError = '';
 	}
 
-	async function renderQRCode(url: string) {
-		qrError = '';
-		try {
-			await tick();
-			if (!qrCodeCanvas) return;
-
-			await QRCode.toCanvas(qrCodeCanvas, url, {
-				width: 180,
-				margin: 1,
-				errorCorrectionLevel: 'M',
-				color: {
-					dark: '#f4f4f5',
-					light: '#111111'
-				}
-			});
-		} catch (error) {
-			console.error('Failed to generate QR code:', error);
-			qrError = 'Unable to generate QR code';
-		}
-	}
-
 	async function showQRCodePanel() {
 		if (!portalUrl) return;
 		showPortalMenu = false;
 		showPortalInfo = true;
-		await renderQRCode(portalUrl);
 	}
 
 	function openPortalInNewTab() {
@@ -121,6 +144,10 @@
 	}
 
 	onMount(() => {
+		updateIsMobile();
+		const mql = window.matchMedia('(max-width: 768px)');
+		mql.addEventListener('change', updateIsMobile);
+
 		bootCLI((update: PortalUpdate | string) => {
 			if (typeof update === 'string') {
 				let parsed: URL;
@@ -139,21 +166,49 @@
 		});
 
 		return () => {
+			mql.removeEventListener('change', updateIsMobile);
 			clearTimeout(copiedTimeout);
 		};
 	});
 </script>
 
-<div class="flex h-full min-h-0 w-full min-w-0 flex-row">
-	<div class="min-h-0 min-w-0 flex-1 overflow-hidden bg-black">
-		<Terminal bind:this={terminalComponent} />
-	</div>
-
-	{#if portals.length > 0}
+<div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
+	<!-- ── Main panes ─────────────────────────────────────────────────────────── -->
+	<div class="flex min-h-0 flex-1 overflow-hidden">
+		<!-- Terminal -->
 		<div
-			class="portal-container relative flex min-h-0 min-w-0 flex-1 overflow-hidden border-l border-zinc-700"
+			class="min-h-0 min-w-0 overflow-hidden bg-black"
+			class:mobile-hidden={isMobile && activeMobileView !== 'terminal'}
+			style={isMobile || portals.length === 0
+				? 'flex: 1 1 0;'
+				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
 		>
-			<div class="min-h-0 min-w-0 flex-1 overflow-hidden">
+			<Terminal bind:this={terminalComponent} />
+		</div>
+
+		<!-- Drag divider (desktop, portal active) -->
+		{#if !isMobile && portals.length > 0}
+			<!-- svelte-ignore a11y_interactive_supports_focus -->
+			<div
+				class="divider-col"
+				class:active={isDragging}
+				onmousedown={startDrag}
+				role="separator"
+				aria-orientation="vertical"
+			>
+				<div class="divider-line"></div>
+			</div>
+		{/if}
+
+		<!-- Portal -->
+		{#if portals.length > 0}
+			<div
+				class="min-h-0 min-w-0 overflow-hidden border-l border-white/[0.06]"
+				class:mobile-hidden={isMobile && activeMobileView !== 'preview'}
+				style={isMobile
+					? 'flex: 1 1 0;'
+					: `width: ${(1 - terminalFraction) * 100}%; flex-shrink: 0;`}
+			>
 				<Portal
 					src={portalUrl}
 					debug={portalDebug}
@@ -172,6 +227,93 @@
 					onCloseOverlays={closePortalOverlays}
 				/>
 			</div>
-		</div>
+		{/if}
+	</div>
+
+	<!-- ── Mobile tab bar ────────────────────────────────────────────────────── -->
+	{#if isMobile}
+		<nav class="flex h-11 shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]">
+			<button
+				onclick={() => (activeMobileView = 'terminal')}
+				class="mobile-tab-btn"
+				class:active={activeMobileView === 'terminal'}
+			>
+				<Icon icon="mingcute:terminal-line" width="16" height="16" />
+				<span>Terminal</span>
+			</button>
+			{#if portals.length > 0}
+				<button
+					onclick={() => (activeMobileView = 'preview')}
+					class="mobile-tab-btn"
+					class:active={activeMobileView === 'preview'}
+				>
+					<Icon icon="mingcute:eye-2-line" width="16" height="16" />
+					<span>Preview</span>
+				</button>
+			{/if}
+		</nav>
 	{/if}
 </div>
+
+<style>
+	/* Keep hidden panes mounted (terminal/iframe need persistent DOM) */
+	.mobile-hidden {
+		display: none !important;
+	}
+
+	/* Cursor + pointer-event lockout while dragging */
+	:global(body.col-dragging) {
+		cursor: col-resize;
+		user-select: none;
+	}
+	:global(body.col-dragging) :global(iframe) {
+		pointer-events: none;
+	}
+
+	/* Drag divider */
+	.divider-col {
+		position: relative;
+		width: 5px;
+		flex-shrink: 0;
+		cursor: col-resize;
+		z-index: 10;
+	}
+	.divider-line {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 2px;
+		width: 1px;
+		border-radius: 9999px;
+		background: rgba(255, 255, 255, 0.07);
+		transition: background 0.15s;
+	}
+	.divider-col:hover .divider-line,
+	.divider-col.active .divider-line {
+		background: rgba(255, 255, 255, 0.25);
+	}
+
+	/* Mobile tab bar buttons */
+	.mobile-tab-btn {
+		display: flex;
+		flex: 1 1 0;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2px;
+		border: none;
+		background: transparent;
+		color: rgba(255, 255, 255, 0.3);
+		font-size: 10px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: color 0.15s, background 0.15s;
+	}
+	.mobile-tab-btn:hover {
+		color: rgba(255, 255, 255, 0.6);
+	}
+	.mobile-tab-btn.active {
+		color: rgba(255, 255, 255, 0.9);
+		background: rgba(255, 255, 255, 0.04);
+	}
+</style>

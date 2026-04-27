@@ -45,13 +45,10 @@
 			if (!localQrCodeCanvas) return;
 
 			await QRCode.toCanvas(localQrCodeCanvas, url, {
-				width: 180,
-				margin: 1,
-				errorCorrectionLevel: 'M',
-				color: {
-					dark: '#f4f4f5',
-					light: '#111111'
-				}
+				width: 150,
+				margin: 0,
+				errorCorrectionLevel: 'H',
+				color: { dark: '#000000', light: '#ffffff' }
 			});
 		} catch (error) {
 			console.error('Failed to generate QR code:', error);
@@ -67,21 +64,23 @@
 </script>
 
 {#if portals.length > 0 || debug}
-	<div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-white">
+	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
+		<!-- Header -->
 		<div
-			class="flex h-8 shrink-0 items-center justify-between border-b border-white/10 bg-zinc-900 px-3 text-[11px] font-medium tracking-wide text-white/70"
+			class="flex h-8 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
 		>
-			<div class="flex items-center">
-				<span>Portal</span>
+			<div class="flex items-center gap-1.5 text-[11px] text-white/35">
+				<Icon icon="mingcute:eye-2-line" width="11" height="11" />
+				<span class="font-medium tracking-wide">Preview</span>
 			</div>
 
 			{#if src}
-				<div class="flex items-center gap-2">
-					{#if portals.length > 0}
+				<div class="relative flex items-center gap-1.5">
+					{#if portals.length > 1}
 						<div class="relative">
 							<select
-								class="h-6 min-w-[80px] appearance-none rounded-md border border-white/20 bg-zinc-800 pr-6 pl-2 text-[11px] font-medium text-white/70 outline-none hover:border-white/30 hover:text-white focus:border-[#4f8cff] focus:ring-2 focus:ring-[#4f8cff]/30"
-								on:change={onPortChange}
+								class="h-6 min-w-[72px] appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[11px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
+								onchange={onPortChange}
 								value={selectedPort ?? undefined}
 								aria-label="Select portal port"
 							>
@@ -90,87 +89,104 @@
 								{/each}
 							</select>
 							<div
-								class="pointer-events-none absolute inset-y-0 right-1 flex items-center text-white/45"
+								class="pointer-events-none absolute inset-y-0 right-1 flex items-center text-white/30"
 							>
-								<Icon icon="mingcute:down-line" width="12" height="12" />
+								<Icon icon="mingcute:down-line" width="10" height="10" />
 							</div>
 						</div>
 					{/if}
-					<div class="relative flex items-center gap-1.5">
-						<button
-							on:click={onToggleMenu}
-							class="inline-flex cursor-pointer items-center gap-1 rounded border-none bg-transparent px-1.5 py-0.5 text-[11px] text-white/55 hover:text-white/80"
-						>
-							<Icon icon="mingcute:settings-2-line" width="11" height="11" />
-							<span>{copied ? 'Copied!' : 'Menu'}</span>
-						</button>
 
-						{#if showMenu}
-							<div
-								class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-[168px] rounded-lg border border-white/10 bg-zinc-900 p-1 shadow-[0_12px_26px_rgba(0,0,0,0.22)]"
-							>
-								<button
-									on:click={onCopyLink}
-									class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] text-white/70 hover:bg-white/5 hover:text-white"
-								>
-									<Icon icon="mingcute:copy-2-line" width="11" height="11" />
-									Copy link
-								</button>
-								<button
-									on:click={onOpenNewTab}
-									class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] text-white/70 hover:bg-white/5 hover:text-white"
-								>
-									<Icon icon="mingcute:external-link-line" width="11" height="11" />
-									Open in new tab
-								</button>
-								<button
-									on:click={onShowQrCode}
-									class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] text-white/70 hover:bg-white/5 hover:text-white"
-								>
-									<Icon icon="mingcute:qrcode-2-line" width="11" height="11" />
-									Show QR code
-								</button>
-							</div>
-						{/if}
-					</div>
+					<button
+						onclick={onToggleMenu}
+						class="inline-flex cursor-pointer items-center gap-1 rounded border-none bg-transparent px-1.5 py-0.5 text-[11px] text-white/35 transition hover:text-white/70"
+					>
+						<Icon icon="mingcute:settings-2-line" width="11" height="11" />
+						<span>{copied ? 'Copied!' : 'Portal'}</span>
+					</button>
+
+					{#if showMenu}
+						<div
+							class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-[168px] rounded-lg border border-white/10 bg-[#111111] p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
+						>
+							<button onclick={onCopyLink} class="portal-menu-item">
+								<Icon icon="mingcute:copy-2-line" width="11" height="11" />
+								Copy link
+							</button>
+							<button onclick={onOpenNewTab} class="portal-menu-item">
+								<Icon icon="mingcute:external-link-line" width="11" height="11" />
+								Open in new tab
+							</button>
+							<button onclick={onShowQrCode} class="portal-menu-item">
+								<Icon icon="mingcute:qrcode-2-line" width="11" height="11" />
+								Show QR code
+							</button>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
 
+		<!-- Content -->
 		{#if src}
 			<div class="relative min-h-0 flex-1">
-				<iframe {src} id="portal" title="Portal content" class="h-full min-h-0 w-full"></iframe>
+				<iframe
+					{src}
+					id="portal"
+					title="Portal content"
+					class="h-full min-h-0 w-full border-none bg-white"
+				></iframe>
 
 				{#if showInfo}
 					<div
-						class="absolute inset-0 z-30 flex items-center justify-center bg-black/55 backdrop-blur-sm"
+						class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md"
 					>
-						<div class="relative w-[230px] rounded-lg border border-white/20 bg-[#111111] p-3">
-							<button
-								on:click={onCloseOverlays}
-								class="absolute -top-2 -right-2 inline-flex items-center gap-1 rounded bg-white/10 px-2 py-0.5 text-[10px] text-white/80 hover:bg-white/20"
-							>
-								<Icon icon="mingcute:close-line" width="10" height="10" />
-								Close
-							</button>
+						<button
+							onclick={onCloseOverlays}
+							class="absolute top-3 right-3 inline-flex cursor-pointer items-center gap-1 rounded border-none bg-white/8 px-2 py-1 text-[11px] font-medium text-white/70 transition hover:bg-white/14"
+						>
+							<Icon icon="mingcute:close-line" width="11" height="11" />
+							Dismiss
+						</button>
 
-							<div class="rounded-md border border-white/10 bg-zinc-900 p-2">
-								<canvas bind:this={localQrCodeCanvas} width="180" height="180"></canvas>
-							</div>
-
-							{#if qrError}
-								<div class="mt-2 text-center text-[10px] text-rose-300/90">{qrError}</div>
-							{:else}
-								<div class="mt-2 truncate text-center text-[10px] text-white/55">{src}</div>
-							{/if}
+						<div class="rounded-lg bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+							<canvas bind:this={localQrCodeCanvas} width="150" height="150"></canvas>
 						</div>
+
+						{#if qrError}
+							<div class="mt-3 text-center text-[11px] text-rose-300/90">{qrError}</div>
+						{:else}
+							<div class="mt-3 max-w-[200px] truncate text-center text-[11px] text-white/40">
+								{src}
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>
 		{:else if debug}
-			<div class="flex h-full w-full items-center justify-center text-xs text-white/40">
+			<div class="flex h-full w-full items-center justify-center text-[11px] text-white/20">
 				Portal debug mode (no URL)
 			</div>
 		{/if}
 	</div>
 {/if}
+
+<style>
+	.portal-menu-item {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		gap: 0.5rem;
+		border-radius: 0.375rem;
+		border: none;
+		background: transparent;
+		padding: 0.375rem 0.5rem;
+		text-align: left;
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.7);
+		cursor: pointer;
+		transition: background 0.1s;
+	}
+	.portal-menu-item:hover {
+		background: rgba(255, 255, 255, 0.06);
+	}
+</style>

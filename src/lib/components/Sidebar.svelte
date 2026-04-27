@@ -12,68 +12,50 @@
 
 	const navItems = [
 		{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini', disabled: false },
-		{
-			id: 'claude',
-			icon: 'mingcute:claude-line',
-			label: 'Claude Code',
-			disabled: true
-		},
+		{ id: 'claude', icon: 'mingcute:claude-line', label: 'Claude Code', disabled: true },
 		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true }
-	];
-
-	const bottomItems = [
-		{
-			/*id: 'settings', icon: 'mingcute:settings-3-line', label: 'Settings'*/
-		}
 	];
 </script>
 
 {#snippet navButton(item: { id: string; icon: string; label: string; disabled: boolean })}
 	<button
 		onclick={() => !item.disabled && onPanelToggle?.(item.id)}
-		class="group relative flex items-center justify-center rounded-md p-2 transition-colors
+		class="group relative flex items-center justify-center rounded p-1.5 transition
 			{activePanel === item.id
 			? 'bg-white/10 text-white'
 			: item.disabled
-				? 'cursor-not-allowed text-gray-600'
-				: 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}"
+				? 'cursor-not-allowed text-zinc-700'
+				: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
 		disabled={item.disabled}
 	>
-		<Icon icon={item.icon} width="20" height="20" />
+		<Icon icon={item.icon} width="18" height="18" />
 
-		<!-- Side Labels which appear next to the icon-->
 		<span
-			class="pointer-events-none absolute left-full z-10 ml-2 flex items-center opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
+			class="pointer-events-none absolute left-full z-10 ml-2.5 flex items-center opacity-0 transition-opacity group-hover:opacity-100"
 		>
-			<span class="h-2 w-2 rotate-45 bg-gray-800"></span>
+			<span class="h-1.5 w-1.5 rotate-45 bg-zinc-800"></span>
 			<span
-				class="-ml-1 flex items-center gap-2 rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-gray-100"
+				class="-ml-0.5 flex items-center gap-1.5 rounded bg-zinc-800 px-2 py-1 text-[11px] whitespace-nowrap text-zinc-200"
 			>
 				<span>{item.label}</span>
 				{#if item.disabled}
-					<span class="text-xxs"> (Coming soon) </span>
+					<span class="text-zinc-500">· Coming soon</span>
 				{/if}
 			</span>
 		</span>
 	</button>
 {/snippet}
 
-<aside class="relative flex h-full w-sidebar flex-col border-r border-white/10 bg-bc-sidebar">
+<aside class="relative hidden h-full w-sidebar flex-col border-r border-white/[0.06] bg-[#111111] md:flex">
 	<div class="flex items-center justify-center py-3">
 		<a href={resolve('/')} title="BrowserCode">
-			<img src={favicon} alt="BrowserCode" class="h-7 w-7 brightness-0 invert" />
+			<img src={favicon} alt="BrowserCode" class="h-6 w-6 brightness-0 invert opacity-70" />
 		</a>
 	</div>
 
-	<nav class="flex flex-1 flex-col gap-1 px-1.5 pt-3">
+	<nav class="flex flex-1 flex-col gap-0.5 px-1 pt-2">
 		{#each navItems as item (item.id)}
 			{@render navButton(item)}
 		{/each}
 	</nav>
-
-	<div class="flex flex-col gap-1 px-1.5 pb-3">
-		{#each bottomItems as item (item.id)}
-			{@render navButton(item)}
-		{/each}
-	</div>
 </aside>
