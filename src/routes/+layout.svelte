@@ -16,7 +16,14 @@
 	}
 </script>
 
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<svelte:head>
+	<link rel="icon" href={favicon} />
+	<script
+		defer
+		data-domain="browsercode.io"
+		src="https://plausible.leaningtech.com/js/script.js"
+	></script>
+</svelte:head>
 
 <div class="flex h-screen w-screen overflow-hidden">
 	<Stepper />
