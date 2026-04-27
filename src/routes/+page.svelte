@@ -29,7 +29,8 @@
 	function startDrag(e: MouseEvent) {
 		e.preventDefault();
 		isDragging = true;
-		document.body.classList.add('col-dragging');
+		document.body.style.cursor = 'col-resize';
+		document.body.style.userSelect = 'none';
 
 		const startX = e.clientX;
 		const startFrac = terminalFraction;
@@ -43,7 +44,8 @@
 
 		function onUp() {
 			isDragging = false;
-			document.body.classList.remove('col-dragging');
+			document.body.style.cursor = '';
+			document.body.style.userSelect = '';
 			window.removeEventListener('mousemove', onMove);
 			window.removeEventListener('mouseup', onUp);
 		}
@@ -178,7 +180,7 @@
 		<!-- Terminal -->
 		<div
 			class="min-h-0 min-w-0 overflow-hidden bg-black"
-			class:mobile-hidden={isMobile && activeMobileView !== 'terminal'}
+			class:hidden={isMobile && activeMobileView !== 'terminal'}
 			style={isMobile || portals.length === 0
 				? 'flex: 1 1 0;'
 				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
@@ -190,13 +192,12 @@
 		{#if !isMobile && portals.length > 0}
 			<!-- svelte-ignore a11y_interactive_supports_focus -->
 			<div
-				class="divider-col"
-				class:active={isDragging}
+				class="group relative z-10 w-[5px] shrink-0 cursor-col-resize"
 				onmousedown={startDrag}
 				role="separator"
 				aria-orientation="vertical"
 			>
-				<div class="divider-line"></div>
+				<div class="absolute top-0 bottom-0 left-[2px] w-px rounded-full transition-[background] duration-150 {isDragging ? 'bg-white/25' : 'bg-white/[0.07] group-hover:bg-white/25'}"></div>
 			</div>
 		{/if}
 
@@ -204,7 +205,8 @@
 		{#if portals.length > 0}
 			<div
 				class="min-h-0 min-w-0 overflow-hidden border-l border-white/[0.06]"
-				class:mobile-hidden={isMobile && activeMobileView !== 'preview'}
+				class:hidden={isMobile && activeMobileView !== 'preview'}
+				class:pointer-events-none={isDragging}
 				style={isMobile
 					? 'flex: 1 1 0;'
 					: `width: ${(1 - terminalFraction) * 100}%; flex-shrink: 0;`}
@@ -232,88 +234,23 @@
 
 	<!-- ── Mobile tab bar ────────────────────────────────────────────────────── -->
 	{#if isMobile}
-		<nav class="flex h-11 shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]">
+		<nav class="flex h-12 shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]">
 			<button
 				onclick={() => (activeMobileView = 'terminal')}
-				class="mobile-tab-btn"
-				class:active={activeMobileView === 'terminal'}
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView === 'terminal' ? 'bg-white/[0.04] text-white/90' : 'bg-transparent text-white/30 hover:text-white/60'}"
 			>
-				<Icon icon="mingcute:terminal-line" width="16" height="16" />
+				<Icon icon="mingcute:terminal-line" width="18" height="18" />
 				<span>Terminal</span>
 			</button>
 			{#if portals.length > 0}
 				<button
 					onclick={() => (activeMobileView = 'preview')}
-					class="mobile-tab-btn"
-					class:active={activeMobileView === 'preview'}
+					class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView === 'preview' ? 'bg-white/[0.04] text-white/90' : 'bg-transparent text-white/30 hover:text-white/60'}"
 				>
-					<Icon icon="mingcute:eye-2-line" width="16" height="16" />
+					<Icon icon="mingcute:eye-2-line" width="18" height="18" />
 					<span>Preview</span>
 				</button>
 			{/if}
 		</nav>
 	{/if}
 </div>
-
-<style>
-	/* Keep hidden panes mounted (terminal/iframe need persistent DOM) */
-	.mobile-hidden {
-		display: none !important;
-	}
-
-	/* Cursor + pointer-event lockout while dragging */
-	:global(body.col-dragging) {
-		cursor: col-resize;
-		user-select: none;
-	}
-	:global(body.col-dragging) :global(iframe) {
-		pointer-events: none;
-	}
-
-	/* Drag divider */
-	.divider-col {
-		position: relative;
-		width: 5px;
-		flex-shrink: 0;
-		cursor: col-resize;
-		z-index: 10;
-	}
-	.divider-line {
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		left: 2px;
-		width: 1px;
-		border-radius: 9999px;
-		background: rgba(255, 255, 255, 0.07);
-		transition: background 0.15s;
-	}
-	.divider-col:hover .divider-line,
-	.divider-col.active .divider-line {
-		background: rgba(255, 255, 255, 0.25);
-	}
-
-	/* Mobile tab bar buttons */
-	.mobile-tab-btn {
-		display: flex;
-		flex: 1 1 0;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 2px;
-		border: none;
-		background: transparent;
-		color: rgba(255, 255, 255, 0.3);
-		font-size: 10px;
-		font-weight: 500;
-		cursor: pointer;
-		transition: color 0.15s, background 0.15s;
-	}
-	.mobile-tab-btn:hover {
-		color: rgba(255, 255, 255, 0.6);
-	}
-	.mobile-tab-btn.active {
-		color: rgba(255, 255, 255, 0.9);
-		background: rgba(255, 255, 255, 0.04);
-	}
-</style>

@@ -67,10 +67,10 @@
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		<!-- Header -->
 		<div
-			class="flex h-8 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
+			class="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
 		>
-			<div class="flex items-center gap-1.5 text-[11px] text-white/35">
-				<Icon icon="mingcute:eye-2-line" width="11" height="11" />
+			<div class="flex items-center gap-2 text-[13px] text-white/35">
+				<Icon icon="mingcute:eye-2-line" width="14" height="14" />
 				<span class="font-medium tracking-wide">Preview</span>
 			</div>
 
@@ -79,7 +79,7 @@
 					{#if portals.length > 1}
 						<div class="relative">
 							<select
-								class="h-6 min-w-[72px] appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[11px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
+								class="h-7 min-w-[72px] appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[12px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
 								onchange={onPortChange}
 								value={selectedPort ?? undefined}
 								aria-label="Select portal port"
@@ -98,9 +98,9 @@
 
 					<button
 						onclick={onToggleMenu}
-						class="inline-flex cursor-pointer items-center gap-1 rounded border-none bg-transparent px-1.5 py-0.5 text-[11px] text-white/35 transition hover:text-white/70"
+						class="inline-flex cursor-pointer items-center gap-1 rounded border-none bg-transparent px-1.5 py-0.5 text-[12px] text-white/35 transition hover:text-white/70"
 					>
-						<Icon icon="mingcute:settings-2-line" width="11" height="11" />
+						<Icon icon="mingcute:settings-2-line" width="13" height="13" />
 						<span>{copied ? 'Copied!' : 'Portal'}</span>
 					</button>
 
@@ -108,16 +108,16 @@
 						<div
 							class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-[168px] rounded-lg border border-white/10 bg-[#111111] p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
 						>
-							<button onclick={onCopyLink} class="portal-menu-item">
-								<Icon icon="mingcute:copy-2-line" width="11" height="11" />
+							<button onclick={onCopyLink} class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]">
+								<Icon icon="mingcute:copy-2-line" width="13" height="13" />
 								Copy link
 							</button>
-							<button onclick={onOpenNewTab} class="portal-menu-item">
-								<Icon icon="mingcute:external-link-line" width="11" height="11" />
+							<button onclick={onOpenNewTab} class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]">
+								<Icon icon="mingcute:external-link-line" width="13" height="13" />
 								Open in new tab
 							</button>
-							<button onclick={onShowQrCode} class="portal-menu-item">
-								<Icon icon="mingcute:qrcode-2-line" width="11" height="11" />
+							<button onclick={onShowQrCode} class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]">
+								<Icon icon="mingcute:qrcode-2-line" width="13" height="13" />
 								Show QR code
 							</button>
 						</div>
@@ -142,9 +142,9 @@
 					>
 						<button
 							onclick={onCloseOverlays}
-							class="absolute top-3 right-3 inline-flex cursor-pointer items-center gap-1 rounded border-none bg-white/8 px-2 py-1 text-[11px] font-medium text-white/70 transition hover:bg-white/14"
+							class="absolute top-3 right-3 inline-flex cursor-pointer items-center gap-1 rounded border-none bg-white/8 px-2 py-1 text-[12px] font-medium text-white/70 transition hover:bg-white/14"
 						>
-							<Icon icon="mingcute:close-line" width="11" height="11" />
+							<Icon icon="mingcute:close-line" width="13" height="13" />
 							Dismiss
 						</button>
 
@@ -153,9 +153,9 @@
 						</div>
 
 						{#if qrError}
-							<div class="mt-3 text-center text-[11px] text-rose-300/90">{qrError}</div>
+							<div class="mt-3 text-center text-[12px] text-rose-300/90">{qrError}</div>
 						{:else}
-							<div class="mt-3 max-w-[200px] truncate text-center text-[11px] text-white/40">
+							<div class="mt-3 max-w-[200px] truncate text-center text-[12px] text-white/40">
 								{src}
 							</div>
 						{/if}
@@ -163,30 +163,9 @@
 				{/if}
 			</div>
 		{:else if debug}
-			<div class="flex h-full w-full items-center justify-center text-[11px] text-white/20">
+			<div class="flex h-full w-full items-center justify-center text-[12px] text-white/20">
 				Portal debug mode (no URL)
 			</div>
 		{/if}
 	</div>
 {/if}
-
-<style>
-	.portal-menu-item {
-		display: flex;
-		width: 100%;
-		align-items: center;
-		gap: 0.5rem;
-		border-radius: 0.375rem;
-		border: none;
-		background: transparent;
-		padding: 0.375rem 0.5rem;
-		text-align: left;
-		font-size: 11px;
-		color: rgba(255, 255, 255, 0.7);
-		cursor: pointer;
-		transition: background 0.1s;
-	}
-	.portal-menu-item:hover {
-		background: rgba(255, 255, 255, 0.06);
-	}
-</style>

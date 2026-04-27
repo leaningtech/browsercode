@@ -75,21 +75,21 @@
 			<!-- Close button -->
 			<button
 				onclick={close}
-				class="absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-md text-white/30 transition hover:bg-white/8 hover:text-white/70"
+				class="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-md text-white/30 transition hover:bg-white/8 hover:text-white/70"
 				aria-label="Close"
 			>
-				<Icon icon="mingcute:close-line" width="14" height="14" />
+				<Icon icon="mingcute:close-line" width="16" height="16" />
 			</button>
 
 			<!-- Header -->
 			<div class="border-b border-white/[0.06] px-6 pt-6 pb-5">
-				<div class="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10">
-					<Icon icon="mingcute:code-line" width="18" height="18" class="text-emerald-400" />
+				<div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
+					<Icon icon="mingcute:code-line" width="20" height="20" class="text-emerald-400" />
 				</div>
-				<h2 id="stepper-title" class="text-base font-semibold text-zinc-100">
+				<h2 id="stepper-title" class="text-lg font-semibold text-zinc-100">
 					Welcome to BrowserCode
 				</h2>
-				<p class="mt-1 text-[13px] text-white/40">
+				<p class="mt-1 text-sm text-white/40">
 					A quick tour of your in-browser development environment.
 				</p>
 			</div>
@@ -99,15 +99,15 @@
 				{#key currentStep}
 					<div class="flex items-start gap-3">
 						<div
-							class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-400"
+							class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-400"
 						>
-							<Icon icon={steps[currentStep - 1].icon} width="16" height="16" />
+							<Icon icon={steps[currentStep - 1].icon} width="18" height="18" />
 						</div>
 						<div>
-							<h3 class="mb-1.5 text-[13px] font-semibold text-zinc-100">
+							<h3 class="mb-1.5 text-sm font-semibold text-zinc-100">
 								{steps[currentStep - 1].title}
 							</h3>
-							<p class="text-[12px] leading-relaxed text-white/45">
+							<p class="text-sm leading-relaxed text-white/45">
 								{steps[currentStep - 1].description}
 							</p>
 						</div>
@@ -133,16 +133,16 @@
 				<button
 					onclick={prev}
 					disabled={currentStep === 1}
-					class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:pointer-events-none disabled:opacity-0"
+					class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:pointer-events-none disabled:opacity-0"
 				>
-					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
+					<Icon icon="mingcute:arrow-left-line" width="16" height="16" />
 					Back
 				</button>
 
 				<div class="flex items-center gap-3">
 					<button
 						onclick={close}
-						class="text-[12px] font-medium text-white/30 transition hover:text-white/60"
+						class="text-sm font-medium text-white/30 transition hover:text-white/60"
 					>
 						Skip
 					</button>
@@ -150,17 +150,17 @@
 					{#if currentStep < totalSteps}
 						<button
 							onclick={next}
-							class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3.5 py-1.5 text-[12px] font-medium text-black transition hover:bg-emerald-400"
+							class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-black transition hover:bg-emerald-400"
 						>
 							Next
-							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
+							<Icon icon="mingcute:arrow-right-line" width="16" height="16" />
 						</button>
 					{:else}
 						<button
 							onclick={close}
-							class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3.5 py-1.5 text-[12px] font-medium text-black transition hover:bg-emerald-400"
+							class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-medium text-black transition hover:bg-emerald-400"
 						>
-							<Icon icon="mingcute:check-fill" width="14" height="14" />
+							<Icon icon="mingcute:check-fill" width="16" height="16" />
 							Get started
 						</button>
 					{/if}
