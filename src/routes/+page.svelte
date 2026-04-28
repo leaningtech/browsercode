@@ -20,6 +20,7 @@
 	let qrError = '';
 	let copiedTimeout: ReturnType<typeof setTimeout>;
 	let terminalComponent: any;
+	let isPortalVisible = true;
 
 	// ── Drag-to-resize ────────────────────────────────────────────────────────
 	let terminalFraction = 0.5;
@@ -80,8 +81,10 @@
 			selectedPort = update.port;
 			portalUrl = update.url;
 
-			// On mobile, auto-switch to preview when portal first comes online
-			if (isMobile && next.length === 1) {
+			// Auto-show portal on desktop, auto-switch on mobile
+			if (!isMobile) {
+				isPortalVisible = true;
+			} else if (next.length === 1) {
 				activeMobileView = 'preview';
 			}
 
@@ -101,6 +104,19 @@
 			selectedPort = fallback?.port ?? null;
 			portalUrl = fallback?.url ?? '';
 		}
+
+		// Auto-hide portal if all portals are gone
+		if (next.length === 0) {
+			isPortalVisible = false;
+		}
+	}
+
+	function togglePortal() {
+		if (portals.length === 0) return;
+		isPortalVisible = !isPortalVisible;
+		tick().then(() => {
+			terminalComponent?.triggerResize();
+		});
 	}
 
 	function onPortChange(event: Event) {
@@ -181,15 +197,20 @@
 		<div
 			class="min-h-0 min-w-0 overflow-hidden bg-black"
 			class:hidden={isMobile && activeMobileView !== 'terminal'}
-			style={isMobile || portals.length === 0
+			style={isMobile || portals.length === 0 || !isPortalVisible
 				? 'flex: 1 1 0;'
 				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
 		>
-			<Terminal bind:this={terminalComponent} />
+			<Terminal
+				bind:this={terminalComponent}
+				portalAvailable={portals.length > 0}
+				{isPortalVisible}
+				onTogglePortal={togglePortal}
+			/>
 		</div>
 
 		<!-- Drag divider (desktop, portal active) -->
-		{#if !isMobile && portals.length > 0}
+		{#if !isMobile && portals.length > 0 && isPortalVisible}
 			<!-- svelte-ignore a11y_interactive_supports_focus -->
 			<div
 				class="group relative z-10 w-[5px] shrink-0 cursor-col-resize"
@@ -197,12 +218,16 @@
 				role="separator"
 				aria-orientation="vertical"
 			>
-				<div class="absolute top-0 bottom-0 left-[2px] w-px rounded-full transition-[background] duration-150 {isDragging ? 'bg-white/25' : 'bg-white/[0.07] group-hover:bg-white/25'}"></div>
+				<div
+					class="absolute top-0 bottom-0 left-[2px] w-px rounded-full transition-[background] duration-150 {isDragging
+						? 'bg-white/25'
+						: 'bg-white/[0.07] group-hover:bg-white/25'}"
+				></div>
 			</div>
 		{/if}
 
 		<!-- Portal -->
-		{#if portals.length > 0}
+		{#if portals.length > 0 && isPortalVisible}
 			<div
 				class="min-h-0 min-w-0 overflow-hidden border-l border-white/[0.06]"
 				class:hidden={isMobile && activeMobileView !== 'preview'}
@@ -237,7 +262,10 @@
 		<nav class="flex h-12 shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]">
 			<button
 				onclick={() => (activeMobileView = 'terminal')}
-				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView === 'terminal' ? 'bg-white/[0.04] text-white/90' : 'bg-transparent text-white/30 hover:text-white/60'}"
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView ===
+				'terminal'
+					? 'bg-white/[0.04] text-white/90'
+					: 'bg-transparent text-white/30 hover:text-white/60'}"
 			>
 				<Icon icon="mingcute:terminal-line" width="18" height="18" />
 				<span>Terminal</span>
@@ -245,7 +273,10 @@
 			{#if portals.length > 0}
 				<button
 					onclick={() => (activeMobileView = 'preview')}
-					class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView === 'preview' ? 'bg-white/[0.04] text-white/90' : 'bg-transparent text-white/30 hover:text-white/60'}"
+					class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView ===
+					'preview'
+						? 'bg-white/[0.04] text-white/90'
+						: 'bg-transparent text-white/30 hover:text-white/60'}"
 				>
 					<Icon icon="mingcute:eye-2-line" width="18" height="18" />
 					<span>Preview</span>
