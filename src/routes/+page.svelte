@@ -269,7 +269,10 @@
 				onclick={() => (showToolMenu = false)}
 				aria-label="Close menu"
 			></button>
-			<div class="fixed bottom-12 left-0 right-0 z-50 rounded-t-xl border-t border-white/10 bg-[#111111] pb-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
+			<div
+				class="fixed left-0 right-0 z-50 rounded-t-xl border-t border-white/10 bg-[#111111] pb-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]"
+				style="bottom: calc(3rem + env(safe-area-inset-bottom));"
+			>
 				<div class="flex items-center justify-between px-4 py-3">
 					<span class="text-[13px] font-semibold text-white/60">CLI Tool</span>
 					<button
@@ -304,7 +307,10 @@
 			</div>
 		{/if}
 
-		<nav class="flex h-12 shrink-0 items-stretch border-t border-white/6 bg-[#111111]">
+		<nav
+			class="flex shrink-0 items-stretch border-t border-white/6 bg-[#111111]"
+			style="height: calc(3rem + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
+		>
 			<button
 				onclick={toggleToolMenu}
 				class="flex w-12 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium transition-colors {showToolMenu

@@ -25,7 +25,7 @@
 	></script>
 </svelte:head>
 
-<div class="flex h-screen w-screen overflow-hidden">
+<div class="flex h-dvh w-screen overflow-hidden">
 	<Stepper />
 	<Sidebar {activePanel} onPanelToggle={handlePanelToggle} />
 

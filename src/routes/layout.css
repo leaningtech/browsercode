@@ -15,6 +15,7 @@ body {
 	background-color: #0d0d0e;
 	color: #d4d4d8;
 	overflow: hidden;
+	height: 100dvh;
 }
 
 /* Scrollbar styling */
