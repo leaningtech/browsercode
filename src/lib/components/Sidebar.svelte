@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
+	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import Icon from '@iconify/svelte';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 
@@ -11,15 +12,15 @@
 
 	let { activePanel = '', onPanelToggle }: Props = $props();
 
-	const navItems = [
+	const navItems: { id: string; icon: string | null; label: string; disabled: boolean }[] = [
 		{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini', disabled: false },
 		{ id: 'claude', icon: 'mingcute:claude-line', label: 'Claude Code', disabled: true },
 		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true },
-		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true }
+		{ id: 'opencode', icon: null, label: 'OpenCode', disabled: true }
 	];
 </script>
 
-{#snippet navButton(item: { id: string; icon: string; label: string; disabled: boolean })}
+{#snippet navButton(item: { id: string; icon: string | null; label: string; disabled: boolean })}
 	<button
 		onclick={() => !item.disabled && onPanelToggle?.(item.id)}
 		class="group relative flex items-center justify-center rounded p-2 transition
@@ -30,7 +31,11 @@
 				: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
 		disabled={item.disabled}
 	>
-		<Icon icon={item.icon} width="20" height="20" />
+		{#if item.icon}
+			<Icon icon={item.icon} width="22" height="22" />
+		{:else}
+			<img src={opencodeLogoSrc} alt={item.label} class="h-5 w-5 opacity-20" />
+		{/if}
 
 		<span
 			class="pointer-events-none absolute left-full z-10 ml-2.5 flex items-center opacity-0 transition-opacity group-hover:opacity-100"
@@ -69,7 +74,7 @@
 			class="group relative flex items-center justify-center rounded p-2 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300"
 			title="Help"
 		>
-			<Icon icon="mingcute:question-line" width="20" height="20" />
+			<Icon icon="mingcute:question-line" width="22" height="22" />
 
 			<span
 				class="pointer-events-none absolute left-full z-10 ml-2.5 flex items-center opacity-0 transition-opacity group-hover:opacity-100"
