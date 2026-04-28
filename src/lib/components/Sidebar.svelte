@@ -46,10 +46,12 @@
 	</button>
 {/snippet}
 
-<aside class="relative hidden h-full w-sidebar flex-col border-r border-white/[0.06] bg-[#111111] md:flex">
+<aside
+	class="relative hidden h-full w-sidebar flex-col border-r border-white/6 bg-[#111111] md:flex"
+>
 	<div class="flex items-center justify-center py-3">
 		<a href={resolve('/')} title="BrowserCode">
-			<img src={favicon} alt="BrowserCode" class="h-7 w-7 brightness-0 invert opacity-70" />
+			<img src={favicon} alt="BrowserCode" class="h-7 w-7 opacity-70 brightness-0 invert" />
 		</a>
 	</div>
 

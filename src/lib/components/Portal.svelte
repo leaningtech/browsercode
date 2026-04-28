@@ -13,7 +13,6 @@
 		showInfo = false,
 		copied = false,
 		qrError = '',
-		qrCodeCanvas = null as HTMLCanvasElement | null,
 		onPortChange,
 		onToggleMenu,
 		onCopyLink,
@@ -38,7 +37,7 @@
 		onCloseOverlays?: () => void;
 	}>();
 
-	let localQrCodeCanvas: HTMLCanvasElement | null = null;
+	let localQrCodeCanvas = $state<HTMLCanvasElement | null>(null);
 
 	async function renderQRCode(url: string) {
 		try {
@@ -79,7 +78,7 @@
 					{#if portals.length > 1}
 						<div class="relative">
 							<select
-								class="h-7 min-w-[72px] appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[12px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
+								class="h-7 min-w-18 appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[12px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
 								onchange={onPortChange}
 								value={selectedPort ?? undefined}
 								aria-label="Select portal port"
@@ -106,25 +105,25 @@
 
 					{#if showMenu}
 						<div
-							class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-[168px] rounded-lg border border-white/10 bg-[#111111] p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
+							class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-42 rounded-lg border border-white/10 bg-[#111111] p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
 						>
 							<button
 								onclick={onCopyLink}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
 							>
 								<Icon icon="mingcute:copy-2-line" width="13" height="13" />
 								Copy link
 							</button>
 							<button
 								onclick={onOpenNewTab}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
 							>
 								<Icon icon="mingcute:external-link-line" width="13" height="13" />
 								Open in new tab
 							</button>
 							<button
 								onclick={onShowQrCode}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/[0.06]"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
 							>
 								<Icon icon="mingcute:qrcode-2-line" width="13" height="13" />
 								Show QR code
@@ -164,7 +163,7 @@
 						{#if qrError}
 							<div class="mt-3 text-center text-[12px] text-rose-300/90">{qrError}</div>
 						{:else}
-							<div class="mt-3 max-w-[200px] truncate text-center text-[12px] text-white/40">
+							<div class="mt-3 max-w-50 truncate text-center text-[12px] text-white/40">
 								{src}
 							</div>
 						{/if}

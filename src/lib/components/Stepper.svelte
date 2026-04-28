@@ -67,7 +67,7 @@
 	>
 		<!-- Dialog -->
 		<div
-			class="relative w-full max-w-lg rounded-2xl border border-white/[0.08] bg-[#111111] shadow-[0_32px_64px_rgba(0,0,0,0.7)]"
+			class="relative w-full max-w-lg rounded-2xl border border-white/8 bg-[#111111] shadow-[0_32px_64px_rgba(0,0,0,0.7)]"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"
@@ -82,7 +82,7 @@
 			</button>
 
 			<!-- Header -->
-			<div class="border-b border-white/[0.06] px-6 pt-6 pb-5">
+			<div class="border-b border-white/6 px-6 pt-6 pb-5">
 				<div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
 					<Icon icon="mingcute:code-line" width="20" height="20" class="text-emerald-400" />
 				</div>
@@ -99,7 +99,7 @@
 				{#key currentStep}
 					<div class="flex items-start gap-3">
 						<div
-							class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04] text-zinc-400"
+							class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/4 text-zinc-400"
 						>
 							<Icon icon={steps[currentStep - 1].icon} width="18" height="18" />
 						</div>

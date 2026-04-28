@@ -3,7 +3,7 @@
 	import Portal from '$lib/components/Portal.svelte';
 	import Icon from '@iconify/svelte';
 
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import { bootCLI } from '$lib/utils/main';
 
 	type PortalItem = { port: number; url: string };
@@ -19,10 +19,8 @@
 	let qrCodeCanvas: HTMLCanvasElement | null = null;
 	let qrError = '';
 	let copiedTimeout: ReturnType<typeof setTimeout>;
-	let terminalComponent: any;
 	let isPortalVisible = true;
 
-	// ── Drag-to-resize ────────────────────────────────────────────────────────
 	let terminalFraction = 0.5;
 	let isDragging = false;
 	let containerEl: HTMLElement | null = null;
@@ -40,7 +38,6 @@
 		function onMove(ev: MouseEvent) {
 			const dx = ev.clientX - startX;
 			terminalFraction = Math.max(0.2, Math.min(0.8, startFrac + dx / totalW));
-			terminalComponent?.triggerResize();
 		}
 
 		function onUp() {
@@ -55,7 +52,6 @@
 		window.addEventListener('mouseup', onUp);
 	}
 
-	// ── Mobile ────────────────────────────────────────────────────────────────
 	let isMobile = false;
 	let activeMobileView: 'terminal' | 'preview' = 'terminal';
 
@@ -63,7 +59,6 @@
 		isMobile = window.matchMedia('(max-width: 768px)').matches;
 	}
 
-	// ── Portal state ──────────────────────────────────────────────────────────
 	function applyPortalUpdate(update: PortalUpdate) {
 		const next = [...portals];
 		const idx = next.findIndex((item) => item.port === update.port);
@@ -87,10 +82,6 @@
 			} else if (next.length === 1) {
 				activeMobileView = 'preview';
 			}
-
-			tick().then(() => {
-				terminalComponent?.triggerResize();
-			});
 			return;
 		}
 
@@ -114,9 +105,6 @@
 	function togglePortal() {
 		if (portals.length === 0) return;
 		isPortalVisible = !isPortalVisible;
-		tick().then(() => {
-			terminalComponent?.triggerResize();
-		});
 	}
 
 	function onPortChange(event: Event) {
@@ -191,7 +179,6 @@
 </script>
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
-	<!-- ── Main panes ─────────────────────────────────────────────────────────── -->
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		<!-- Terminal -->
 		<div
@@ -202,7 +189,6 @@
 				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
 		>
 			<Terminal
-				bind:this={terminalComponent}
 				portalAvailable={portals.length > 0}
 				{isPortalVisible}
 				onTogglePortal={togglePortal}
@@ -211,25 +197,24 @@
 
 		<!-- Drag divider (desktop, portal active) -->
 		{#if !isMobile && portals.length > 0 && isPortalVisible}
-			<!-- svelte-ignore a11y_interactive_supports_focus -->
-			<div
-				class="group relative z-10 w-[5px] shrink-0 cursor-col-resize"
+			<button
+				class="group relative z-10 w-1.25 shrink-0 cursor-col-resize"
 				onmousedown={startDrag}
-				role="separator"
-				aria-orientation="vertical"
+				tabindex="0"
+				aria-label="Resize preview panel"
 			>
 				<div
-					class="absolute top-0 bottom-0 left-[2px] w-px rounded-full transition-[background] duration-150 {isDragging
+					class="absolute top-0 bottom-0 left-0.5 w-px rounded-full transition-[background] duration-150 {isDragging
 						? 'bg-white/25'
 						: 'bg-white/[0.07] group-hover:bg-white/25'}"
 				></div>
-			</div>
+			</button>
 		{/if}
 
 		<!-- Portal -->
 		{#if portals.length > 0 && isPortalVisible}
 			<div
-				class="min-h-0 min-w-0 overflow-hidden border-l border-white/[0.06]"
+				class="min-h-0 min-w-0 overflow-hidden border-l border-white/6"
 				class:hidden={isMobile && activeMobileView !== 'preview'}
 				class:pointer-events-none={isDragging}
 				style={isMobile
@@ -257,14 +242,14 @@
 		{/if}
 	</div>
 
-	<!-- ── Mobile tab bar ────────────────────────────────────────────────────── -->
+	<!-- Mobile Bottom Navigator -->
 	{#if isMobile}
-		<nav class="flex h-12 shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]">
+		<nav class="flex h-12 shrink-0 items-stretch border-t border-white/6 bg-[#111111]">
 			<button
 				onclick={() => (activeMobileView = 'terminal')}
-				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView ===
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium transition-colors {activeMobileView ===
 				'terminal'
-					? 'bg-white/[0.04] text-white/90'
+					? 'bg-white/4 text-white/90'
 					: 'bg-transparent text-white/30 hover:text-white/60'}"
 			>
 				<Icon icon="mingcute:terminal-line" width="18" height="18" />
@@ -273,9 +258,9 @@
 			{#if portals.length > 0}
 				<button
 					onclick={() => (activeMobileView = 'preview')}
-					class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[2px] border-none text-[11px] font-medium transition-colors {activeMobileView ===
+					class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium transition-colors {activeMobileView ===
 					'preview'
-						? 'bg-white/[0.04] text-white/90'
+						? 'bg-white/4 text-white/90'
 						: 'bg-transparent text-white/30 hover:text-white/60'}"
 				>
 					<Icon icon="mingcute:eye-2-line" width="18" height="18" />

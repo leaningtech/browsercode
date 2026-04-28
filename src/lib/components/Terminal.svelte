@@ -4,15 +4,11 @@
 	export let portalAvailable: boolean = false;
 	export let isPortalVisible: boolean = false;
 	export let onTogglePortal: (() => void) | undefined = undefined;
-
-	export function triggerResize() {
-		window.dispatchEvent(new Event('resize'));
-	}
 </script>
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-[#0d0d0e]">
 	<div
-		class="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
+		class="flex h-10 shrink-0 items-center justify-between border-b border-white/6 bg-[#111111] px-3"
 	>
 		<div class="flex items-center gap-2 text-[13px] text-white/35">
 			<Icon icon="mingcute:terminal-line" width="14" height="14" />
