@@ -1,176 +1,354 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import favicon from '$lib/assets/favicon.svg';
-	import { stepperState } from '$lib/stores/stepper.svelte';
+	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 
-	let showModal = $state(false);
-	let currentStep = $state(1);
-	const totalSteps = 4;
+	let currentStep = 1;
+	const totalSteps = 6;
+	let showModal = false;
+	let highlightedAgent: 'claude' | 'codex' | 'opencode' = 'claude';
+	let agentCycleTimer: ReturnType<typeof setInterval> | null = null;
+	let copied = false;
+	let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
-	$effect(() => {
-		if (stepperState.open && !showModal) {
-			showModal = true;
-			currentStep = 1;
+	const firstPrompt =
+		"Please create and preview a 'hello world' project in Express.js";
+
+	const dispatch = createEventDispatcher();
+
+	const agents = {
+		claude: {
+			label: 'Claude Code',
+			icon: 'mingcute:claude-line',
+			helper: 'Claude Code — coming soon',
+			useIcon: true
+		},
+		codex: {
+			label: 'Codex CLI',
+			icon: 'hugeicons:chat-gpt',
+			helper: 'Codex CLI — coming soon',
+			useIcon: true
+		},
+		opencode: {
+			label: 'OpenCode',
+			icon: null,
+			helper: 'OpenCode — coming soon',
+			useIcon: false
 		}
-	});
+	} as const;
 
-	const steps = [
-		{
-			icon: 'mingcute:terminal-line',
-			title: 'Integrated Terminal',
-			description:
-				'A full-featured terminal runs directly in your browser. Execute commands, install packages, and interact with your environment — no local setup required.'
-		},
-		{
-			icon: 'mingcute:eye-2-line',
-			title: 'Live Preview',
-			description:
-				'See your application running in real time on the right. The preview updates as your app serves changes — instant feedback, zero friction.'
-		},
-		{
-			icon: 'mingcute:share-forward-line',
-			title: 'Portal Sharing',
-			description:
-				'Generate a public URL for your running app via the Portal menu. Share it with teammates or scan the QR code to open it on any device.'
-		},
-		{
-			icon: 'mingcute:sparkles-2-line',
-			title: 'Powered by BrowserPod',
-			description:
-				'BrowserCode runs entirely in your browser using BrowserPod — a full Linux environment compiled to WebAssembly. No servers, no installs, just code.'
-		}
-	];
+	// Sidebar geometry: favicon header (py-3.5 ~2.875rem) + divider + nav pt-2 + nav buttons.
+	// Each nav button = p-2.5 (20px) + 20px icon = 40px, plus gap-0.5 (2px).
+	// Button 1 (Gemini) center ≈ 46 + 1 + 20 + 2 = ~47px from top of nav → ~46 + 1 + 20 = ~93px total
+	// Button 2 (Claude) center ≈ previous + 40 + 2 = ~135px
+	// Button 3 (Codex) center ≈ ~177px
+	// Button 4 (OpenCode) center ≈ ~219px
+	const agentButtonOffsets = {
+		claude: 135,
+		codex: 177,
+		opencode: 219
+	};
+
+	// GitHub icon is in the bottom section of the sidebar.
+	// We use a bottom offset from the viewport bottom.
+	// Bottom section: py-2 (8px) + 3 buttons (40px each) + gap-0.5 (2px) between each.
+	// From bottom: 8px padding + 8px (half of last question button) → GitHub is 3rd from bottom.
+	// GitHub button center from bottom ≈ 8 + 40 + 2 + 40 + 2 + 20 = 112px
+	const githubButtonBottomOffset = 112;
 
 	onMount(() => {
-		if (!localStorage.getItem('bc:hasVisited')) {
+		const isFirstTime = !localStorage.getItem('hasVisited');
+		if (isFirstTime) {
 			showModal = true;
-			localStorage.setItem('bc:hasVisited', 'true');
+			localStorage.setItem('hasVisited', 'true');
 		}
 	});
 
-	function next() {
-		if (currentStep < totalSteps) currentStep += 1;
+	onDestroy(() => {
+		if (agentCycleTimer) clearInterval(agentCycleTimer);
+		if (copyTimer) clearTimeout(copyTimer);
+	});
+
+	const agentOrder: Array<'claude' | 'codex' | 'opencode'> = ['claude', 'codex', 'opencode'];
+
+	function startAgentCycle() {
+		if (agentCycleTimer) return;
+		agentCycleTimer = setInterval(() => {
+			const idx = agentOrder.indexOf(highlightedAgent);
+			highlightedAgent = agentOrder[(idx + 1) % agentOrder.length];
+		}, 1800);
 	}
 
-	function prev() {
-		if (currentStep > 1) currentStep -= 1;
+	function stopAgentCycle() {
+		if (agentCycleTimer) {
+			clearInterval(agentCycleTimer);
+			agentCycleTimer = null;
+		}
 	}
 
-	function close() {
+	function nextStep() {
+		if (currentStep < totalSteps) {
+			currentStep += 1;
+			if (currentStep === 3) {
+				highlightedAgent = 'claude';
+				startAgentCycle();
+			} else {
+				stopAgentCycle();
+			}
+		}
+	}
+
+	function prevStep() {
+		if (currentStep > 1) {
+			currentStep -= 1;
+			if (currentStep === 3) {
+				highlightedAgent = 'claude';
+				startAgentCycle();
+			} else {
+				stopAgentCycle();
+			}
+		}
+	}
+
+	function finish() {
+		stopAgentCycle();
 		showModal = false;
-		stepperState.open = false;
+		dispatch('close');
 	}
 
-	function handleBackdropClick(e: MouseEvent) {
-		if (e.target === e.currentTarget) close();
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === event.currentTarget) {
+			finish();
+		}
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (!showModal) return;
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			finish();
+		}
+	}
+
+	async function copyPrompt() {
+		try {
+			await navigator.clipboard.writeText(firstPrompt);
+			copied = true;
+			if (copyTimer) clearTimeout(copyTimer);
+			copyTimer = setTimeout(() => (copied = false), 1500);
+		} catch (err) {
+			console.error('Failed to copy prompt:', err);
+		}
 	}
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 {#if showModal}
-	<!-- Backdrop -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- Backdrop. On step 3 we leave the sidebar uncovered so the CLI
+	     buttons remain visible and visually "highlighted" by the surrounding dim.
+	     On step 2 we leave the sidebar uncovered so the GitHub button is visible.
+	     Escape-to-close is handled by the window listener above. -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm"
-		onclick={handleBackdropClick}
+		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/60 transition-[left] duration-500 ease-out"
+		style="left: {currentStep === 2 || currentStep === 3 ? 'var(--width-sidebar)' : '0'};"
+		role="presentation"
+		on:click={handleBackdropClick}
 	>
-		<!-- Dialog -->
 		<div
-			class="relative w-full max-w-lg rounded-2xl border border-white/8 bg-[#111111] shadow-[0_32px_64px_rgba(0,0,0,0.7)]"
+			class="relative w-full max-w-xl rounded-xl border border-white/10 bg-bc-panel shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"
 		>
-			<!-- Close button -->
-			<button
-				onclick={close}
-				class="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-md text-white/30 transition hover:bg-white/8 hover:text-white/70"
-				aria-label="Close"
+			<!-- Header strip, mirroring the IDE panel chrome -->
+			<div
+				class="flex items-center justify-between border-b border-white/10 px-5 py-3 text-xs text-zinc-500"
 			>
-				<Icon icon="mingcute:close-line" width="16" height="16" />
-			</button>
-
-			<!-- Header -->
-			<div class="border-b border-white/6 px-6 pt-6 pb-5">
-				<div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/6">
-					<img src={favicon} alt="BrowserCode" class="h-5 w-5 brightness-0 invert opacity-60 grayscale" />
-				</div>
-				<h2 id="stepper-title" class="text-lg font-semibold text-zinc-100">
-					Welcome to BrowserCode
-				</h2>
-				<p class="mt-1 text-sm text-white/40">
-					A quick tour of your in-browser development environment.
-				</p>
+				<span class="font-medium tracking-wide text-zinc-400 uppercase">BrowserCode (Preview) </span>
+				<span class="font-mono text-zinc-600">{currentStep} / {totalSteps}</span>
 			</div>
 
-			<!-- Step content -->
-			<div class="px-6 py-5">
-				{#key currentStep}
-					<div class="flex items-start gap-3">
-						<div
-							class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/4 text-zinc-400"
+			<div class="p-8">
+				{#if currentStep === 1}
+					<div class="mb-5 flex justify-center">
+						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
+					</div>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">BrowserCode (Preview)</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						BrowserCode runs Gemini CLI in the browser unmodified. It runs via BrowserPod, an API that provides
+						Wasm-based runtimes for AI agents and code. It runs in-browser without any cloud compute.
+					</p>
+				{:else if currentStep === 2}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Breaking BrowserCode</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						This is our first beta, so please bend, stretch and break it. When you find issues,
+						please raise it using
+						<a
+							href="https://github.com/leaningtech/browsercode"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="inline-flex items-center gap-1 font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
 						>
-							<Icon icon={steps[currentStep - 1].icon} width="18" height="18" />
+							<Icon icon="simple-icons:github" width="13" height="13" />
+							GitHub
+						</a>
+					</p>
+				{:else if currentStep === 3}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						More AI coding CLIs coming soon
+					</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						BrowserCode boots with Gemini, but support for
+						<span
+							class="font-medium transition-colors duration-300"
+							class:text-zinc-100={highlightedAgent === 'claude'}
+							class:text-zinc-500={highlightedAgent !== 'claude'}>Claude Code</span
+						>,
+						<span
+							class="font-medium transition-colors duration-300"
+							class:text-zinc-100={highlightedAgent === 'codex'}
+							class:text-zinc-500={highlightedAgent !== 'codex'}>Codex CLI</span
+						>
+						and
+						<span
+							class="font-medium transition-colors duration-300"
+							class:text-zinc-100={highlightedAgent === 'opencode'}
+							class:text-zinc-500={highlightedAgent !== 'opencode'}>OpenCode</span
+						>
+						are coming soon.
+					</p>
+
+					<div
+						class="mt-6 flex items-center gap-3 rounded-lg border border-white/5 bg-black/30 px-4 py-3"
+					>
+						{#if agents[highlightedAgent].useIcon}
+							<Icon
+								icon={agents[highlightedAgent].icon as string}
+								width="22"
+								height="22"
+								class="text-zinc-200 transition-colors duration-300"
+							/>
+						{:else}
+							<img src={opencodeLogoSrc} alt="OpenCode" class="h-[22px] w-[22px]" />
+						{/if}
+						<div class="flex-1 text-sm text-zinc-300">
+							<span class="font-medium">{agents[highlightedAgent].label}</span>
+							<span class="ml-2 text-zinc-500">— coming soon</span>
 						</div>
-						<div>
-							<h3 class="mb-1.5 text-sm font-semibold text-zinc-100">
-								{steps[currentStep - 1].title}
-							</h3>
-							<p class="text-sm leading-relaxed text-white/45">
-								{steps[currentStep - 1].description}
-							</p>
+						<div class="flex gap-1">
+							<span
+								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+								class:bg-zinc-200={highlightedAgent === 'claude'}
+								class:bg-zinc-700={highlightedAgent !== 'claude'}
+							></span>
+							<span
+								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+								class:bg-zinc-200={highlightedAgent === 'codex'}
+								class:bg-zinc-700={highlightedAgent !== 'codex'}
+							></span>
+							<span
+								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+								class:bg-zinc-200={highlightedAgent === 'opencode'}
+								class:bg-zinc-700={highlightedAgent !== 'opencode'}
+							></span>
 						</div>
 					</div>
-				{/key}
+				{:else if currentStep === 4}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Contribute to BrowserCode</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						BrowserCode is open source. You can fork the project on
+						<a
+							href="https://github.com/leaningtech/browsercode"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="inline-flex items-center gap-1 font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
+						>
+							<Icon icon="simple-icons:github" width="13" height="13" />
+							GitHub
+						</a>
+					</p>
+				{:else if currentStep === 5}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Get started</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						BrowserCode will boot Gemini CLI now. On boot, Gemini may hang silently for up to 30 seconds. This is normal behavior for Gemini CLI in any environment. 
+					</p>
+				{:else if currentStep === 6}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Try this</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						Use this as your first prompt for BrowserCode:
+					</p>
+
+					<div
+						class="mt-5 flex items-start gap-3 rounded-lg border border-white/10 bg-black/40 p-4"
+					>
+						<code class="flex-1 font-mono text-sm leading-relaxed text-zinc-200 select-all">
+							{firstPrompt}
+						</code>
+						<button
+							on:click={copyPrompt}
+							class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-zinc-100"
+							aria-label="Copy prompt"
+						>
+							{#if copied}
+								<Icon icon="mingcute:check-line" width="14" height="14" />
+								Copied
+							{:else}
+								<Icon icon="mingcute:copy-2-line" width="14" height="14" />
+								Copy
+							{/if}
+						</button>
+					</div>
+				{/if}
 			</div>
 
-			<!-- Step indicators -->
-			<div class="flex items-center gap-1.5 px-6 pb-1">
-				{#each Array(totalSteps) as _, i (i)}
-					<button
-						onclick={() => (currentStep = i + 1)}
-						class="h-1 rounded-full transition-all duration-200 {currentStep === i + 1
-							? 'w-5 bg-white/60'
-							: 'w-1.5 bg-white/15 hover:bg-white/30'}"
-						aria-label="Go to step {i + 1}"
-					></button>
-				{/each}
-			</div>
-
-			<!-- Footer -->
-			<div class="flex items-center justify-between border-t border-white/6 px-6 py-4">
+			<!-- Footer with nav + step pips -->
+			<div
+				class="flex items-center justify-between border-t border-white/10 bg-black/20 px-5 py-3"
+			>
 				<button
-					onclick={prev}
+					on:click={prevStep}
 					disabled={currentStep === 1}
-					class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium text-white/40 transition hover:bg-white/5 hover:text-white/70 disabled:pointer-events-none disabled:opacity-0"
+					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 				>
-					<Icon icon="mingcute:arrow-left-line" width="16" height="16" />
+					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
 					Back
 				</button>
 
-				<div class="flex items-center gap-3">
+				<div class="flex items-center gap-1.5">
+					{#each Array(totalSteps) as _, i}
+						<span
+							class="h-1.5 rounded-full transition-all duration-300"
+							class:w-6={i + 1 === currentStep}
+							class:bg-zinc-100={i + 1 === currentStep}
+							class:w-1.5={i + 1 !== currentStep}
+							class:bg-zinc-700={i + 1 !== currentStep}
+						></span>
+					{/each}
+				</div>
+
+				<div class="flex items-center gap-2">
 					<button
-						onclick={close}
-						class="text-sm font-medium text-white/30 transition hover:text-white/60"
+						on:click={finish}
+						class="rounded-md px-3 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
 					>
 						Skip
 					</button>
-
 					{#if currentStep < totalSteps}
 						<button
-							onclick={next}
-							class="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/15 hover:text-white"
+							on:click={nextStep}
+							class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white"
 						>
 							Next
-							<Icon icon="mingcute:arrow-right-line" width="16" height="16" />
+							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
 						</button>
 					{:else}
 						<button
-							onclick={close}
-							class="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/15 hover:text-white"
+							on:click={finish}
+							class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white"
 						>
-							<Icon icon="mingcute:check-fill" width="16" height="16" />
+							<Icon icon="mingcute:check-fill" width="14" height="14" />
 							Get started
 						</button>
 					{/if}
@@ -178,4 +356,52 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Step 3: helper tooltip that jumps between the Claude, Codex, and OpenCode sidebar buttons.
+	     Sits above the backdrop (z-50) so it's visible, positioned over the sidebar strip. -->
+	{#if currentStep === 3}
+		<div
+			class="pointer-events-none fixed z-[60] ml-3 flex items-center transition-[top] duration-500 ease-out"
+			style="left: var(--width-sidebar); top: {agentButtonOffsets[highlightedAgent]}px; transform: translateY(-50%);"
+		>
+			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span
+				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+			>
+				{agents[highlightedAgent].helper}
+			</span>
+		</div>
+	{/if}
+
+	<!-- Step 2: helper tooltip pointing to the GitHub icon in the sidebar bottom section. -->
+	{#if currentStep === 2}
+		<div
+			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
+			style="left: var(--width-sidebar); bottom: {githubButtonBottomOffset}px; transform: translateY(50%);"
+		>
+			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span
+				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+			>
+				<Icon icon="simple-icons:github" width="12" height="12" />
+				Report issues on GitHub
+			</span>
+		</div>
+	{/if}
+
+	<!-- Step 4: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
+	{#if currentStep === 4}
+		<div
+			class="pointer-events-none fixed z-[60] flex items-center"
+			style="top: 24px; right: 160px; transform: translateY(-50%);"
+		>
+			<span
+				class="flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+			>
+				<Icon icon="simple-icons:github" width="12" height="12" />
+				Fork on GitHub
+			</span>
+			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+		</div>
+	{/if}
 {/if}
