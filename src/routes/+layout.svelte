@@ -21,12 +21,13 @@
 	<meta property="og:title" content="BrowserCode" />
 	<meta
 		property="og:description"
-		content="A full Linux development environment running entirely in your browser."
+		content="Run AI coding CLIs in-browser."
 	/>
-	<meta property="og:image" content="/og.webp" />
+	<meta property="og:image" content="https://browsercode.io/og.png" />
 	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://browsercode.io" />
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:image" content="/og.webp" />
+	<meta name="twitter:image" content="https://browsercode.io/og.png" />
 	<script
 		defer
 		data-domain="browsercode.io"
