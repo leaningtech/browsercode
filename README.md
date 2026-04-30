@@ -7,6 +7,9 @@
     width="400"
   />
 
+[![Discord server](https://img.shields.io/discord/988743885121548329?color=%235865F2&logo=discord&logoColor=%23fff)](https://discord.gg/8ySMrQv6X)
+[![Issues](https://img.shields.io/github/issues/leaningtech/webvm)](https://github.com/leaningtech/browsercode/issues)
+
   <h1>Run AI coding CLIs in the browser</h1>
 
   <p>
