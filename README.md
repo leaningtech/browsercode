@@ -44,7 +44,7 @@ BrowserCode 0.1.0 is our first beta release. The preview launches with Gemini C
   width="300"
 />
 
-1. Go to [browsercode.io] (https://browsercode.io)
+1. Go to [browsercode.io](https://browsercode.io)
 2. BrowserCode will boot instantly, opening with a quick tutorial.
 3. When Gemini boots, you'll be prompted to log-in
 4. Depending on your log-in option, you may be asked to authenticate your account by copying a code from a separate tab. 
@@ -62,6 +62,7 @@ Here are a few walls you might hit:
 BrowserCode doesn't yet support native binaries, for more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
 - Networking over TCP isn't available.
 - Gemini CLI will display a status message indicating there's no sandbox; we've told Gemini it's running in the browser, it doesn't seem to care very much.
+- For maximum compatbility, please use a Chromium browser. Safari currently isn't supported.
 
 
 <h2 id="roadmap">Roadmap</h2>
