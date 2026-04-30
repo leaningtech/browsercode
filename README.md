@@ -37,7 +37,7 @@ BrowserCode is a browser runtime for AI coding CLIs. BrowserCode is a working ex
 - Instant previews over URL via BrowserPod's portal function
 - Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
 
-BrowserCode 0.1.0 is our first beta release. The preview launches with Gemini CLI vx.x
+BrowserCode 0.1.0 is our first beta release. This preview launches with an unmodified version of Gemini CLI running completely client-side. 
 
 <h2 id="quickstart">Quickstart</h2>
 
