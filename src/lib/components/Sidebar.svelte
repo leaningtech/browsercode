@@ -103,7 +103,7 @@
 		</div>
 		<div class="relative">
 			<a
-				href="https://discord.gg/leaningtech"
+				href="https://discord.leaningtech.com"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="group relative flex items-center justify-center rounded-md p-2.5 text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/65"
