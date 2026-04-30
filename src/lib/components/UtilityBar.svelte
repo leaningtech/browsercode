@@ -11,6 +11,9 @@
 	<span class="flex items-center gap-2 text-[11.5px]">
 		<img src={favicon} alt="BrowserCode logo" class="h-4 w-4" />
 		<span class="text-white/40">BrowserCode v0.1.0</span>
+		<span class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] text-amber-400/80"
+			>Preview</span
+		>
 	</span>
 
 	<a
@@ -23,9 +26,6 @@
 		<span>Powered by BrowserPod</span>
 		<span class="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[10.5px] text-white/40"
 			>v{pkg.version}</span
-		>
-		<span class="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] text-amber-400/80"
-			>beta</span
 		>
 	</a>
 
