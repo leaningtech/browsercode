@@ -7,7 +7,8 @@ export default defineConfig({
 	server: {
 		headers: {
 			'Cross-Origin-Embedder-Policy': 'require-corp',
-			'Cross-Origin-Opener-Policy': 'same-origin'
+			'Cross-Origin-Opener-Policy': 'same-origin',
+			'Content-Security-Policy': "frame-ancestors 'self' https://browserpod.io"
 		}
 	}
 });
