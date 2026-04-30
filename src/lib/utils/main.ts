@@ -6,8 +6,7 @@ export async function bootCLI(onPortalUpdate?: (update: PortalUpdate) => void) {
 	const consoleElement = document.querySelector('#console') as HTMLElement;
 	const pod = await BrowserPod.boot({
 		apiKey: import.meta.env.VITE_API_KEY as string,
-		userImage: 'wss://disks.browserpod.io/gemini_20260429_2.ext2',
-		env: ['COLORTERM=truecolor']
+		userImage: 'wss://disks.browserpod.io/gemini_20260429_2.ext2'
 	});
 	const terminal = await pod.createDefaultTerminal(consoleElement);
 
@@ -44,6 +43,7 @@ export async function bootCLI(onPortalUpdate?: (update: PortalUpdate) => void) {
 
 	await pod.run('npm', ['run', 'gemini'], {
 		echo: true,
+		env: ['COLORTERM=truecolor'],
 		terminal,
 		cwd: projectPath
 	});
