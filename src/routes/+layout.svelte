@@ -52,7 +52,7 @@
 			class="pointer-events-auto absolute flex items-center justify-center gap-1.5 bg-[#333] py-1.5 text-xs font-semibold text-white shadow-md"
 			style="top: 38px; right: -42px; width: 190px; transform: rotate(45deg);"
 		>
-			Fork me on GitHub
+			Star me on GitHub
 		</a>
 	</div>
 
