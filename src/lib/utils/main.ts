@@ -6,7 +6,7 @@ export async function bootCLI(onPortalUpdate?: (update: PortalUpdate) => void) {
 	const consoleElement = document.querySelector('#console') as HTMLElement;
 	const pod = await BrowserPod.boot({
 		apiKey: 'bp1_b6378aaedbafca7a2a80ec461df53314896fd18987304152e6b616c05661adc7',
-		userImage: 'wss://disks.browserpod.io/gemini_20260428.ext2'
+		userImage: 'wss://disks.browserpod.io/gemini_20260429_2.ext2'
 	});
 	const terminal = await pod.createDefaultTerminal(consoleElement);
 
