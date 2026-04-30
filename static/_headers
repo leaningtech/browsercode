@@ -1,0 +1,7 @@
+/*
+		! X-Frame-Options
+		Content-Security-Policy: frame-ancestors 'self' https://browserpod.io
+/
+	Cross-Origin-Opener-Policy: same-origin
+	Cross-Origin-Embedder-Policy: require-corp
+	corp: true
