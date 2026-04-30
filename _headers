@@ -1,7 +1,6 @@
-/*
-		! X-Frame-Options
-		Content-Security-Policy: frame-ancestors 'self' https://browserpod.io
-/
-	Cross-Origin-Opener-Policy: same-origin
-	Cross-Origin-Embedder-Policy: require-corp
-	corp: true
+/* Enable Cross-Origin Isolation and allow embedding from browserpod.io (and CI previews)
+
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: cross-origin
+  Content-Security-Policy: frame-ancestors 'self' https://browserpod.io https://*.browserpod.io https://*.browserpod.pages.dev
