@@ -22,7 +22,7 @@
 				: isPortalVisible
 					? 'Hide portal'
 					: 'Show portal'}
-			class="hidden items-center rounded border-none bg-transparent p-1 transition-colors md:inline-flex
+			class="mr-35 hidden items-center rounded border-none bg-transparent p-1 transition-colors md:inline-flex
 				{portalAvailable
 				? isPortalVisible
 					? 'cursor-pointer text-white/60 hover:text-white/90'

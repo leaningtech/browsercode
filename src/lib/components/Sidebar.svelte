@@ -63,9 +63,9 @@
 		<a
 			href={resolve('/')}
 			title="BrowserCode"
-			class="rounded-md p-1 opacity-50 transition-opacity duration-150 hover:opacity-80"
+			class="rounded-md p-1 transition-opacity duration-150 hover:opacity-80"
 		>
-			<img src={favicon} alt="BrowserCode" class="h-6 w-6 brightness-0 invert" />
+			<img src={favicon} alt="BrowserCode" class="h-6 w-6" />
 		</a>
 	</div>
 
@@ -79,7 +79,7 @@
 
 	<div class="mx-3 h-px bg-white/[0.05]"></div>
 
-	<div class="flex flex-col items-center justify-center px-1.5 py-2 gap-0.5">
+	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
 		<div class="relative">
 			<a
 				href="https://github.com/leaningtech/browsercode"

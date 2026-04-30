@@ -29,6 +29,23 @@
 	<Stepper />
 	<Sidebar {activePanel} onPanelToggle={handlePanelToggle} />
 
+	<!-- GitHub Fork Ribbon -->
+	<div
+		class="pointer-events-none fixed top-0 right-0 z-40 hidden overflow-hidden md:block"
+		style="width: 150px; height: 175px;"
+	>
+		<a
+			href="https://github.com/leaningtech/browsercode"
+			target="_blank"
+			rel="noopener noreferrer"
+			aria-label="Fork this project on GitHub"
+			class="pointer-events-auto absolute flex items-center justify-center gap-1.5 bg-[#333] py-1.5 text-xs font-semibold text-white shadow-md"
+			style="top: 38px; right: -42px; width: 190px; transform: rotate(45deg);"
+		>
+			Fork me on GitHub
+		</a>
+	</div>
+
 	<div class="flex flex-1 flex-col overflow-hidden">
 		<div class="flex flex-1 overflow-hidden">
 			<main class="flex min-h-0 min-w-0 flex-1 overflow-hidden">

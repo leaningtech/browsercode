@@ -8,7 +8,7 @@
 	class="hidden h-8 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#0a0a0b] px-4 md:flex"
 >
 	<span class="flex items-center gap-2 text-[11.5px]">
-		<img src={favicon} alt="BrowserCode logo" class="h-4 w-4 grayscale" />
+		<img src={favicon} alt="BrowserCode logo" class="h-4 w-4" />
 		<span class="text-white/40">BrowserCode v0.1.0</span>
 	</span>
 
