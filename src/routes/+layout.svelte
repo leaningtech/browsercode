@@ -4,14 +4,26 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import UtilityBar from '$lib/components/UtilityBar.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
+	import { onMount } from 'svelte';
 
 	let { children } = $props();
 
-	let activePanel = $state('gemini');
+	let activePanel = $state('claude');
+
+	function getToolFromURL(): 'claude' | 'gemini' {
+		if (typeof window === 'undefined') return 'claude';
+		const params = new URLSearchParams(window.location.search);
+		const tool = params.get('');
+		return tool === 'gemini' ? 'gemini' : 'claude';
+	}
+
+	onMount(() => {
+		activePanel = getToolFromURL();
+	});
 
 	function handlePanelToggle(panel: string) {
-		if (panel !== 'gemini') {
-			activePanel = activePanel === panel ? 'gemini' : panel;
+		if (panel === 'claude' || panel === 'gemini') {
+			window.location.href = `?=${panel}`;
 		}
 	}
 </script>

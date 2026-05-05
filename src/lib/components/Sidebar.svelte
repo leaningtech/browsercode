@@ -4,6 +4,7 @@
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import Icon from '@iconify/svelte';
 	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { toolItems } from '$lib/config/tools';
 
 	interface Props {
 		activePanel?: string;
@@ -11,13 +12,6 @@
 	}
 
 	let { activePanel = '', onPanelToggle }: Props = $props();
-
-	const navItems: { id: string; icon: string | null; label: string; disabled: boolean }[] = [
-		{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini', disabled: false },
-		{ id: 'claude', icon: 'mingcute:claude-line', label: 'Claude Code', disabled: true },
-		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true },
-		{ id: 'opencode', icon: null, label: 'OpenCode', disabled: true }
-	];
 </script>
 
 {#snippet navButton(item: { id: string; icon: string | null; label: string; disabled: boolean })}
@@ -72,7 +66,7 @@
 	<div class="mx-3 h-px bg-white/[0.05]"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
-		{#each navItems as item (item.id)}
+		{#each toolItems as item (item.id)}
 			{@render navButton(item)}
 		{/each}
 	</nav>

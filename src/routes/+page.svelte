@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { bootCLI } from '$lib/utils/main';
 	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { toolItems } from '$lib/config/tools';
 
 	type PortalItem = { port: number; url: string };
 	type PortalUpdate = { port: number; url: string | null; active: boolean };
@@ -56,21 +57,22 @@
 	let isMobile = false;
 	let activeMobileView: 'terminal' | 'preview' = 'terminal';
 	let showToolMenu = false;
-	let activeTool = 'gemini';
+	let activeTool = 'claude';
 
-	const toolItems = [
-		{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini', disabled: false },
-		{ id: 'claude', icon: 'mingcute:claude-line', label: 'Claude Code', disabled: true },
-		{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true },
-		{ id: 'opencode', icon: null, label: 'OpenCode', disabled: true }
-	];
+	function getToolFromURL(): 'claude' | 'gemini' {
+		const params = new URLSearchParams(window.location.search);
+		const tool = params.get('');
+		return tool === 'gemini' ? 'gemini' : 'claude';
+	}
 
 	function toggleToolMenu() {
 		showToolMenu = !showToolMenu;
 	}
 
 	function selectTool(id: string) {
-		activeTool = id;
+		if (id === 'claude' || id === 'gemini') {
+			window.location.href = `?=${id}`;
+		}
 		showToolMenu = false;
 	}
 
@@ -173,6 +175,9 @@
 		const mql = window.matchMedia('(max-width: 768px)');
 		mql.addEventListener('change', updateIsMobile);
 
+		const tool = getToolFromURL();
+		activeTool = tool;
+
 		bootCLI((update: PortalUpdate | string) => {
 			if (typeof update === 'string') {
 				let parsed: URL;
@@ -188,7 +193,7 @@
 			}
 
 			applyPortalUpdate(update);
-		});
+		}, tool);
 
 		return () => {
 			mql.removeEventListener('change', updateIsMobile);
