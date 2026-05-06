@@ -277,7 +277,7 @@
 			></button>
 			<div
 				class="fixed right-0 left-0 z-50 rounded-t-xl border-t border-white/10 bg-[#111111] pb-2 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]"
-				style="bottom: calc(3rem + env(safe-area-inset-bottom));"
+				style="bottom: calc(48px + env(safe-area-inset-bottom));"
 			>
 				<div class="flex items-center justify-between px-4 py-3">
 					<span class="text-[13px] font-semibold text-white/60">CLI Tool</span>
@@ -319,11 +319,11 @@
 
 		<nav
 			class="flex shrink-0 items-stretch border-t border-white/6 bg-[#111111]"
-			style="height: calc(3rem + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
+			style="height: calc(48px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			<button
 				onclick={toggleToolMenu}
-				class="flex w-12 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium transition-colors {showToolMenu
+				class="flex w-25 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium transition-colors {showToolMenu
 					? 'bg-white/4 text-white/90'
 					: 'bg-transparent text-white/30 hover:text-white/60'}"
 			>
@@ -354,7 +354,7 @@
 			{/if}
 			<button
 				onclick={() => (stepperState.open = true)}
-				class="flex w-12 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium text-white/30 transition-colors hover:text-white/60"
+				class="flex w-25 shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-none text-[11px] font-medium text-white/30 transition-colors hover:text-white/60"
 			>
 				<Icon icon="mingcute:question-line" width="20" height="20" />
 				<span>Help</span>
