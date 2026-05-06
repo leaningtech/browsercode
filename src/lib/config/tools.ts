@@ -19,6 +19,7 @@ export type CLIConfig = {
 	storageKey: string;
 	command: string;
 	args: string[];
+	openCallback?: (urlOrPath: string) => void;
 };
 
 export const cliConfigs: Record<string, CLIConfig> = {
@@ -26,7 +27,14 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		userImage: 'wss://disks.browserpod.io/claude_20260506.ext2',
 		storageKey: 'claude_20260506',
 		command: 'npm',
-		args: ['run', 'claude']
+		args: ['run', 'claude'],
+		openCallback: (urlOrPath: string) => {
+			if(urlOrPath.startsWith("https://claude.com/cai/oauth/authorize") || urlOrPath.startsWith("https://platform.claude.com/oauth/authorize")) {
+				// Rewrite the localhost callback to the code-based exchange
+				const fixedUrl = urlOrPath.replace("http%3A%2F%2Flocalhost%3A0", "https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode");
+				window.open(fixedUrl, "_blank");
+			}
+		}
 	},
 	gemini: {
 		userImage: 'wss://disks.browserpod.io/gemini_20260430_2.ext2',

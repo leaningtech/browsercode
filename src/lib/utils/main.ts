@@ -41,6 +41,10 @@ export async function bootCLI(
 		}
 	});
 
+	if(config.openCallback) {
+		pod.onOpen(config.openCallback);
+	}
+
 	await pod.run(config.command, config.args, {
 		echo: true,
 		env: ['COLORTERM=truecolor'],
