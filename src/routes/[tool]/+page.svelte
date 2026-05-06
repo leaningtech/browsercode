@@ -59,9 +59,12 @@
 	let activeMobileView: 'terminal' | 'preview' = 'terminal';
 	let showToolMenu = false;
 
-	function getActiveTool(): 'claude' | 'gemini' {
+	const validToolIds = new Set(toolItems.filter((t) => !t.disabled).map((t) => t.id));
+	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
+
+	function getActiveTool() {
 		const tool = $page.params.tool;
-		return tool === 'gemini' ? 'gemini' : 'claude';
+		return validToolIds.has(tool) ? tool : defaultTool;
 	}
 
 	$: activeTool = getActiveTool();
@@ -71,7 +74,7 @@
 	}
 
 	function selectTool(id: string) {
-		if (id === 'claude' || id === 'gemini') {
+		if (validToolIds.has(id)) {
 			window.location.href = `/${id}`;
 		}
 		showToolMenu = false;
@@ -176,8 +179,6 @@
 		const mql = window.matchMedia('(max-width: 768px)');
 		mql.addEventListener('change', updateIsMobile);
 
-		const tool = getActiveTool();
-
 		bootCLI((update: PortalUpdate | string) => {
 			if (typeof update === 'string') {
 				let parsed: URL;
@@ -193,7 +194,7 @@
 			}
 
 			applyPortalUpdate(update);
-		}, tool);
+		}, getActiveTool());
 
 		return () => {
 			mql.removeEventListener('change', updateIsMobile);
