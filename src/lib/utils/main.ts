@@ -1,4 +1,4 @@
-import { cliConfigs } from '$lib/config/tools';
+import { cliConfigs, toolItems } from '$lib/config/tools';
 
 type PortalUpdate = { port: number; url: string | null; active: boolean };
 
@@ -13,6 +13,7 @@ export async function bootCLI(
 	const { BrowserPod } = await import('@leaningtech/browserpod');
 
 	const config = cliConfigs[tool] ?? cliConfigs.gemini;
+	const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
 
 	const consoleElement = document.querySelector('#console') as HTMLElement;
 	const pod = await BrowserPod.boot({
@@ -45,7 +46,7 @@ export async function bootCLI(
 		pod.onOpen(config.openCallback);
 	}
 
-	terminal.write(`Starting ${tool}...`);
+	terminal.write(`Starting ${toolLabel}...\n`);
 
 	await pod.run(config.command, config.args, {
 		env: ['COLORTERM=truecolor'],
