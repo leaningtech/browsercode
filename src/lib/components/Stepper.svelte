@@ -167,7 +167,7 @@
 					</div>
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">BrowserCode Preview</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode runs Claude Code and Gemini CLI, and more in the browser unmodified.
+						BrowserCode runs Claude Code and Gemini CLI, and other AI coding agents in the browser, unmodified.
 					</p>
 				{:else if currentStep === 2}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Powered by BrowserPod</h1>
@@ -178,7 +178,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
-						>BrowserPod</a>, Sandboxed server runtimes that run directly in the browser to run Ai agents, code and development tools in the browser without cloud compute.
+						>BrowserPod</a>, a browser-based sandbox that runs AI agents, code and development tools in the browser, without cloud compute.
 					</p>
 
 					<a
@@ -219,7 +219,7 @@
 						More AI coding CLIs coming soon
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode boots with Claude Code, with Gemini also available now. Support for
+						BrowserCode boots with Claude Code, with Gemini CLI also available now. Support for
 						<span
 							class="font-medium transition-colors duration-300"
 							class:text-zinc-100={highlightedAgent === 'codex'}
@@ -267,7 +267,7 @@
 				{:else if currentStep === 5}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Give us a star on GitHub</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						Star us, fork us; do whatever you want. BrowserCode is free and open source, meaning you can embed BrowserCode in your projects easily on
+						BrowserCode is free and open source software. Do anything you like with it! Change it, customize it, embed it on your application. Find us on
 						<a
 							href="https://github.com/leaningtech/browsercode"
 							target="_blank"
@@ -281,7 +281,7 @@
 				{:else if currentStep === 6}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Get started</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode will boot Claude Code now. You can switch to Gemini at any time from the sidebar.
+						BrowserCode will boot now. You can switch AI coding agent at any time from the sidebar.
 					</p>
 				{:else if currentStep === 7}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Try this</h1>
@@ -408,7 +408,7 @@
 				class="flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
 			>
 				<Icon icon="simple-icons:github" width="12" height="12" />
-				Star us on GitHub
+				Star us on GitHub!
 			</span>
 			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
 		</div>
