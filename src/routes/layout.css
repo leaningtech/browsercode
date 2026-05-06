@@ -10,6 +10,15 @@
 	--width-panel: 15rem;
 }
 
+
+@media (width <= 850px)
+{
+	html
+	{
+		font-size: calc(100vw / 55);
+	}
+}
+
 html,
 body {
 	background-color: #0d0d0e;
