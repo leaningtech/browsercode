@@ -142,6 +142,8 @@ You **do not** have an arbitrary egress network. What you do have is the inverse
 - **Do not hardcode absolute URLs** like `http://localhost:3000/api` in client code. Use relative paths (`/api/...`) or read the host from `window.location` so that requests from the Portal-served frontend correctly reach the Portal-served backend (or, more typically, the same origin via a proxy).
 - **Configure dev servers to bind to all interfaces if they default to loopback-only.** For example, Vite users may need `vite --host 0.0.0.0` or `server: { host: true }` in `vite.config.js` so BrowserPod's Portal layer can reach the listener.
 - **No outbound calls to arbitrary internet hosts during runtime.** You have npm registry access and git access for installs, but a running server inside the Pod is not a general-purpose outbound HTTP client. This limitation will be lifted in the future for logged-in users.
+- **`curl` is not supported.** Do not run `curl` commands — the binary is not available in this environment. Use `npm install` or `git clone` for fetching packages and repositories.
+- **No localhost interface access at this time.** Don't try to access a dev server port via `localhost` directly. The loopback interface is currently not supported. This limitation will also be lifted soon.
 
 ---
 
