@@ -47,8 +47,8 @@ export const cliConfigs: Record<string, CLIConfig> = {
 	gemini: {
 		userImage: 'wss://disks.browserpod.io/gemini_20260430_2.ext2',
 		storageKey: 'gemini_20260430_2',
-		command: 'npm',
-		args: ['run', 'gemini'],
+		command: 'node',
+		args: ['/home/user/node_modules/@google/gemini-cli/bundle/gemini.js'],
 		projectFile: 'project/gemini/GEMINI.md'
 	}
 };
