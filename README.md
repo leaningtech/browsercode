@@ -6,15 +6,17 @@
     alt="BrowserCode logo"
     width="400"
   />
+  
+<br>
 
 [![Discord server](https://img.shields.io/discord/988743885121548329?color=%235865F2&logo=discord&logoColor=%23fff)](https://discord.gg/8ySMrQv6X)
 [![Issues](https://img.shields.io/github/issues/leaningtech/browsercode)](https://github.com/leaningtech/browsercode/issues)
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.5.0-blue)
 
   <h1>Run AI coding CLIs in the browser</h1>
 
   <p>
- The BrowserPod runtime to build projects that embed agentic AI CLIs.
+ The BrowserPod runtime to build projects that embed AI coding CLIs.
   </p>
 </div>
 
@@ -49,29 +51,29 @@ BrowserCode 0.5.0 is our second beta release. This preview launches with an unmo
 />
 
 1. Go to [browsercode.io](https://browsercode.io)
-2. BrowserCode will boot instantly, opening with a quick tutorial.
-3. When Claude Code
-4. Depending on your log-in option, you may be asked to authenticate your account by copying a code from a separate tab. 
+2. BrowserCode will boot instantly, opening with a quick modal tutorial to guide you
+3. Claude Code will launch instantly
+4. Depending on your log-in option, you may be asked to authenticate your account by copying a code from a separate tab
 
 <br clear="right" />
 
 <h2 id="breaking-browsercode">Breaking BrowserCode</h2>
-This is BrowserCode's first beta. Don't be kind to it. Stretch it, bend it, find out what breaks. Here are a few walls you might hit:
+This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out what breaks. Here are a few walls you might hit:
 
-- At launch, Claude is prompted using a custom skill to help it understand that it is running in a custom environment. However, it may first attempt its default behaviour before referencing the file. 
+- At launch, Claude is prompted using a custom skill to help it understand that it is running in a custom environment. However, it may first attempt its default behaviour before referencing the file
 - BrowserCode doesn't yet support native binaries, for more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
-- Networking over TCP isn't available.
-- For maximum compatbility, please use a Chromium browser. Safari currently isn't supported.
+- Networking over TCP isn't available
+- For maximum compatbility, please use a Chromium browser. Safari currently isn't supported
 
 
 <h2 id="roadmap">Roadmap</h2>
 
-| CLI | Status |
-| --- | --- |
-| Gemini CLI | Beta open now |
-| Claude Code | Beta open now |
-| Codex | Coming soon |
-| OpenCode | Coming soon |
+| | CLI | Status |
+| :---: | --- | --- |
+| <img src="./static/readme/gemini.webp" alt="Gemini CLI" width="32" height="32" /> | **Gemini CLI** | ✅ Beta open now |
+| <img src="./static/readme/claude.webp" alt="Claude Code" width="32" height="32" /> | **Claude Code** | ✅ Beta open now |
+| <img src="./static/readme/codex.webp" alt="Codex" width="32" height="32" /> | **Codex** | 🚧 Coming soon |
+| <img src="./static/readme/opencode.webp" alt="OpenCode" width="32" height="32" /> | **OpenCode** | 🚧 Coming soon |
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
