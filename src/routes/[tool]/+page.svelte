@@ -24,6 +24,65 @@
 	let copiedTimeout: ReturnType<typeof setTimeout>;
 	let isPortalVisible = true;
 
+	let podAlreadyRunning = false;
+	let stopHeartbeat: (() => void) | null = null;
+
+	const HEARTBEAT_INTERVAL = 3000;
+	const HEARTBEAT_EXPIRY = 8000;
+
+	function getTabId(): string {
+		let id = sessionStorage.getItem('browserpod_tab_id');
+		if (!id) {
+			id = Math.random().toString(36).slice(2);
+			sessionStorage.setItem('browserpod_tab_id', id);
+		}
+		return id;
+	}
+
+	function isPodRunningElsewhere(tool: string): boolean {
+		const stored = localStorage.getItem(`pod_heartbeat_${tool}`);
+		if (!stored) return false;
+		try {
+			const data = JSON.parse(stored);
+			if (data.tabId === getTabId()) return false;
+			return Date.now() - data.time < HEARTBEAT_EXPIRY;
+		} catch {
+			return false;
+		}
+	}
+
+	function startPodHeartbeat(tool: string): () => void {
+		const key = `pod_heartbeat_${tool}`;
+		const tabId = getTabId();
+		const write = () => localStorage.setItem(key, JSON.stringify({ time: Date.now(), tabId }));
+		write();
+		const interval = setInterval(write, HEARTBEAT_INTERVAL);
+		return () => {
+			clearInterval(interval);
+			localStorage.removeItem(key);
+		};
+	}
+
+	function bootPod() {
+		const tool = getActiveTool();
+		stopHeartbeat = startPodHeartbeat(tool);
+		bootCLI((update: PortalUpdate | string) => {
+			if (typeof update === 'string') {
+				let parsed: URL;
+				try {
+					parsed = new URL(update);
+				} catch {
+					return;
+				}
+				const port = Number(parsed.port);
+				if (!Number.isInteger(port) || port <= 0) return;
+				applyPortalUpdate({ port, url: update, active: true });
+				return;
+			}
+			applyPortalUpdate(update);
+		}, tool);
+	}
+
 	let terminalFraction = 0.5;
 	let isDragging = false;
 	let containerEl: HTMLElement | null = null;
@@ -75,7 +134,7 @@
 
 	function selectTool(id: string) {
 		if (validToolIds.has(id)) {
-			window.location.href = `/${id}`;
+			window.open(`/${id}`, '_blank', 'noopener,noreferrer');
 		}
 		showToolMenu = false;
 	}
@@ -179,29 +238,45 @@
 		const mql = window.matchMedia('(max-width: 768px)');
 		mql.addEventListener('change', updateIsMobile);
 
-		bootCLI((update: PortalUpdate | string) => {
-			if (typeof update === 'string') {
-				let parsed: URL;
-				try {
-					parsed = new URL(update);
-				} catch {
-					return;
-				}
-				const port = Number(parsed.port);
-				if (!Number.isInteger(port) || port <= 0) return;
-				applyPortalUpdate({ port, url: update, active: true });
-				return;
-			}
-
-			applyPortalUpdate(update);
-		}, getActiveTool());
+		if (isPodRunningElsewhere(getActiveTool())) {
+			podAlreadyRunning = true;
+		} else {
+			bootPod();
+		}
 
 		return () => {
+			stopHeartbeat?.();
 			mql.removeEventListener('change', updateIsMobile);
 			clearTimeout(copiedTimeout);
 		};
 	});
 </script>
+
+{#if podAlreadyRunning}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+		<div class="mx-4 w-full max-w-sm rounded-xl border border-white/10 bg-[#1a1a1c] p-6 shadow-2xl">
+			<div class="mb-3 flex items-center gap-2.5">
+				<Icon
+					icon="mingcute:warning-line"
+					width="22"
+					height="22"
+					class="shrink-0 text-yellow-400"
+				/>
+				<h2 class="text-[15px] font-semibold text-white">Pod Already Running</h2>
+			</div>
+			<p class="mb-5 text-[13px] leading-relaxed text-white/55">
+				{toolItems.find((t) => t.id === activeTool)?.label ?? activeTool} is already open in another tab.
+				Only one instance can run at a time. close the other tab first.
+			</p>
+			<button
+				onclick={() => window.history.back()}
+				class="w-full rounded-lg border border-white/10 px-4 py-2 text-[13px] font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white/80"
+			>
+				Go Back
+			</button>
+		</div>
+	</div>
+{/if}
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
 	<div class="flex min-h-0 flex-1 overflow-hidden">

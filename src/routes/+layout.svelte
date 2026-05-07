@@ -23,7 +23,7 @@
 
 	function handlePanelToggle(panel: string) {
 		if (validToolIds.has(panel)) {
-			window.location.href = `/${panel}`;
+			window.open(`/${panel}`, '_blank', 'noopener,noreferrer');
 		}
 	}
 </script>
