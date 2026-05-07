@@ -24,7 +24,7 @@
 	let copiedTimeout: ReturnType<typeof setTimeout>;
 	let isPortalVisible = true;
 
-	let terminalFraction = 0.5;
+	let portalFraction = 0.5;
 	let isDragging = false;
 	let containerEl: HTMLElement | null = null;
 
@@ -35,12 +35,12 @@
 		document.body.style.userSelect = 'none';
 
 		const startX = e.clientX;
-		const startFrac = terminalFraction;
+		const startFrac = portalFraction;
 		const totalW = containerEl?.clientWidth ?? 1;
 
 		function onMove(ev: MouseEvent) {
 			const dx = ev.clientX - startX;
-			terminalFraction = Math.max(0.2, Math.min(0.8, startFrac + dx / totalW));
+			portalFraction = Math.max(0.2, Math.min(0.8, startFrac - dx / totalW));
 		}
 
 		function onUp() {
@@ -204,14 +204,11 @@
 </script>
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
-	<div class="flex min-h-0 flex-1 overflow-hidden">
-		<!-- Terminal -->
+	<div class="relative min-h-0 flex-1 overflow-hidden">
+		<!-- Terminal (always full size) -->
 		<div
-			class="min-h-0 min-w-0 overflow-hidden bg-black"
+			class="absolute inset-0 bg-black"
 			class:hidden={isMobile && activeMobileView !== 'terminal'}
-			style={isMobile || portals.length === 0 || !isPortalVisible
-				? 'flex: 1 1 0;'
-				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
 		>
 			<Terminal
 				portalAvailable={portals.length > 0}
@@ -220,10 +217,12 @@
 			/>
 		</div>
 
-		<!-- Drag divider (desktop, portal active) -->
+		<!-- Portal overlay (desktop, portal active) -->
 		{#if !isMobile && portals.length > 0 && isPortalVisible}
+			<!-- Drag divider -->
 			<button
-				class="group relative z-10 w-1.25 shrink-0 cursor-col-resize"
+				class="group absolute top-0 bottom-0 z-20 w-1.25 cursor-col-resize"
+				style="right: calc({portalFraction * 100}% - 0.625rem);"
 				onmousedown={startDrag}
 				tabindex="0"
 				aria-label="Resize preview panel"
@@ -234,18 +233,32 @@
 						: 'bg-white/[0.07] group-hover:bg-white/25'}"
 				></div>
 			</button>
-		{/if}
 
-		<!-- Portal -->
-		{#if portals.length > 0 && isPortalVisible}
 			<div
-				class="min-h-0 min-w-0 overflow-hidden border-l border-white/6"
-				class:hidden={isMobile && activeMobileView !== 'preview'}
+				class="absolute top-0 right-0 bottom-0 min-w-0 overflow-hidden border-l border-white/6"
 				class:pointer-events-none={isDragging}
-				style={isMobile
-					? 'flex: 1 1 0;'
-					: `width: ${(1 - terminalFraction) * 100}%; flex-shrink: 0;`}
+				style="width: {portalFraction * 100}%;"
 			>
+				<Portal
+					src={portalUrl}
+					{portals}
+					{selectedPort}
+					showMenu={showPortalMenu}
+					showInfo={showPortalInfo}
+					{copied}
+					{qrError}
+					{qrCodeCanvas}
+					{onPortChange}
+					onToggleMenu={togglePortalMenu}
+					onCopyLink={copyPortalURL}
+					onOpenNewTab={openPortalInNewTab}
+					onShowQrCode={showQRCodePanel}
+					onCloseOverlays={closePortalOverlays}
+				/>
+			</div>
+		{:else if isMobile && portals.length > 0 && activeMobileView === 'preview'}
+			<!-- Mobile portal (full screen overlay) -->
+			<div class="absolute inset-0 overflow-hidden">
 				<Portal
 					src={portalUrl}
 					{portals}
