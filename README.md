@@ -3,7 +3,7 @@
 <div align="center">
   <img
     src="./static/readme/browsercode-lockup-trans-black-text.webp"
-    alt="Gemini CLI running in BrowserCode on BrowserPod"
+    alt="BrowserCode logo"
     width="400"
   />
 
@@ -37,7 +37,7 @@ BrowserCode is a browser runtime for AI coding CLIs. BrowserCode is a working ex
 - Instant previews over URL via BrowserPod's portal function
 - Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
 
-BrowserCode 0.1.0 is our first beta release. This preview launches with an unmodified version of Gemini CLI running completely client-side. 
+BrowserCode 0.5.0 is our second beta release. This preview launches with an unmodified version of Claude Code (with Gemini available too) running completely client-side. 
 
 <h2 id="quickstart">Quickstart</h2>
 
@@ -50,20 +50,17 @@ BrowserCode 0.1.0 is our first beta release. This preview launches with an unmod
 
 1. Go to [browsercode.io](https://browsercode.io)
 2. BrowserCode will boot instantly, opening with a quick tutorial.
-3. When Gemini boots, you'll be prompted to log-in
+3. When Claude Code
 4. Depending on your log-in option, you may be asked to authenticate your account by copying a code from a separate tab. 
-
-Gemini can take up to 30 seconds to boot. While it boots, it willl hang silently. This is normal for Gemini CLI in any environment.
 
 <br clear="right" />
 
 <h2 id="breaking-browsercode">Breaking BrowserCode</h2>
 This is BrowserCode's first beta. Don't be kind to it. Stretch it, bend it, find out what breaks. Here are a few walls you might hit:
 
-- At launch, Gemini is prompted using a custom GEMINI.md file to help it understand that it is running in a custom environment. However, it may first attempt its default behaviour before referencing the file. 
-BrowserCode doesn't yet support native binaries, for more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
+- At launch, Claude is prompted using a custom skill to help it understand that it is running in a custom environment. However, it may first attempt its default behaviour before referencing the file. 
+- BrowserCode doesn't yet support native binaries, for more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
 - Networking over TCP isn't available.
-- Gemini CLI will display a status message indicating there's no sandbox; we've told Gemini it's running in the browser, it doesn't seem to care very much.
 - For maximum compatbility, please use a Chromium browser. Safari currently isn't supported.
 
 
@@ -72,7 +69,7 @@ BrowserCode doesn't yet support native binaries, for more information, see the [
 | CLI | Status |
 | --- | --- |
 | Gemini CLI | Beta open now |
-| Claude Code | Next |
+| Claude Code | Beta open now |
 | Codex | Coming soon |
 | OpenCode | Coming soon |
 
