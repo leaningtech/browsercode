@@ -279,14 +279,12 @@
 {/if}
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
-	<div class="flex min-h-0 flex-1 overflow-hidden">
-		<!-- Terminal -->
+	<div class="relative flex min-h-0 flex-1 overflow-hidden">
+		<!-- Terminal (always full width) -->
 		<div
 			class="min-h-0 min-w-0 overflow-hidden bg-black"
 			class:hidden={isMobile && activeMobileView !== 'terminal'}
-			style={isMobile || portals.length === 0 || !isPortalVisible
-				? 'flex: 1 1 0;'
-				: `width: ${terminalFraction * 100}%; flex-shrink: 0;`}
+			style="flex: 1 1 0;"
 		>
 			<Terminal
 				portalAvailable={portals.length > 0}
@@ -298,7 +296,8 @@
 		<!-- Drag divider (desktop, portal active) -->
 		{#if !isMobile && portals.length > 0 && isPortalVisible}
 			<button
-				class="group relative z-10 w-1.25 shrink-0 cursor-col-resize"
+				class="group absolute top-0 bottom-0 z-20 w-1.25 shrink-0 cursor-col-resize"
+				style={`left: calc(${terminalFraction * 100}% - 0.3125rem);`}
 				onmousedown={startDrag}
 				tabindex="0"
 				aria-label="Resize preview panel"
@@ -311,15 +310,15 @@
 			</button>
 		{/if}
 
-		<!-- Portal -->
+		<!-- Portal (overlay on top of terminal) -->
 		{#if portals.length > 0 && isPortalVisible}
 			<div
-				class="min-h-0 min-w-0 overflow-hidden border-l border-white/6"
+				class="overflow-hidden border-l border-white/6"
 				class:hidden={isMobile && activeMobileView !== 'preview'}
 				class:pointer-events-none={isDragging}
 				style={isMobile
-					? 'flex: 1 1 0;'
-					: `width: ${(1 - terminalFraction) * 100}%; flex-shrink: 0;`}
+					? 'position: absolute; inset: 0;'
+					: `position: absolute; top: 0; right: 0; bottom: 0; width: ${(1 - terminalFraction) * 100}%;`}
 			>
 				<Portal
 					src={portalUrl}
