@@ -16,7 +16,7 @@
   <h1>Run AI coding CLIs in the browser</h1>
 
   <p>
- The BrowserPod runtime to build projects that embed AI coding CLIs.
+ A BrowserPod-based solution to embed AI coding CLIs in web applications.
   </p>
 </div>
 
@@ -45,7 +45,7 @@ BrowserCode is a browser runtime for AI coding CLIs. BrowserCode is a working ex
 - Instant previews over URL via BrowserPod's portal function
 - Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
 
-BrowserCode 0.5.0 is our second beta release. This preview launches with an unmodified version of Claude Code (with Gemini available too) running completely client-side. 
+BrowserCode 0.5.0 is our second beta release. This preview launches with an unmodified version of Claude Code, running completely client-side. Gemini CLI is available as well.
 
 <h2 id="quickstart">Quickstart</h2>
 
