@@ -16,10 +16,21 @@
 		validToolIds.has($page.params.tool as string) ? $page.params.tool : defaultTool
 	);
 
-	let pageTitle = $derived.by(() => {
-		const tool = toolItems.find((t) => t.id === activePanel);
-		return tool ? `${tool.label} — BrowserCode` : 'BrowserCode';
-	});
+	let activeTool = $derived(toolItems.find((t) => t.id === activePanel));
+
+	let pageTitle = $derived(
+		activeTool ? `${activeTool.label} — BrowserCode` : 'BrowserCode'
+	);
+
+	let pageDescription = $derived(
+		activeTool
+			? `Run ${activeTool.label} in your browser, on BrowserCode.`
+			: 'Run AI coding CLIs in your browser.'
+	);
+
+	let pageUrl = $derived(
+		activeTool ? `https://browsercode.io/${activeTool.id}` : 'https://browsercode.io'
+	);
 
 	function handlePanelToggle(panel: string) {
 		if (validToolIds.has(panel)) {
@@ -31,13 +42,18 @@
 <svelte:head>
 	<title>{pageTitle}</title>
 	<link rel="icon" href={favicon} />
-	<meta property="og:title" content="BrowserCode" />
-	<meta property="og:description" content="Run AI coding CLIs in-browser." />
+	<meta name="description" content={pageDescription} />
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDescription} />
 	<meta property="og:image" content="https://browsercode.io/og.png" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://browsercode.io" />
+	<meta property="og:url" content={pageUrl} />
 	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={pageTitle} />
+	<meta name="twitter:description" content={pageDescription} />
 	<meta name="twitter:image" content="https://browsercode.io/og.png" />
+	<meta property="twitter:domain" content="browsercode.io" />
+	<meta property="twitter:url" content={pageUrl} />
 	<script
 		defer
 		data-domain="browsercode.io"
