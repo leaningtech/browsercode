@@ -2,8 +2,6 @@ import { cliConfigs, toolItems } from '$lib/config/tools';
 
 type PortalUpdate = { port: number; url: string | null; active: boolean };
 
-type Pod = Parameters<typeof copyFile>[0];
-
 export async function bootCLI(
 	onPortalUpdate?: (update: PortalUpdate) => void,
 	tool: keyof typeof cliConfigs = 'gemini'
