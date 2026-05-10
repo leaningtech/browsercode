@@ -62,12 +62,7 @@
 	const validToolIds = new Set(toolItems.filter((t) => !t.disabled).map((t) => t.id));
 	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
 
-	function getActiveTool() {
-		const tool = $page.params.tool;
-		return validToolIds.has(tool) ? tool : defaultTool;
-	}
-
-	$: activeTool = getActiveTool();
+	$: activeTool = validToolIds.has($page.params.tool) ? $page.params.tool : defaultTool;
 
 	function toggleToolMenu() {
 		showToolMenu = !showToolMenu;

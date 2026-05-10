@@ -326,7 +326,7 @@
 				</button>
 
 				<div class="flex items-center gap-1.5">
-					{#each Array(totalSteps) as _, i}
+					{#each Array(totalSteps) as _step, i (i)}
 						<span
 							class="h-1.5 rounded-full transition-all duration-300"
 							class:w-6={i + 1 === currentStep}
