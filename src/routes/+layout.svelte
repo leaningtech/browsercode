@@ -18,9 +18,7 @@
 
 	let activeTool = $derived(toolItems.find((t) => t.id === activePanel));
 
-	let pageTitle = $derived(
-		activeTool ? `${activeTool.label} — BrowserCode` : 'BrowserCode'
-	);
+	let pageTitle = $derived(activeTool ? `${activeTool.label} — BrowserCode` : 'BrowserCode');
 
 	let pageDescription = $derived(
 		activeTool
@@ -54,11 +52,6 @@
 	<meta name="twitter:image" content="https://browsercode.io/og.png" />
 	<meta property="twitter:domain" content="browsercode.io" />
 	<meta property="twitter:url" content={pageUrl} />
-	<script
-		defer
-		data-domain="browsercode.io"
-		src="https://plausible.leaningtech.com/js/script.js"
-	></script>
 </svelte:head>
 
 <div class="flex h-dvh w-screen overflow-hidden">
