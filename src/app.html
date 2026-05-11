@@ -3,7 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-		<meta name="description" content="BrowserCode - Run AI coding CLIs in the browser, client-side without cloud compute," />
+		<meta
+			name="description"
+			content="BrowserCode - Run AI coding CLIs in the browser, client-side without cloud compute,"
+		/>
 		<meta name="theme-color" content="#000000" />
 		<!-- Will need to be changed to be dynamic -->
 		<meta property="og:title" content="BrowserCode - Run AI coding CLIs in-browser" />
@@ -11,14 +14,26 @@
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://browsercode.io" />
 		%sveltekit.head%
-	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-3S4LTTG2Y9"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
-		gtag('config', 'G-3S4LTTG2Y9');
-	</script>
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-3S4LTTG2Y9"></script>
+		<script
+			defer
+			data-domain="browsercode.io"
+			src="https://plausible.leaningtech.com/js/script.js"
+		></script>
+		<script
+			defer
+			data-domain="browsercode.io"
+			src="https://plausible.leaningtech.com/js/script.outbound-links.js"
+		></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag('js', new Date());
+			gtag('config', 'G-3S4LTTG2Y9');
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

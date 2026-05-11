@@ -59,7 +59,7 @@ export async function bootCLI(
 		cwd: homePath
 	});
 
-	trackEvent('Booted CLI', toolLabel);
+	trackEvent('Booted', { tool: toolLabel });
 }
 
 export async function copyFile(
