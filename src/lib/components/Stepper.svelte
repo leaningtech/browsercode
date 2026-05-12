@@ -8,34 +8,55 @@
 	let currentStep = 1;
 	const totalSteps = 7;
 
-	let highlightedAgent: 'codex' | 'opencode' = 'codex';
+	let highlightedAgent: 'claude' | 'gemini' | 'codex' | 'opencode' = 'claude';
 	let agentCycleTimer: ReturnType<typeof setInterval> | null = null;
 	let copied = false;
 	let copyTimer: ReturnType<typeof setTimeout> | null = null;
+	let isMobile = false;
 
 	const firstPrompt = 'Build a basic Express.js demo in a new folder and preview it.';
 
 	const dispatch = createEventDispatcher();
 
-	const agents = {
+	const agents: Record<
+		'claude' | 'gemini' | 'codex' | 'opencode',
+		{ label: string; icon: string | null; helper: string; useIcon: boolean; available: boolean }
+	> = {
+		claude: {
+			label: 'Claude Code',
+			icon: 'mingcute:claude-line',
+			helper: 'Claude Code',
+			useIcon: true,
+			available: true
+		},
+		gemini: {
+			label: 'Gemini CLI',
+			icon: 'simple-icons:googlegemini',
+			helper: 'Gemini CLI',
+			useIcon: true,
+			available: true
+		},
 		codex: {
 			label: 'Codex CLI',
 			icon: 'hugeicons:chat-gpt',
 			helper: 'Codex CLI — coming soon',
-			useIcon: true
+			useIcon: true,
+			available: false
 		},
 		opencode: {
 			label: 'OpenCode',
 			icon: null,
 			helper: 'OpenCode — coming soon',
-			useIcon: false
+			useIcon: false,
+			available: false
 		}
-	} as const;
+	};
 
 	// Sidebar order: [Claude, Gemini, Codex, OpenCode]. Each nav button is 40px tall with 2px gap.
 	// Nav starts ~93px from viewport top (favicon header + divider + pt-2). Button N center ≈ 93 + (N-1)*42.
-	// Codex is button 3 → ~177px; OpenCode is button 4 → ~219px.
-	const agentButtonOffsets = {
+	const agentButtonOffsets: Record<'claude' | 'gemini' | 'codex' | 'opencode', number> = {
+		claude: 93,
+		gemini: 135,
 		codex: 177,
 		opencode: 219
 	};
@@ -48,11 +69,22 @@
 	const githubButtonBottomOffset = 112;
 
 	onMount(() => {
+		function updateMobile() {
+			isMobile = window.matchMedia('(max-width: 768px)').matches;
+		}
+		updateMobile();
+		const mql = window.matchMedia('(max-width: 768px)');
+		mql.addEventListener('change', updateMobile);
+
 		const isFirstTime = !localStorage.getItem('hasVisited');
 		if (isFirstTime) {
 			stepperState.open = true;
 			localStorage.setItem('hasVisited', 'true');
 		}
+
+		return () => {
+			mql.removeEventListener('change', updateMobile);
+		};
 	});
 
 	onDestroy(() => {
@@ -60,7 +92,12 @@
 		if (copyTimer) clearTimeout(copyTimer);
 	});
 
-	const agentOrder: Array<'codex' | 'opencode'> = ['codex', 'opencode'];
+	const agentOrder: Array<'claude' | 'gemini' | 'codex' | 'opencode'> = [
+		'claude',
+		'gemini',
+		'codex',
+		'opencode'
+	];
 
 	function startAgentCycle() {
 		if (agentCycleTimer) return;
@@ -81,7 +118,7 @@
 		if (currentStep < totalSteps) {
 			currentStep += 1;
 			if (currentStep === 4) {
-				highlightedAgent = 'codex';
+				highlightedAgent = 'claude';
 				startAgentCycle();
 			} else {
 				stopAgentCycle();
@@ -93,7 +130,7 @@
 		if (currentStep > 1) {
 			currentStep -= 1;
 			if (currentStep === 4) {
-				highlightedAgent = 'codex';
+				highlightedAgent = 'claude';
 				startAgentCycle();
 			} else {
 				stopAgentCycle();
@@ -139,15 +176,30 @@
 	<!-- Backdrop. On step 4 we leave the sidebar uncovered so the CLI
 	     buttons remain visible and visually "highlighted" by the surrounding dim.
 	     On step 3 we leave the sidebar uncovered so the GitHub button is visible.
+	     On mobile there is no sidebar so the backdrop always covers the full width.
 	     Escape-to-close is handled by the window listener above. -->
 	<div
-		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/60 transition-[left] duration-500 ease-out"
-		style="left: {currentStep === 3 || currentStep === 4 ? 'var(--width-sidebar)' : '0'};"
+		class="fixed inset-y-0 right-0 z-50 bg-black/60 transition-[left] duration-500 ease-out"
+		class:flex={!isMobile}
+		class:items-center={!isMobile}
+		class:justify-center={!isMobile}
+		style="left: {!isMobile && (currentStep === 3 || currentStep === 4) ? 'var(--width-sidebar)' : '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
 	>
 		<div
-			class="relative w-full max-w-xl rounded-xl border border-white/10 bg-bc-panel shadow-2xl"
+			class="bg-bc-panel"
+			class:relative={!isMobile}
+			class:w-full={!isMobile}
+			class:max-w-xl={!isMobile}
+			class:rounded-xl={!isMobile}
+			class:border={!isMobile}
+			class:shadow-2xl={!isMobile}
+			class:absolute={isMobile}
+			class:inset-x-0={isMobile}
+			class:rounded-t-2xl={isMobile}
+			class:border-t={isMobile}
+			style="{isMobile ? 'bottom: calc(48px + env(safe-area-inset-bottom)); border-color: rgba(255,255,255,0.1); box-shadow: 0 -8px 32px rgba(0,0,0,0.8);' : 'border-color: rgba(255,255,255,0.1);'}"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"
@@ -216,10 +268,21 @@
 					</p>
 				{:else if currentStep === 4}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						More AI coding CLIs coming soon
+						AI coding CLIs
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode boots with Claude Code, with Gemini CLI also available now. Support for
+						BrowserCode boots with
+						<span
+							class="font-medium transition-colors duration-300"
+							class:text-zinc-100={highlightedAgent === 'claude'}
+							class:text-zinc-500={highlightedAgent !== 'claude'}>Claude Code</span
+						>, with
+						<span
+							class="font-medium transition-colors duration-300"
+							class:text-zinc-100={highlightedAgent === 'gemini'}
+							class:text-zinc-500={highlightedAgent !== 'gemini'}>Gemini CLI</span
+						>
+						also available now.
 						<span
 							class="font-medium transition-colors duration-300"
 							class:text-zinc-100={highlightedAgent === 'codex'}
@@ -231,7 +294,7 @@
 							class:text-zinc-100={highlightedAgent === 'opencode'}
 							class:text-zinc-500={highlightedAgent !== 'opencode'}>OpenCode</span
 						>
-						is coming soon.
+						are coming soon.
 					</p>
 
 					<div
@@ -249,19 +312,20 @@
 						{/if}
 						<div class="flex-1 text-sm text-zinc-300">
 							<span class="font-medium">{agents[highlightedAgent].label}</span>
-							<span class="ml-2 text-zinc-500">— coming soon</span>
+							{#if agents[highlightedAgent].available}
+								<span class="ml-2 text-zinc-500">— available now</span>
+							{:else}
+								<span class="ml-2 text-zinc-500">— coming soon</span>
+							{/if}
 						</div>
 						<div class="flex gap-1">
-							<span
-								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-								class:bg-zinc-200={highlightedAgent === 'codex'}
-								class:bg-zinc-700={highlightedAgent !== 'codex'}
-							></span>
-							<span
-								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-								class:bg-zinc-200={highlightedAgent === 'opencode'}
-								class:bg-zinc-700={highlightedAgent !== 'opencode'}
-							></span>
+							{#each agentOrder as agentId}
+								<span
+									class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+									class:bg-zinc-200={highlightedAgent === agentId}
+									class:bg-zinc-700={highlightedAgent !== agentId}
+								></span>
+							{/each}
 						</div>
 					</div>
 				{:else if currentStep === 5}
@@ -366,9 +430,10 @@
 		</div>
 	</div>
 
-	<!-- Step 4: helper tooltip that jumps between the Claude, Codex, and OpenCode sidebar buttons.
-	     Sits above the backdrop (z-50) so it's visible, positioned over the sidebar strip. -->
-	{#if currentStep === 4}
+	<!-- Step 4: helper tooltip that jumps between the Claude, Gemini, Codex, and OpenCode sidebar buttons.
+	     Sits above the backdrop (z-50) so it's visible, positioned over the sidebar strip.
+	     Hidden on mobile since there is no sidebar. -->
+	{#if currentStep === 4 && !isMobile}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center transition-[top] duration-500 ease-out"
 			style="left: var(--width-sidebar); top: {agentButtonOffsets[highlightedAgent]}px; transform: translateY(-50%);"
@@ -382,8 +447,9 @@
 		</div>
 	{/if}
 
-	<!-- Step 3: helper tooltip pointing to the GitHub icon in the sidebar bottom section. -->
-	{#if currentStep === 3}
+	<!-- Step 3: helper tooltip pointing to the GitHub icon in the sidebar bottom section.
+	     Hidden on mobile since there is no sidebar. -->
+	{#if currentStep === 3 && !isMobile}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); bottom: {githubButtonBottomOffset}px; transform: translateY(50%);"
@@ -398,8 +464,9 @@
 		</div>
 	{/if}
 
-	<!-- Step 5: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
-	{#if currentStep === 5}
+	<!-- Step 5: helper tooltip pointing to the GitHub fork ribbon in the top-right corner.
+	     Hidden on mobile since there is no ribbon. -->
+	{#if currentStep === 5 && !isMobile}
 		<div
 			class="pointer-events-none fixed z-[60] flex items-center"
 			style="top: 24px; right: 160px; transform: translateY(-50%);"
