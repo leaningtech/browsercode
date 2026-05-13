@@ -13,6 +13,16 @@ export async function bootCLI(
 	const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
 
 	const consoleElement = document.querySelector('#console') as HTMLElement;
+
+	const ua = navigator.userAgent;
+	const isIos =
+		/iPad|iPhone|iPod/.test(ua) ||
+		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+	if (isIos) {
+		consoleElement.textContent = 'unsupported';
+		return;
+	}
+
 	const pod = await BrowserPod.boot({
 		apiKey: import.meta.env.VITE_API_KEY as string,
 		userImage: config.userImage,

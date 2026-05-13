@@ -4,6 +4,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import UtilityBar from '$lib/components/UtilityBar.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
+	import IosUnsupportedModal from '$lib/components/IosUnsupportedModal.svelte';
 	import { page } from '$app/stores';
 	import { toolItems } from '$lib/config/tools';
 
@@ -53,6 +54,8 @@
 	<meta property="twitter:domain" content="browsercode.io" />
 	<meta property="twitter:url" content={pageUrl} />
 </svelte:head>
+
+<IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden">
 	<Stepper />
