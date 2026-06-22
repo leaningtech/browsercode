@@ -1,0 +1,17 @@
+{
+  "name": "next-app",
+  "scripts": {
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "13.5.11",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@next/swc-wasm-nodejs": "13.5.11"
+  },
+  "overrides": {
+    "esbuild": "npm:esbuild-wasm@*",
+    "rollup": "npm:@rollup/wasm-node@*",
+    "@parcel/watcher": "npm:@parcel/watcher-wasm@*"
+  }
+}

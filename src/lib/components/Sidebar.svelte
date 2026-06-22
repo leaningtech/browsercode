@@ -13,6 +13,13 @@
 	}
 
 	let { activePanel = '', onPanelToggle }: Props = $props();
+
+	const ideItem = {
+		id: 'ide',
+		icon: 'mingcute:code-line',
+		label: 'Playground IDE',
+		disabled: false
+	};
 </script>
 
 {#snippet navButton(item: { id: string; icon: string | null; label: string; disabled: boolean })}
@@ -67,6 +74,10 @@
 	<div class="mx-3 h-px bg-white/[0.05]"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
+		{@render navButton(ideItem)}
+
+		<div class="mx-1.5 h-px bg-white/[0.05]"></div>
+
 		{#each toolItems as item (item.id)}
 			{@render navButton(item)}
 		{/each}

@@ -1,0 +1,22 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@oxc-minify/binding-wasm32-wasi": "^0.98.0",
+    "@oxc-parser/binding-wasm32-wasi": "^0.98.0",
+    "@oxc-transform/binding-wasm32-wasi": "^0.98.0",
+    "nuxt": "^3.17.5"
+  },
+  "overrides": {
+    "esbuild": "npm:esbuild-wasm@*",
+    "rollup": "npm:@rollup/wasm-node@*"
+  }
+}

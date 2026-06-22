@@ -71,15 +71,13 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 - Networking over TCP isn't available
 - For maximum compatbility, please use a Chromium browser. Safari currently isn't supported
 
-
 <h2 id="roadmap">Roadmap</h2>
 
-| | CLI | Status |
-| :---: | --- | --- |
-| <img src="./static/readme/gemini.webp" alt="Gemini CLI" width="32" height="32" /> | **Gemini CLI** | ✅ Beta open now |
+|                                                                                    | CLI             | Status           |
+| :--------------------------------------------------------------------------------: | --------------- | ---------------- |
+| <img src="./static/readme/gemini.webp" alt="Gemini CLI" width="32" height="32" />  | **Gemini CLI**  | ✅ Beta open now |
 | <img src="./static/readme/claude.webp" alt="Claude Code" width="32" height="32" /> | **Claude Code** | ✅ Beta open now |
-| <img src="./static/readme/codex.webp" alt="Codex" width="32" height="32" /> | **Codex** | 🚧 Coming soon |
-| <img src="./static/readme/opencode.webp" alt="OpenCode" width="32" height="32" /> | **OpenCode** | 🚧 Coming soon |
-
+|    <img src="./static/readme/codex.webp" alt="Codex" width="32" height="32" />     | **Codex**       | 🚧 Coming soon   |
+| <img src="./static/readme/opencode.webp" alt="OpenCode" width="32" height="32" />  | **OpenCode**    | 🚧 Coming soon   |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

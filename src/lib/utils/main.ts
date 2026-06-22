@@ -1,3 +1,4 @@
+import type { BinaryFile, BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { cliConfigs, toolItems } from '$lib/config/tools';
 import { trackEvent } from './useLazyTracking';
 
@@ -61,7 +62,8 @@ export async function bootCLI(
 		await copyFile(pod, config.projectFile, homePath, filename);
 	}
 
-	terminal.write(`Starting ${toolLabel}...\n`);
+	// write() exists at runtime but is missing from the published Terminal types
+	(terminal as Terminal & { write: (data: string) => void }).write(`Starting ${toolLabel}...\n`);
 
 	trackEvent('Booted', { tool: toolLabel });
 
@@ -73,15 +75,7 @@ export async function bootCLI(
 }
 
 export async function copyFile(
-	pod: {
-		createFile: (
-			path: string,
-			mode: 'binary' | 'text'
-		) => Promise<{
-			write: (data: ArrayBuffer | string) => Promise<void>;
-			close: () => Promise<void>;
-		}>;
-	},
+	pod: BrowserPod,
 	path: string,
 	prefix: string,
 	destFilename?: string
@@ -89,7 +83,7 @@ export async function copyFile(
 	const normalizedPrefix = prefix.endsWith('/') ? prefix.slice(0, -1) : prefix;
 	const dest = destFilename ? `${normalizedPrefix}/${destFilename}` : `${normalizedPrefix}/${path}`;
 
-	const file = await pod.createFile(dest, 'binary');
+	const file = (await pod.createFile(dest, 'binary')) as BinaryFile;
 	const resp = await fetch(path);
 
 	if (!resp.ok) {

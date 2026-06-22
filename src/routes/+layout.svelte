@@ -10,30 +10,39 @@
 
 	let { children } = $props();
 
-	const validToolIds = new Set(toolItems.filter((t) => !t.disabled).map((t) => t.id));
+	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
 	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
 
+	let isAgentRoute = $derived($page.route.id?.startsWith('/agents') ?? false);
+
 	let activePanel = $derived(
-		validToolIds.has($page.params.tool as string) ? $page.params.tool : defaultTool
+		isAgentRoute
+			? $page.params.tool && validToolIds.has($page.params.tool)
+				? $page.params.tool
+				: defaultTool
+			: 'ide'
 	);
 
-	let activeTool = $derived(toolItems.find((t) => t.id === activePanel));
+	let activeTool = $derived(isAgentRoute ? toolItems.find((t) => t.id === activePanel) : undefined);
 
-	let pageTitle = $derived(activeTool ? `${activeTool.label} — BrowserCode` : 'BrowserCode');
+	let pageTitle = $derived(
+		activeTool ? `${activeTool.label} — BrowserCode` : 'Playground IDE — BrowserCode'
+	);
 
 	let pageDescription = $derived(
 		activeTool
 			? `Run ${activeTool.label} in your browser, on BrowserCode.`
-			: 'Run AI coding CLIs in your browser.'
+			: 'Build and preview web apps right in your browser, on BrowserCode.'
 	);
 
-	let pageUrl = $derived(
-		activeTool ? `https://browsercode.io/${activeTool.id}` : 'https://browsercode.io'
-	);
+	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);
 
 	function handlePanelToggle(panel: string) {
-		if (validToolIds.has(panel)) {
-			window.location.href = `/${panel}`;
+		if (panel === 'ide') {
+			// Full-page navigations are deliberate: they tear the active pod down cleanly
+			window.location.href = '/ide';
+		} else if (validToolIds.has(panel)) {
+			window.location.href = `/agents/${panel}`;
 		}
 	}
 </script>
@@ -58,7 +67,10 @@
 <IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden">
-	<Stepper />
+	{#if isAgentRoute}
+		<!-- The onboarding tour explains the agent CLIs; keep it off the IDE -->
+		<Stepper />
+	{/if}
 	<Sidebar {activePanel} onPanelToggle={handlePanelToggle} />
 
 	<!-- GitHub Ribbon -->

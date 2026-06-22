@@ -32,12 +32,13 @@
 		}
 	} as const;
 
-	// Sidebar order: [Claude, Gemini, Codex, OpenCode]. Each nav button is 40px tall with 2px gap.
-	// Nav starts ~93px from viewport top (favicon header + divider + pt-2). Button N center ≈ 93 + (N-1)*42.
-	// Codex is button 3 → ~177px; OpenCode is button 4 → ~219px.
+	// Sidebar order: [IDE, divider, Claude, Gemini, Codex, OpenCode]. Each nav button is 40px tall
+	// with 2px gap; the IDE button + divider above the agents add ~45px (40 + 2 + 1 + 2).
+	// Nav starts ~93px from viewport top (favicon header + divider + pt-2). Agent button N center
+	// ≈ 93 + 45 + (N-1)*42. Codex is agent button 3 → ~222px; OpenCode is agent button 4 → ~264px.
 	const agentButtonOffsets = {
-		codex: 177,
-		opencode: 219
+		codex: 222,
+		opencode: 264
 	};
 
 	// GitHub icon is in the bottom section of the sidebar.
@@ -165,12 +166,17 @@
 					<div class="mb-5 flex justify-center">
 						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
 					</div>
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">BrowserCode Preview</h1>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						BrowserCode Preview
+					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode runs Claude Code and Gemini CLI, and other AI coding agents in the browser, unmodified.
+						BrowserCode runs Claude Code and Gemini CLI, and other AI coding agents in the browser,
+						unmodified.
 					</p>
 				{:else if currentStep === 2}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Powered by BrowserPod</h1>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						Powered by BrowserPod
+					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						BrowserCode is built on
 						<a
@@ -178,7 +184,9 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class="font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
-						>BrowserPod</a>, a browser-based sandbox that runs AI agents, code and development tools in the browser, without cloud compute.
+							>BrowserPod</a
+						>, a browser-based sandbox that runs AI agents, code and development tools in the
+						browser, without cloud compute.
 					</p>
 
 					<a
@@ -187,20 +195,22 @@
 						rel="noopener noreferrer"
 						class="mt-6 flex items-center gap-3 rounded-lg border border-white/5 bg-black/30 px-4 py-3 transition-colors duration-150 hover:border-white/10 hover:bg-black/40"
 					>
-						<Icon
-							icon="mingcute:cube-3d-line"
-							width="22"
-							height="22"
-							class="text-zinc-200"
-						/>
+						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-zinc-200" />
 						<div class="flex-1 text-sm text-zinc-300">
 							<span class="font-medium">BrowserPod</span>
 							<span class="ml-2 text-zinc-500">Learn more</span>
 						</div>
-						<Icon icon="mingcute:arrow-right-up-line" width="16" height="16" class="text-zinc-500" />
+						<Icon
+							icon="mingcute:arrow-right-up-line"
+							width="16"
+							height="16"
+							class="text-zinc-500"
+						/>
 					</a>
 				{:else if currentStep === 3}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Breaking BrowserCode</h1>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						Breaking BrowserCode
+					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						This is our first beta, so please bend, stretch and break it. When you find issues,
 						please raise it using
@@ -265,9 +275,12 @@
 						</div>
 					</div>
 				{:else if currentStep === 5}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Give us a star on GitHub</h1>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						Give us a star on GitHub
+					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode is free and open source software. Do anything you like with it! Change it, customize it, embed it on your application. Find us on
+						BrowserCode is free and open source software. Do anything you like with it! Change it,
+						customize it, embed it on your application. Find us on
 						<a
 							href="https://github.com/leaningtech/browsercode"
 							target="_blank"
@@ -313,9 +326,7 @@
 			</div>
 
 			<!-- Footer with nav + step pips -->
-			<div
-				class="flex items-center justify-between border-t border-white/10 bg-black/20 px-5 py-3"
-			>
+			<div class="flex items-center justify-between border-t border-white/10 bg-black/20 px-5 py-3">
 				<button
 					on:click={prevStep}
 					disabled={currentStep === 1}
@@ -326,7 +337,7 @@
 				</button>
 
 				<div class="flex items-center gap-1.5">
-					{#each Array(totalSteps) as _, i}
+					{#each { length: totalSteps }, i (i)}
 						<span
 							class="h-1.5 rounded-full transition-all duration-300"
 							class:w-6={i + 1 === currentStep}
@@ -371,7 +382,9 @@
 	{#if currentStep === 4}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center transition-[top] duration-500 ease-out"
-			style="left: var(--width-sidebar); top: {agentButtonOffsets[highlightedAgent]}px; transform: translateY(-50%);"
+			style="left: var(--width-sidebar); top: {agentButtonOffsets[
+				highlightedAgent
+			]}px; transform: translateY(-50%);"
 		>
 			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
 			<span

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express + BrowserPod</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #ededed;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    main { text-align: center; padding: 2rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
+    p { color: #888; font-size: 1rem; margin-bottom: 1.5rem; }
+    button {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #ededed;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    button:hover { border-color: #666; }
+    #response { margin-top: 1rem; color: #4ade80; font-size: 0.9rem; min-height: 1.5rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Express + BrowserPod</h1>
+    <p>This demo is running inside BrowserPod.</p>
+    <button onclick="fetchHello()">Call /api/hello</button>
+    <div id="response"></div>
+  </main>
+  <script>
+    async function fetchHello() {
+      const res = await fetch('/api/hello');
+      const data = await res.json();
+      document.getElementById('response').textContent = JSON.stringify(data);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+index.html
+manifest.txt
+package-lock.json
+package.json
+public/favicon.svg
+public/icons.svg
+src/App.jsx
+src/app.css
+src/assets/hero.png
+src/assets/react.svg
+src/assets/vite.svg
+src/index.css
+src/main.jsx
+start-vite.mjs
+vite.config.js

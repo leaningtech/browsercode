@@ -12,6 +12,8 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
+	// Framework starter templates are served as static assets, not app code
+	{ ignores: ['static/'] },
 	js.configs.recommended,
 	ts.configs.recommended,
 	svelte.configs.recommended,

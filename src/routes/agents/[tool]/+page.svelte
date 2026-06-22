@@ -59,15 +59,16 @@
 	let activeMobileView: 'terminal' | 'preview' = 'terminal';
 	let showToolMenu = false;
 
-	const validToolIds = new Set(toolItems.filter((t) => !t.disabled).map((t) => t.id));
+	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
 	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
 
 	function getActiveTool() {
 		const tool = $page.params.tool;
-		return validToolIds.has(tool) ? tool : defaultTool;
+		return tool && validToolIds.has(tool) ? tool : defaultTool;
 	}
 
-	$: activeTool = getActiveTool();
+	// Tool switching is a full page load, so the active tool is fixed for this page's lifetime
+	const activeTool = getActiveTool();
 
 	function toggleToolMenu() {
 		showToolMenu = !showToolMenu;
@@ -75,7 +76,7 @@
 
 	function selectTool(id: string) {
 		if (validToolIds.has(id)) {
-			window.location.href = `/${id}`;
+			window.location.href = `/agents/${id}`;
 		}
 		showToolMenu = false;
 	}
@@ -125,11 +126,6 @@
 		if (next.length === 0) {
 			isPortalVisible = false;
 		}
-	}
-
-	function togglePortal() {
-		if (portals.length === 0) return;
-		isPortalVisible = !isPortalVisible;
 	}
 
 	function onPortChange(event: Event) {
@@ -210,11 +206,7 @@
 			class="absolute inset-0 bg-black"
 			class:hidden={isMobile && activeMobileView !== 'terminal'}
 		>
-			<Terminal
-				portalAvailable={portals.length > 0}
-				{isPortalVisible}
-				onTogglePortal={togglePortal}
-			/>
+			<Terminal />
 		</div>
 
 		<!-- Portal overlay (desktop, portal active) -->
@@ -297,7 +289,9 @@
 					<div class="h-1 w-10 rounded-full bg-white/15"></div>
 				</div>
 				<div class="flex items-center justify-between px-4 py-2">
-					<span class="text-[12px] font-semibold tracking-wide text-white/40 uppercase">CLI Tool</span>
+					<span class="text-[12px] font-semibold tracking-wide text-white/40 uppercase"
+						>CLI Tool</span
+					>
 					<button
 						onclick={() => (showToolMenu = false)}
 						class="rounded-md p-1.5 text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
@@ -317,11 +311,24 @@
 									? 'cursor-not-allowed text-white/20'
 									: 'text-white/50 hover:bg-white/5 hover:text-white/80'}"
 						>
-							<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {activeTool === item.id ? 'bg-white/10' : 'bg-white/5'}">
+							<div
+								class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {activeTool ===
+								item.id
+									? 'bg-white/10'
+									: 'bg-white/5'}"
+							>
 								{#if item.icon}
 									<Icon icon={item.icon} width="18" height="18" />
 								{:else}
-									<img src={opencodeLogoSrc} alt={item.label} class="h-4.5 w-4.5 {item.disabled ? 'opacity-20' : activeTool === item.id ? 'opacity-90' : 'opacity-40'}" />
+									<img
+										src={opencodeLogoSrc}
+										alt={item.label}
+										class="h-4.5 w-4.5 {item.disabled
+											? 'opacity-20'
+											: activeTool === item.id
+												? 'opacity-90'
+												: 'opacity-40'}"
+									/>
 								{/if}
 							</div>
 							<span class="flex-1 text-[14px] font-medium">{item.label}</span>
@@ -330,10 +337,24 @@
 									<Icon icon="mingcute:check-line" width="12" height="12" class="text-white/80" />
 								</div>
 							{:else if item.disabled}
-								<span class="rounded-md bg-white/6 px-2 py-0.5 text-[10px] font-medium text-white/25">Soon</span>
+								<span
+									class="rounded-md bg-white/6 px-2 py-0.5 text-[10px] font-medium text-white/25"
+									>Soon</span
+								>
 							{/if}
 						</button>
 					{/each}
+					<div class="my-2 h-px bg-white/[0.06]"></div>
+					<button
+						onclick={() => (window.location.href = '/ide')}
+						class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
+					>
+						<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">
+							<Icon icon="mingcute:code-line" width="18" height="18" />
+						</div>
+						<span class="flex-1 text-[14px] font-medium">Open Playground IDE</span>
+						<Icon icon="mingcute:arrow-right-line" width="16" height="16" class="text-white/30" />
+					</button>
 				</div>
 			</div>
 		{/if}
