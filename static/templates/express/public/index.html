@@ -1,50 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Express + BrowserPod</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0a0a0a;
-      color: #ededed;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    main { text-align: center; padding: 2rem; }
-    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; }
-    p { color: #888; font-size: 1rem; margin-bottom: 1.5rem; }
-    button {
-      background: #1a1a1a;
-      border: 1px solid #333;
-      color: #ededed;
-      padding: 0.5rem 1.25rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    button:hover { border-color: #666; }
-    #response { margin-top: 1rem; color: #4ade80; font-size: 0.9rem; min-height: 1.5rem; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Express + BrowserPod</h1>
-    <p>This demo is running inside BrowserPod.</p>
-    <button onclick="fetchHello()">Call /api/hello</button>
-    <div id="response"></div>
-  </main>
-  <script>
-    async function fetchHello() {
-      const res = await fetch('/api/hello');
-      const data = await res.json();
-      document.getElementById('response').textContent = JSON.stringify(data);
-    }
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Express — running in BrowserPod</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="bar">
+        <span class="brand">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="7" rx="2" stroke="currentColor" stroke-width="1.6" />
+            <rect x="3" y="13" width="18" height="7" rx="2" stroke="currentColor" stroke-width="1.6" />
+            <circle cx="7" cy="7.5" r="1.1" fill="currentColor" />
+            <circle cx="7" cy="16.5" r="1.1" fill="currentColor" />
+          </svg>
+          express
+        </span>
+        <span class="meta"><span class="dot" aria-hidden="true"></span>Live on port 4000</span>
+      </header>
+
+      <section class="exchange">
+        <div class="ask">
+          <h1>Express, running in your browser.</h1>
+          <p class="lede">
+            An Express app on Node — compiled to WebAssembly — is serving this
+            page. Pick a route to send a request.
+          </p>
+          <div class="routes" role="group" aria-label="Send a request">
+            <button class="route" data-m="get" data-method="GET" data-path="/api/hello">
+              <span class="verb">GET</span><span class="path">/api/hello</span>
+            </button>
+            <button class="route" data-m="get" data-method="GET" data-path="/api/time">
+              <span class="verb">GET</span><span class="path">/api/time</span>
+            </button>
+            <button
+              class="route"
+              data-m="post"
+              data-method="POST"
+              data-path="/api/echo"
+              data-body='{"name":"BrowserPod"}'
+            >
+              <span class="verb">POST</span><span class="path">/api/echo</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="response" id="response" data-m="get">
+          <div class="response-head">
+            <span class="rl"><span class="rl-method" id="r-method">GET</span> <span id="r-path">/api/hello</span></span>
+            <span class="rl-status" id="r-status">—</span>
+          </div>
+          <pre class="body" id="r-body" aria-live="polite">Sending…</pre>
+        </div>
+      </section>
+
+      <section class="resources" aria-label="Resources">
+        <a class="res" href="https://expressjs.com/" target="_blank" rel="noreferrer">
+          <span class="res-t">Documentation</span>
+          <span class="res-d">Guide &amp; getting started</span>
+        </a>
+        <a class="res" href="https://expressjs.com/en/guide/routing.html" target="_blank" rel="noreferrer">
+          <span class="res-t">Routing</span>
+          <span class="res-d">Define more endpoints</span>
+        </a>
+        <a class="res" href="https://expressjs.com/en/4x/api.html" target="_blank" rel="noreferrer">
+          <span class="res-t">API reference</span>
+          <span class="res-d">req, res &amp; app methods</span>
+        </a>
+        <a class="res" href="https://expressjs.com/en/guide/using-middleware.html" target="_blank" rel="noreferrer">
+          <span class="res-t">Middleware</span>
+          <span class="res-d">Run code on every request</span>
+        </a>
+      </section>
+
+      <footer class="foot">
+        <span>Edit <code>server.js</code> to add routes.</span>
+      </footer>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
 </html>

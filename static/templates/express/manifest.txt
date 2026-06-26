@@ -1,5 +1,8 @@
 manifest.txt
 package-lock.json
 package.json
+public/app.js
+public/favicon.svg
 public/index.html
+public/styles.css
 server.js
