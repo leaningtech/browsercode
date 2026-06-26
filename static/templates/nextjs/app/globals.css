@@ -1,31 +1,219 @@
+:root {
+  --paper: #f4f5f7;
+  --ink: #0b0b0f;
+  --muted: #6b6f76;
+  --line: #e3e5ea;
+  --accent: #4f46e5;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0c0d10;
+    --ink: #f3f4f6;
+    --muted: #8b8f98;
+    --line: #1e2026;
+    --accent: #818cf8;
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0a0a0a;
-  color: #ededed;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
   min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 48px) clamp(20px, 5vw, 40px) 40px;
+}
+
+/* ── Runtime readout (signature) ────────────────────────── */
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+.readout .ok {
+  color: var(--ink);
+}
+.readout .sep {
+  color: var(--muted);
+  opacity: 0.4;
+}
+.readout .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ── Hero ───────────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+  padding: clamp(48px, 12vh, 120px) 0;
+}
+.hero h1 {
+  font-size: clamp(44px, 9vw, 96px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: var(--ink);
+}
+.lede {
+  max-width: 46ch;
+  margin-top: 1.4rem;
+  font-size: clamp(15px, 2.2vw, 18px);
+  color: var(--muted);
+}
+.hint {
+  margin-top: 1.2rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.hint code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  color: var(--ink);
+}
+
+/* ── Resource rows ──────────────────────────────────────── */
+.links {
+  border-top: 1px solid var(--line);
+}
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  padding: 1.15rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  transition: padding-left 0.18s ease;
+}
+.row .k {
+  flex: 0 0 7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.row .d {
+  flex: 1 1 auto;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.row .arrow {
+  color: var(--accent);
+  font-size: 1.1rem;
+  transition: transform 0.18s ease;
+}
+.row:hover {
+  padding-left: 0.75rem;
+}
+.row:hover .arrow {
+  transform: translateX(4px);
+}
+.row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.foot {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin-top: 2.5rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.by {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.by:hover {
+  color: var(--ink);
+}
+.by svg {
+  width: 13px;
+  height: 12px;
 }
 
-main {
-  text-align: center;
-  padding: 2rem;
+@media (max-width: 560px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+  }
+  .row .k {
+    flex-basis: 100%;
+  }
+  .row .d {
+    flex-basis: 100%;
+  }
+  .row .arrow {
+    display: none;
+  }
 }
 
-h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-p {
-  color: #888;
-  font-size: 1rem;
+@media (prefers-reduced-motion: reduce) {
+  .readout .dot {
+    animation: none;
+  }
+  .row,
+  .row:hover {
+    padding-left: 0.25rem;
+    transition: none;
+  }
+  .row:hover .arrow {
+    transform: none;
+  }
 }
