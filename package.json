@@ -46,7 +46,7 @@
 		"@codemirror/view": "^6.43.1",
 		"@iconify-json/mingcute": "^1.2.7",
 		"@iconify/svelte": "^5.2.1",
-		"@leaningtech/browserpod": "2.8.0",
+		"@leaningtech/browserpod": "2.12.1",
 		"@replit/codemirror-lang-svelte": "^6.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"qrcode": "^1.5.4",
