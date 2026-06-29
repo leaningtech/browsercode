@@ -29,7 +29,7 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		storageKey: 'claude_20260506',
 		command: 'node',
 		args: ['/home/user/claude-extracted/src/entrypoints/cli.js'],
-		projectFile: 'project/claude/CLAUDE.md',
+		projectFile: '/project/claude/CLAUDE.md',
 		openCallback: (urlOrPath: string) => {
 			if (
 				urlOrPath.startsWith('https://claude.com/cai/oauth/authorize') ||
@@ -49,6 +49,6 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		storageKey: 'gemini_20260430_2',
 		command: 'node',
 		args: ['/home/user/node_modules/@google/gemini-cli/bundle/gemini.js'],
-		projectFile: 'project/gemini/GEMINI.md'
+		projectFile: '/project/gemini/GEMINI.md'
 	}
 };
