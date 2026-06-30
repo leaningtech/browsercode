@@ -41,6 +41,16 @@ export class IdeSession {
 		return frameworkConfigs[this.framework];
 	}
 
+	/** Label shown in the IDE shell. Becomes mode-aware later; framework label for now. */
+	get displayLabel(): string {
+		return this.config.label;
+	}
+
+	/** Preview is pinned to this port when set. Framework-specific right now. */
+	get appPort(): number | undefined {
+		return this.config.appPort;
+	}
+
 	get dirty(): boolean {
 		return this.fileContent !== this.savedFileContent;
 	}
