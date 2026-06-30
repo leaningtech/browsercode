@@ -5,7 +5,8 @@ import {
 	type FrameworkConfig,
 	type FrameworkId
 } from '$lib/config/frameworks';
-import { readPodFile, writePodFile, writePodBinaryFile } from './pod-fs';
+import { POD_HOME, readPodFile, writePodFile, writePodBinaryFile } from './pod-fs';
+import { fetchRepoTree } from '$lib/github/api';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 
 export type PortalUpdate = { port: number; url: string | null; active: boolean };
@@ -27,6 +28,13 @@ export class IdeSession {
 	loading = $state(true);
 	isSaving = $state(false);
 	hasPortal = $state(false);
+	podReady = $state(false);
+
+	/** Which boot path produced this session; drives the label, appPort and workdir. */
+	mode = $state<'framework' | 'github'>('framework');
+	/** Directory the project lives in inside the pod; pod-fs paths resolve against it. */
+	workdir = POD_HOME;
+	private githubSlug = $state('');
 
 	pod: BrowserPod | null = null;
 	outputTerminal: Terminal | null = null;
@@ -41,14 +49,14 @@ export class IdeSession {
 		return frameworkConfigs[this.framework];
 	}
 
-	/** Label shown in the IDE shell. Becomes mode-aware later; framework label for now. */
+	/** Label shown in the IDE shell; framework label, or owner/repo[/dir] in GitHub mode. */
 	get displayLabel(): string {
-		return this.config.label;
+		return this.mode === 'github' ? this.githubSlug : this.config.label;
 	}
 
-	/** Preview is pinned to this port when set. Framework-specific right now. */
+	/** Preview is pinned to this port when set. Unknown for arbitrary GitHub repos. */
 	get appPort(): number | undefined {
-		return this.config.appPort;
+		return this.mode === 'github' ? undefined : this.config.appPort;
 	}
 
 	get dirty(): boolean {
@@ -91,9 +99,10 @@ export class IdeSession {
 				if (this.cancelled(token)) return;
 				const content = await fetchTemplateFile(this.config, file);
 				if (this.cancelled(token)) return;
-				await writePodBinaryFile(pod, file, content);
+				await writePodBinaryFile(pod, `${this.workdir}/${file}`, content);
 			}
 
+			this.podReady = true;
 			const initialFile = this.projectFiles.includes(this.config.defaultFile)
 				? this.config.defaultFile
 				: this.projectFiles[0];
@@ -116,7 +125,7 @@ export class IdeSession {
 				await pod.run('npm', setupCommandArgs, {
 					echo: true,
 					terminal: this.outputTerminal,
-					cwd: '/home/user'
+					cwd: this.workdir
 				});
 			}
 
@@ -124,19 +133,149 @@ export class IdeSession {
 			await pod.run('npm', this.config.devCommandArgs ?? ['run', 'dev'], {
 				echo: true,
 				terminal: this.outputTerminal,
-				cwd: '/home/user'
+				cwd: this.workdir
 			});
 		} finally {
 			this.booting = false;
 		}
 	}
 
+	/**
+	 * Boots a pod from a GitHub repo: partial+sparse clone (so git never mmaps a large
+	 * packfile), `npm install`, then the project's dev/start script.
+	 * The file tree is fetched up front so it renders while the clone runs.
+	 */
+	async bootFromGitHub(
+		owner: string,
+		repo: string,
+		ref: string,
+		dir: string,
+		terminals: TerminalElements,
+		onPortalUpdate: (update: PortalUpdate) => void
+	): Promise<void> {
+		if (this.booting || this.pod) return;
+		this.booting = true;
+		this.mode = 'github';
+		this.githubSlug = dir ? `${owner}/${repo}/${dir}` : `${owner}/${repo}`;
+		const token = ++this.bootToken;
+		try {
+			// File list up front (before the pod) so the tree renders while we clone.
+			try {
+				const files = await fetchRepoTree(owner, repo, ref, dir);
+				if (this.cancelled(token)) return;
+				this.projectFiles = files;
+			} catch (error) {
+				console.error('Failed to fetch repo file tree:', error);
+			}
+
+			const { BrowserPod } = await import('@leaningtech/browserpod');
+			if (this.cancelled(token)) return;
+
+			const pod = await BrowserPod.boot({
+				apiKey: import.meta.env.VITE_API_KEY as string
+			});
+			if (this.cancelled(token)) {
+				void shutdownPod(pod);
+				return;
+			}
+			this.pod = pod;
+
+			this.outputTerminal = await pod.createDefaultTerminal(terminals.output);
+			this.bashTerminal = await pod.createDefaultTerminal(terminals.bash);
+
+			pod.onPortal(({ url, port }) => {
+				if (this.cancelled(token)) return;
+				const portNumber = Number(port);
+				if (!Number.isInteger(portNumber) || portNumber <= 0) return;
+				const trimmedUrl = typeof url === 'string' ? url.trim() : '';
+				const active = trimmedUrl.length > 0;
+				if (active) this.hasPortal = true;
+				onPortalUpdate({ port: portNumber, url: active ? trimmedUrl : null, active });
+			});
+
+			const repoDir = `${POD_HOME}/${repo}`;
+			this.workdir = dir ? `${repoDir}/${dir}` : repoDir;
+
+			// Trees-only pack (--filter=blob:none) keeps the initial clone tiny so git never
+			// mmaps a large packfile. For a subdir boot, --sparse checks out just top-level
+			// files and `sparse-checkout set` then materializes only that subtree. For a
+			// whole-repo boot we omit --sparse so the full working tree is checked out
+			// (blobs are still lazy-fetched on demand).
+			const cloneArgs = ['clone', '--depth', '1', '--branch', ref, '--filter=blob:none'];
+			if (dir) cloneArgs.push('--sparse');
+			cloneArgs.push(`https://github.com/${owner}/${repo}.git`);
+			await pod.run('git', cloneArgs, {
+				echo: true,
+				terminal: this.outputTerminal,
+				cwd: POD_HOME
+			});
+			if (this.cancelled(token)) return;
+
+			if (dir) {
+				await pod.run('git', ['sparse-checkout', 'set', dir], {
+					echo: true,
+					terminal: this.outputTerminal,
+					cwd: repoDir
+				});
+				if (this.cancelled(token)) return;
+			}
+
+			// The working tree exists now — let the editor read from the pod.
+			this.podReady = true;
+			const initialFile = this.projectFiles[0];
+			if (initialFile) await this.loadFile(initialFile);
+			else this.loading = false;
+
+			trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` });
+
+			await pod.run('npm', ['install'], {
+				echo: true,
+				terminal: this.outputTerminal,
+				cwd: this.workdir
+			});
+			if (this.cancelled(token)) return;
+
+			const script = await this.resolveStartScript();
+			if (this.cancelled(token)) return;
+			if (!script) {
+				if (this.outputTerminal)
+					(this.outputTerminal as Terminal & { write?: (data: string) => void }).write?.(
+						'\r\nNo "dev" or "start" script in package.json — nothing to run.\r\n'
+					);
+				return;
+			}
+
+			await pod.run('npm', ['run', script], {
+				echo: true,
+				terminal: this.outputTerminal,
+				cwd: this.workdir
+			});
+		} finally {
+			this.booting = false;
+		}
+	}
+
+	/** Pick the dev-server script from the cloned package.json: prefer `dev`, then `start`. */
+	private async resolveStartScript(): Promise<string | null> {
+		if (!this.pod) return null;
+		try {
+			const raw = await readPodFile(this.pod, `${this.workdir}/package.json`);
+			const scripts = (JSON.parse(raw) as { scripts?: Record<string, string> }).scripts ?? {};
+			if (scripts.dev) return 'dev';
+			if (scripts.start) return 'start';
+			return null;
+		} catch (error) {
+			console.error('Failed to read package.json:', error);
+			return null;
+		}
+	}
+
 	async loadFile(path: string): Promise<void> {
-		if (!this.pod || this.unmounted) return;
+		if (!this.pod || !this.podReady || this.unmounted) return;
 		this.loading = true;
 		this.selectedFile = path;
 		try {
-			const content = await readPodFile(this.pod, path);
+			const content = await readPodFile(this.pod, `${this.workdir}/${path}`);
 			if (this.unmounted || this.selectedFile !== path) return;
 			this.savedFileContent = content;
 			this.fileContent = content;
@@ -156,7 +295,7 @@ export class IdeSession {
 		const path = this.selectedFile;
 		const content = this.fileContent;
 		try {
-			await writePodFile(this.pod, path, content);
+			await writePodFile(this.pod, `${this.workdir}/${path}`, content);
 			if (this.selectedFile === path) this.savedFileContent = content;
 		} catch (error) {
 			console.error('Failed to save file:', error);
@@ -170,7 +309,7 @@ export class IdeSession {
 		if (this.bashStarted || !this.pod || !this.bashTerminal) return;
 		this.bashStarted = true;
 		try {
-			void this.pod.run('bash', ['-i'], { terminal: this.bashTerminal, cwd: '/home/user' });
+			void this.pod.run('bash', ['-i'], { terminal: this.bashTerminal, cwd: this.workdir });
 		} catch (error) {
 			console.error('Failed to start bash:', error);
 			this.bashStarted = false;

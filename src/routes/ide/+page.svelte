@@ -1,25 +1,31 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
+	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import { IdeSession, type PortalUpdate, type TerminalElements } from '$lib/ide/session.svelte';
 	import { defaultFrameworkId, isFrameworkId, type FrameworkId } from '$lib/config/frameworks';
 
+	// Bare /ide (no ?framework=) shows the landing instead of auto-booting a template.
+	const requested = $page.url.searchParams.get('framework');
+	const showLanding = !requested;
+	const framework: FrameworkId = isFrameworkId(requested) ? requested : defaultFrameworkId;
+
 	const session = new IdeSession();
 
-	function getFrameworkFromUrl(): FrameworkId {
-		const requested = new URL(window.location.href).searchParams.get('framework');
-		return isFrameworkId(requested) ? requested : defaultFrameworkId;
-	}
-
 	// Full reload tears the pod down cleanly
-	function selectFramework(framework: FrameworkId) {
+	function selectFramework(nextFramework: FrameworkId) {
 		const url = new URL(window.location.href);
-		url.searchParams.set('framework', framework);
+		url.searchParams.set('framework', nextFramework);
 		window.location.href = url.toString();
 	}
 
 	function boot(terminals: TerminalElements, onPortalUpdate: (update: PortalUpdate) => void) {
-		return session.boot(getFrameworkFromUrl(), terminals, onPortalUpdate);
+		return session.boot(framework, terminals, onPortalUpdate);
 	}
 </script>
 
-<IdeShell {session} {boot} onSelectFramework={selectFramework} />
+{#if showLanding}
+	<IdeLanding />
+{:else}
+	<IdeShell {session} {boot} onSelectFramework={selectFramework} />
+{/if}
