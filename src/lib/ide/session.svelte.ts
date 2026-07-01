@@ -141,8 +141,8 @@ export class IdeSession {
 	}
 
 	/**
-	 * Boots a pod from a GitHub repo: partial+sparse clone (so git never mmaps a large
-	 * packfile), `npm install`, then the project's dev/start script.
+	 * Boots a pod from a GitHub repo: shallow clone, `npm install`, then the
+	 * project's dev/start script.
 	 * The file tree is fetched up front so it renders while the clone runs.
 	 */
 	async bootFromGitHub(
@@ -196,29 +196,20 @@ export class IdeSession {
 			const repoDir = `${POD_HOME}/${repo}`;
 			this.workdir = dir ? `${repoDir}/${dir}` : repoDir;
 
-			// Trees-only pack (--filter=blob:none) keeps the initial clone tiny so git never
-			// mmaps a large packfile. For a subdir boot, --sparse checks out just top-level
-			// files and `sparse-checkout set` then materializes only that subtree. For a
-			// whole-repo boot we omit --sparse so the full working tree is checked out
-			// (blobs are still lazy-fetched on demand).
-			const cloneArgs = ['clone', '--depth', '1', '--branch', ref, '--filter=blob:none'];
-			if (dir) cloneArgs.push('--sparse');
-			cloneArgs.push(`https://github.com/${owner}/${repo}.git`);
-			await pod.run('git', cloneArgs, {
-				echo: true,
-				terminal: this.outputTerminal,
-				cwd: POD_HOME
-			});
-			if (this.cancelled(token)) return;
-
-			if (dir) {
-				await pod.run('git', ['sparse-checkout', 'set', dir], {
+			// Plain shallow clone: fetch only the tip commit (--depth 1) of the requested branch
+			// and check out the full working tree. For a subdir boot we just point `workdir` at
+			// the subtree afterwards. (BrowserPod 2.12+ handles the packfile memory footprint, so
+			// the earlier --filter=blob:none / --sparse workaround is no longer needed.)
+			await pod.run(
+				'git',
+				['clone', '--depth', '1', '--branch', ref, `https://github.com/${owner}/${repo}.git`],
+				{
 					echo: true,
 					terminal: this.outputTerminal,
-					cwd: repoDir
-				});
-				if (this.cancelled(token)) return;
-			}
+					cwd: POD_HOME
+				}
+			);
+			if (this.cancelled(token)) return;
 
 			// The working tree exists now — let the editor read from the pod.
 			this.podReady = true;
