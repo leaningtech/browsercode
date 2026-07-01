@@ -6,6 +6,9 @@
 	import FileTreePanel from '$lib/components/ide/FileTreePanel.svelte';
 	import FrameworkPanel from '$lib/components/ide/FrameworkPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
+	import PreviewLoader from '$lib/components/ide/PreviewLoader.svelte';
+	import { fade } from 'svelte/transition';
+	import { cubicIn } from 'svelte/easing';
 	import type { IdeSession, PortalUpdate, TerminalElements } from '$lib/ide/session.svelte';
 	import type { FrameworkId } from '$lib/config/frameworks';
 
@@ -39,6 +42,18 @@
 	let copied = $state(false);
 	let qrError = $state('');
 	let copiedTimeout: ReturnType<typeof setTimeout>;
+
+	let previewLive = $derived(portals.length > 0);
+	// Keep the loader mounted for a beat after the preview goes live so its "step through"
+	let loaderVisible = $state(true);
+	$effect(() => {
+		if (!previewLive) {
+			loaderVisible = true;
+			return;
+		}
+		const id = setTimeout(() => (loaderVisible = false), 220);
+		return () => clearTimeout(id);
+	});
 
 	// ── Mobile state ──────────────────────────────────────────────────────────
 	let isMobile = $state(false);
@@ -408,41 +423,30 @@
 							</p>
 						</div>
 					</div>
-				{:else if portals.length > 0}
-					<Portal
-						src={portalUrl}
-						{portals}
-						{selectedPort}
-						showMenu={showPortalMenu}
-						showInfo={showPortalInfo}
-						{copied}
-						{qrError}
-						{onPortChange}
-						onToggleMenu={togglePortalMenu}
-						onCopyLink={copyPortalURL}
-						onOpenNewTab={openPortalInNewTab}
-						onShowQrCode={showQRCodePanel}
-						onCloseOverlays={closePortalOverlays}
-					/>
 				{:else}
-					<div
-						class="flex h-10 shrink-0 items-center justify-between border-b border-white/6 bg-[#111111] px-3"
-					>
-						<div class="flex items-center gap-2 text-[13px] text-white/35">
-							<Icon icon="mingcute:eye-2-line" width="14" height="14" />
-							<span class="font-medium tracking-wide">Preview</span>
+					{#if portals.length > 0}
+						<Portal
+							src={portalUrl}
+							{portals}
+							{selectedPort}
+							showMenu={showPortalMenu}
+							showInfo={showPortalInfo}
+							{copied}
+							{qrError}
+							{onPortChange}
+							onToggleMenu={togglePortalMenu}
+							onCopyLink={copyPortalURL}
+							onOpenNewTab={openPortalInNewTab}
+							onShowQrCode={showQRCodePanel}
+							onCloseOverlays={closePortalOverlays}
+						/>
+					{/if}
+					<!-- Loader overlays the column until the preview is live. -->
+					{#if loaderVisible}
+						<div class="absolute inset-0 z-30" out:fade={{ duration: 550, easing: cubicIn }}>
+							<PreviewLoader label={session.displayLabel} active={!previewLive} />
 						</div>
-						<span class="inline-flex items-center gap-1 text-[11px] text-white/20">
-							<Icon icon="mingcute:wifi-off-line" width="11" height="11" />
-							Offline
-						</span>
-					</div>
-					<div class="flex flex-1 flex-col items-center justify-center gap-2 bg-zinc-950">
-						<span class="loader-spin text-emerald-500">
-							<Icon icon="mingcute:loading-3-line" width="18" height="18" />
-						</span>
-						<span class="text-[11px] text-white/25">Loading preview…</span>
-					</div>
+					{/if}
 				{/if}
 			</div>
 		</div>
@@ -533,17 +537,6 @@
 	.divider-row:hover .divider-line,
 	.divider-row.active .divider-line {
 		background: rgba(255, 255, 255, 0.25);
-	}
-
-	@keyframes loader-spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-	.loader-spin {
-		display: inline-flex;
-		animation: loader-spin 0.9s linear infinite;
-		will-change: transform;
 	}
 
 	/* ── Mobile ────────────────────────────────────────────────────────────── */
