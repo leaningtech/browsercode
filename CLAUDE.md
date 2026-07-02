@@ -80,7 +80,7 @@ Tool/IDE switching uses full page loads (`window.location.href`) on purpose — 
 
 **ide/+page.svelte** (playground application)
 
-- Composes the IDE: icon rail, resizable side panel (FileTreePanel / FrameworkPanel), EditorPane (CodeMirror), TerminalTabs (Output + Bash), Portal preview
+- Dispatches to IdeLanding (bare `/ide`) or IdeShell (framework/GitHub boot); IdeShell composes the icon rail, resizable FileTreePanel side panel, a header project switcher (template + GitHub clone), EditorPane (CodeMirror), TerminalTabs (Output + Bash), Portal preview
 - Pod lifecycle and file/portal state live in `lib/ide/session.svelte.ts` (IdeSession); pod file I/O helpers in `lib/ide/pod-fs.ts`
 - `lib/components/ide/EditorPane.svelte` is the only file importing `@codemirror/*` — it is designed to be replaced by VS Code Web later; session/pod-fs/frameworks survive that migration
 

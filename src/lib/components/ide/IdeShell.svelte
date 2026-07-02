@@ -4,13 +4,12 @@
 	import Portal from '$lib/components/Portal.svelte';
 	import EditorPane from '$lib/components/ide/EditorPane.svelte';
 	import FileTreePanel from '$lib/components/ide/FileTreePanel.svelte';
-	import FrameworkPanel from '$lib/components/ide/FrameworkPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
 	import PreviewLoader from '$lib/components/ide/PreviewLoader.svelte';
 	import { fade } from 'svelte/transition';
 	import { cubicIn } from 'svelte/easing';
 	import type { IdeSession, PortalUpdate, TerminalElements } from '$lib/ide/session.svelte';
-	import type { FrameworkId } from '$lib/config/frameworks';
+	import { frameworkRailItems, type FrameworkId } from '$lib/config/frameworks';
 
 	type PortalItem = { port: number; url: string };
 
@@ -31,7 +30,8 @@
 	} = $props();
 
 	let isCompatibleBrowser = $state(true);
-	let activePanel = $state<'files' | 'frameworks' | null>('files');
+	let activePanel = $state<'files' | null>('files');
+	let showProjectMenu = $state(false);
 
 	// ── Portal state (same shape as the agents page; Portal.svelte renders it) ──
 	let portals = $state<PortalItem[]>([]);
@@ -128,13 +128,18 @@
 		window.addEventListener('mouseup', onUp);
 	}
 
-	// ── Framework selection (full reload tears the pod down cleanly) ───────────
+	// ── Project switcher (full reload tears the pod down cleanly) ──────────────
 	function handleSelectFramework(framework: FrameworkId) {
-		if (framework === session.framework) {
-			activePanel = 'frameworks';
-			return;
-		}
+		showProjectMenu = false;
+		// Skip the reboot only when this template is already live; in GitHub mode always
+		// reboot, since `session.framework` still holds the default there.
+		if (session.mode === 'framework' && framework === session.framework) return;
 		onSelectFramework(framework);
+	}
+
+	function openLanding() {
+		showProjectMenu = false;
+		window.location.href = '/ide';
 	}
 
 	// ── Portal handling ─────────────────────────────────────────────────────────
@@ -255,17 +260,90 @@
 	});
 </script>
 
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key === 'Escape') showProjectMenu = false;
+	}}
+/>
+
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-zinc-300">
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 	<header
 		class="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
 	>
-		<div class="flex items-center gap-2 text-[11px] text-white/40">
-			<span class="text-white/60">{session.displayLabel}</span>
+		<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
+			<!-- Project switcher -->
+			<div class="relative shrink-0">
+				<button
+					type="button"
+					onclick={() => (showProjectMenu = !showProjectMenu)}
+					class="group -ml-1 flex max-w-[45vw] items-center gap-1 rounded px-1.5 py-0.5 text-white/60 transition hover:bg-white/5 hover:text-white/90 focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:outline-none"
+					aria-haspopup="menu"
+					aria-expanded={showProjectMenu}
+					title="Switch project"
+				>
+					<span class="truncate">{session.displayLabel}</span>
+					<Icon
+						icon="mingcute:down-line"
+						width="12"
+						height="12"
+						class="shrink-0 text-white/30 transition-transform duration-150 group-hover:text-white/50 motion-reduce:transition-none {showProjectMenu
+							? 'rotate-180'
+							: ''}"
+					/>
+				</button>
+
+				{#if showProjectMenu}
+					<!-- Click-away catcher -->
+					<button
+						type="button"
+						aria-label="Close menu"
+						class="fixed inset-0 z-40 cursor-default"
+						onclick={() => (showProjectMenu = false)}
+					></button>
+					<div
+						role="menu"
+						class="absolute top-full left-0 z-50 mt-1.5 w-56 rounded-lg border border-white/8 bg-[#0e0e0e] p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+					>
+						<div
+							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-zinc-600 uppercase"
+						>
+							Templates
+						</div>
+						{#each frameworkRailItems as fw (fw.id)}
+							{@const isActive = session.mode === 'framework' && session.framework === fw.id}
+							<button
+								type="button"
+								role="menuitem"
+								onclick={() => handleSelectFramework(fw.id)}
+								class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition {isActive
+									? 'bg-white/10 text-zinc-100'
+									: 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}"
+							>
+								<Icon icon={fw.icon} width="14" height="14" class="shrink-0" />
+								<span class="flex-1 truncate">{fw.label}</span>
+								{#if isActive}
+									<span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+								{/if}
+							</button>
+						{/each}
+						<div class="my-1 h-px bg-white/[0.06]"></div>
+						<button
+							type="button"
+							role="menuitem"
+							onclick={openLanding}
+							class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200"
+						>
+							<Icon icon="mingcute:github-line" width="14" height="14" class="shrink-0" />
+							<span class="flex-1 truncate">Open from GitHub…</span>
+						</button>
+					</div>
+				{/if}
+			</div>
 			<span class="text-white/20">/</span>
-			<span class="text-white/60">{session.selectedFile}</span>
+			<span class="truncate text-white/60">{session.selectedFile}</span>
 			{#if session.isSaving}
-				<span class="ml-1 text-emerald-500/70">saving…</span>
+				<span class="ml-1 shrink-0 text-emerald-500/70">saving…</span>
 			{/if}
 		</div>
 	</header>
@@ -288,16 +366,6 @@
 				>
 					<Icon icon="mingcute:file-line" width="18" height="18" />
 				</button>
-				<button
-					onclick={() => (activePanel = activePanel === 'frameworks' ? null : 'frameworks')}
-					class="flex items-center justify-center rounded p-1.5 transition {activePanel ===
-					'frameworks'
-						? 'bg-white/10 text-white'
-						: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
-					title="Frameworks"
-				>
-					<Icon icon="mingcute:cube-line" width="18" height="18" />
-				</button>
 			</div>
 		</aside>
 
@@ -319,15 +387,11 @@
 			>
 				<div class="flex items-center border-b border-white/[0.04] px-3 py-2">
 					<span class="text-[10px] font-medium tracking-widest text-zinc-600 uppercase">
-						{activePanel === 'files' ? 'Files' : 'Frameworks'}
+						Files
 					</span>
 				</div>
 				<div class="flex-1 overflow-y-auto p-1.5">
-					{#if activePanel === 'files'}
-						<FileTreePanel {session} onFileOpen={() => isMobile && (activePanel = null)} />
-					{:else}
-						<FrameworkPanel selected={session.framework} onSelect={handleSelectFramework} />
-					{/if}
+					<FileTreePanel {session} onFileOpen={() => isMobile && (activePanel = null)} />
 				</div>
 			</div>
 

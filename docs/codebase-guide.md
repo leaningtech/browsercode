@@ -73,8 +73,8 @@ src/
     ├── ide/session.svelte.ts      # IdeSession: pod lifecycle + file/portal/terminal state
     ├── ide/pod-fs.ts              # pod filesystem read/write helpers
     ├── components/                # Sidebar, Portal, Terminal, Stepper, UtilityBar, …
-    └── components/ide/            # EditorPane (CodeMirror), FileTreePanel,
-                                   # FrameworkPanel, TerminalTabs
+    └── components/ide/            # IdeShell, IdeLanding, EditorPane (CodeMirror),
+                                   # FileTreePanel, TerminalTabs
 ```
 
 Design intent behind the `lib/ide/` split: `session.svelte.ts`, `pod-fs.ts` and
