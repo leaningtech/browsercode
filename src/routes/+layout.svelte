@@ -11,40 +11,40 @@
 	let { children } = $props();
 
 	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
-	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
 
-	let isAgentRoute = $derived($page.route.id?.startsWith('/agents') ?? false);
-
-	let activePanel = $derived(
-		isAgentRoute
-			? $page.params.tool && validToolIds.has($page.params.tool)
-				? $page.params.tool
-				: defaultTool
-			: 'ide'
+	let activeTool = $derived(
+		$page.route.id === '/agents/[tool]' && $page.params.tool && validToolIds.has($page.params.tool)
+			? toolItems.find((t) => t.id === $page.params.tool)
+			: undefined
 	);
 
-	let activeTool = $derived(isAgentRoute ? toolItems.find((t) => t.id === activePanel) : undefined);
-
 	let pageTitle = $derived(
-		activeTool ? `${activeTool.label} — BrowserCode` : 'Playground IDE — BrowserCode'
+		activeTool
+			? `${activeTool.label} — BrowserCode`
+			: $page.route.id?.startsWith('/ide')
+				? 'Playground IDE — BrowserCode'
+				: $page.route.id === '/agents'
+					? 'Agents — BrowserCode'
+					: $page.route.id === '/about'
+						? 'About — BrowserCode'
+						: $page.route.id === '/help'
+							? 'Help — BrowserCode'
+							: 'BrowserCode — Start coding on your browser tab'
 	);
 
 	let pageDescription = $derived(
 		activeTool
 			? `Run ${activeTool.label} in your browser, on BrowserCode.`
-			: 'Build and preview web apps right in your browser, on BrowserCode.'
+			: $page.route.id?.startsWith('/ide')
+				? 'Build and preview web apps right in your browser, on BrowserCode.'
+				: $page.route.id === '/agents'
+					? 'Use your favorite CLI agents without any installations, sandboxed.'
+					: $page.route.id === '/help'
+						? 'Get help getting started, or report an issue with BrowserCode.'
+						: 'BrowserCode runs a full Node.js sandbox in WebAssembly — no installs, no servers.'
 	);
 
 	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);
-
-	function handlePanelToggle(panel: string) {
-		if (panel === 'ide') {
-			// Full-page navigations are deliberate: they tear the active pod down cleanly
-			window.location.href = '/ide';
-		} else if (validToolIds.has(panel)) {
-			window.location.href = `/agents/${panel}`;
-		}
-	}
 </script>
 
 <svelte:head>
@@ -67,11 +67,10 @@
 <IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden">
-	{#if isAgentRoute}
-		<!-- The onboarding tour explains the agent CLIs; keep it off the IDE -->
-		<Stepper />
-	{/if}
-	<Sidebar {activePanel} onPanelToggle={handlePanelToggle} />
+	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but Help/About
+	     both need to be able to trigger it from anywhere via stepperState. -->
+	<Stepper />
+	<Sidebar />
 
 	<!-- GitHub Ribbon -->
 	<div

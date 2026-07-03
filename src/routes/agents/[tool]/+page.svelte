@@ -9,6 +9,7 @@
 	import { bootCLI } from '$lib/utils/main';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
+	import { requestSingleTabLock } from '$lib/utils/tabLock';
 
 	type PortalItem = { port: number; url: string };
 	type PortalUpdate = { port: number; url: string | null; active: boolean };
@@ -58,6 +59,18 @@
 	let isMobile = false;
 	let activeMobileView: 'terminal' | 'preview' = 'terminal';
 	let showToolMenu = false;
+	let showDuplicateTabWarning = false;
+	let closeFallback = false;
+	let releaseTabLock: () => void = () => {};
+
+	function attemptCloseTab() {
+		window.close();
+		// Browsers only let scripts close tabs they themselves opened — if we're still here
+		// shortly after, that didn't work, so tell the user to close it manually instead.
+		setTimeout(() => {
+			closeFallback = true;
+		}, 400);
+	}
 
 	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
 	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
@@ -175,31 +188,75 @@
 		const mql = window.matchMedia('(max-width: 768px)');
 		mql.addEventListener('change', updateIsMobile);
 
-		bootCLI((update: PortalUpdate | string) => {
-			if (typeof update === 'string') {
-				let parsed: URL;
-				try {
-					parsed = new URL(update);
-				} catch {
-					return;
-				}
-				const port = Number(parsed.port);
-				if (!Number.isInteger(port) || port <= 0) return;
-				applyPortalUpdate({ port, url: update, active: true });
+		// Two tabs booting the same agent would both write to the same BrowserPod storage key —
+		// claim an exclusive, tab-lifetime lock first and only boot if we actually got it.
+		const tool = getActiveTool();
+		const lock = requestSingleTabLock(`agent-session:${tool}`);
+		releaseTabLock = lock.release;
+
+		lock.acquired.then((acquired) => {
+			if (!acquired) {
+				showDuplicateTabWarning = true;
 				return;
 			}
 
-			applyPortalUpdate(update);
-		}, getActiveTool());
+			bootCLI((update: PortalUpdate | string) => {
+				if (typeof update === 'string') {
+					let parsed: URL;
+					try {
+						parsed = new URL(update);
+					} catch {
+						return;
+					}
+					const port = Number(parsed.port);
+					if (!Number.isInteger(port) || port <= 0) return;
+					applyPortalUpdate({ port, url: update, active: true });
+					return;
+				}
+
+				applyPortalUpdate(update);
+			}, tool);
+		});
 
 		return () => {
 			mql.removeEventListener('change', updateIsMobile);
 			clearTimeout(copiedTimeout);
+			releaseTabLock();
 		};
 	});
 </script>
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
+	{#if showDuplicateTabWarning}
+		<div
+			class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+		>
+			<div
+				class="max-w-sm rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-2xl"
+			>
+				<div
+					class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400"
+				>
+					<Icon icon="mingcute:alert-line" width="22" height="22" />
+				</div>
+				<h3 class="mb-2 text-sm font-semibold text-zinc-50">Already open in another tab</h3>
+				<p class="mb-5 text-[12.5px] leading-relaxed text-zinc-400">
+					Sorry, you can only open one tab of the same agent.
+				</p>
+				{#if closeFallback}
+					<p class="text-[12px] text-zinc-500">You can close this tab.</p>
+				{:else}
+					<button
+						onclick={attemptCloseTab}
+						class="rounded-md bg-white/10 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-white/15"
+					>
+						Close
+					</button>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
 	<div class="relative min-h-0 flex-1 overflow-hidden">
 		<!-- Terminal (always full size) -->
 		<div

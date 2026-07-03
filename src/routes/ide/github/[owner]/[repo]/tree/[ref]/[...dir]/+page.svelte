@@ -4,7 +4,6 @@
 	import Icon from '@iconify/svelte';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import { IdeSession, type PortalUpdate, type TerminalElements } from '$lib/ide/session.svelte';
-	import type { FrameworkId } from '$lib/config/frameworks';
 
 	const SEGMENT = /^[\w.-]+$/;
 
@@ -23,18 +22,13 @@
 
 	const session = new IdeSession();
 
-	function selectFramework(framework: FrameworkId) {
-		// Switching to a curated framework leaves GitHub mode (full reload = pod teardown).
-		window.location.href = `/ide?framework=${framework}`;
-	}
-
 	function boot(terminals: TerminalElements, onPortalUpdate: (update: PortalUpdate) => void) {
 		return session.bootFromGitHub(owner, repo, ref, dir, terminals, onPortalUpdate);
 	}
 </script>
 
 {#if valid}
-	<IdeShell {session} {boot} onSelectFramework={selectFramework} />
+	<IdeShell {session} {boot} />
 {:else}
 	<div class="flex h-full w-full items-center justify-center bg-zinc-950 p-4 text-zinc-300">
 		<div class="max-w-md rounded-xl border border-white/8 bg-[#111111] px-6 py-8 text-center">
@@ -46,7 +40,9 @@
 			<h3 class="mb-2 text-sm font-semibold text-zinc-50">Invalid repository URL</h3>
 			<p class="text-[12px] leading-relaxed text-zinc-400">
 				Expected
-				<code class="text-zinc-200">/ide/github/&lt;owner&gt;/&lt;repo&gt;/tree/&lt;ref&gt;/&lt;dir&gt;</code>.
+				<code class="text-zinc-200"
+					>/ide/github/&lt;owner&gt;/&lt;repo&gt;/tree/&lt;ref&gt;/&lt;dir&gt;</code
+				>.
 			</p>
 			<a
 				href={resolve('/ide')}

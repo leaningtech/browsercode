@@ -5,13 +5,45 @@ export type ToolItem = {
 	icon: string | null;
 	label: string;
 	disabled: boolean;
+	/** Tailwind classes for the icon badge when the tool is available (ignored while disabled). */
+	accentClass: string;
+	/** Solid Tailwind background class for the small "this one is running" status dot. */
+	dotClass: string;
 };
 
 export const toolItems: ToolItem[] = [
-	{ id: 'claude', icon: 'mingcute:claude-line', label: 'Claude Code', disabled: false },
-	{ id: 'gemini', icon: 'simple-icons:googlegemini', label: 'Gemini CLI', disabled: false },
-	{ id: 'codex', icon: 'hugeicons:chat-gpt', label: 'Codex CLI', disabled: true },
-	{ id: 'opencode', icon: null, label: 'OpenCode', disabled: true }
+	{
+		id: 'claude',
+		icon: 'mingcute:claude-line',
+		label: 'Claude Code',
+		disabled: false,
+		accentClass: 'bg-orange-500/10 text-orange-400',
+		dotClass: 'bg-orange-400'
+	},
+	{
+		id: 'gemini',
+		icon: 'simple-icons:googlegemini',
+		label: 'Gemini CLI',
+		disabled: false,
+		accentClass: 'bg-blue-500/10 text-blue-400',
+		dotClass: 'bg-blue-400'
+	},
+	{
+		id: 'codex',
+		icon: 'hugeicons:chat-gpt',
+		label: 'Codex CLI',
+		disabled: true,
+		accentClass: 'bg-emerald-500/10 text-emerald-400',
+		dotClass: 'bg-emerald-400'
+	},
+	{
+		id: 'opencode',
+		icon: null,
+		label: 'OpenCode',
+		disabled: true,
+		accentClass: 'bg-fuchsia-500/10 text-fuchsia-400',
+		dotClass: 'bg-fuchsia-400'
+	}
 ];
 
 export type CLIConfig = {

@@ -12,13 +12,6 @@
 
 	const session = new IdeSession();
 
-	// Full reload tears the pod down cleanly
-	function selectFramework(nextFramework: FrameworkId) {
-		const url = new URL(window.location.href);
-		url.searchParams.set('framework', nextFramework);
-		window.location.href = url.toString();
-	}
-
 	function boot(terminals: TerminalElements, onPortalUpdate: (update: PortalUpdate) => void) {
 		return session.boot(framework, terminals, onPortalUpdate);
 	}
@@ -27,5 +20,5 @@
 {#if showLanding}
 	<IdeLanding />
 {:else}
-	<IdeShell {session} {boot} onSelectFramework={selectFramework} />
+	<IdeShell {session} {boot} />
 {/if}
