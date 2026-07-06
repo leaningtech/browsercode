@@ -17,7 +17,7 @@ export type TerminalElements = { output: HTMLElement; bash: HTMLElement };
  * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
  * the selected framework template into its filesystem, starts the dev server and
  * exposes file/terminal/portal state. UI components render from this; the editor
- * implementation (CodeMirror today, VS Code Web later) stays swappable on top.
+ * implementation (Monaco today, VS Code Web later) stays swappable on top.
  */
 export class IdeSession {
 	framework = $state<FrameworkId>(defaultFrameworkId);

@@ -11,7 +11,7 @@ with a POSIX filesystem, terminals and instant preview URLs ("portals").
 | ----------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | What boots  | A precompiled **ext2 disk image** per tool (`wss://disks.browserpod.io/…`) containing the CLI and its node_modules | A blank pod, **hydrated at runtime** from a framework template in `static/templates/` |
 | Persistence | `storageKey` per disk-image version — user changes persist across sessions in IndexedDB                            | None — every visit starts fresh from the template                                     |
-| UI          | Terminal (the CLI's own TUI) + preview portal                                                                      | CodeMirror editor + file tree + Output/Bash terminals + preview portal                |
+| UI          | Terminal (the CLI's own TUI) + preview portal                                                                      | Monaco editor + file tree + Output/Bash terminals + preview portal                    |
 | Boot entry  | `bootCLI()` in `src/lib/utils/main.ts`                                                                             | `IdeSession.boot()` in `src/lib/ide/session.svelte.ts`                                |
 
 ## Routing
@@ -73,16 +73,17 @@ src/
     ├── ide/session.svelte.ts      # IdeSession: pod lifecycle + file/portal/terminal state
     ├── ide/pod-fs.ts              # pod filesystem read/write helpers
     ├── components/                # Sidebar, Portal, Terminal, Stepper, UtilityBar, …
-    └── components/ide/            # IdeShell, IdeLanding, EditorPane (CodeMirror),
+    └── components/ide/            # IdeShell, IdeLanding, EditorPane (Monaco),
                                    # FileTreePanel, TerminalTabs
 ```
 
 Design intent behind the `lib/ide/` split: `session.svelte.ts`, `pod-fs.ts` and
-`config/frameworks.ts` are the parts that survive the planned **CodeMirror → VS Code Web
-migration**; `components/ide/EditorPane.svelte` is the only file that imports `@codemirror/*` and
-is meant to be replaced wholesale, along with `FileTreePanel` (VS Code brings its own explorer).
+`config/frameworks.ts` are the parts that survive the planned **Monaco → VS Code Web
+migration**; `components/ide/EditorPane.svelte` and `components/ide/monaco.ts` are the only files
+that import `monaco-editor` and are meant to be replaced wholesale, along with `FileTreePanel`
+(VS Code brings its own explorer).
 
-- CodeMirror is wrapped via `svelte-codemirror-editor` — just imported and passed props; language extensions are picked by file suffix.
+- Monaco is loaded lazily (dynamic import in `EditorPane`) so its chunk stays off the agents routes; `monaco.ts` wires the Vite `?worker` workers, the `browsercode-dark` theme, and the file-suffix → language mapping. Svelte/Vue files highlight as HTML (Monaco has no grammar for them); TS/JS semantic validation is off (no resolvable node_modules in the pod).
 - Terminal styling: BrowserPod terminals are xterm.js — restyling means overriding `.xterm-*` CSS classes (see `TerminalTabs.svelte` / agents `Terminal.svelte`).
 
 ## Headers / CORS
