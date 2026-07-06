@@ -11,8 +11,6 @@ import { trackEvent } from '$lib/utils/useLazyTracking';
 
 export type PortalUpdate = { port: number; url: string | null; active: boolean };
 
-export type TerminalElements = { output: HTMLElement; bash: HTMLElement };
-
 /**
  * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
  * the selected framework template into its filesystem, starts the dev server and
@@ -38,9 +36,7 @@ export class IdeSession {
 
 	pod: BrowserPod | null = null;
 	outputTerminal: Terminal | null = null;
-	bashTerminal: Terminal | null = null;
 
-	private bashStarted = false;
 	private unmounted = false;
 	private bootToken = 0;
 	private booting = false;
@@ -69,7 +65,7 @@ export class IdeSession {
 
 	async boot(
 		framework: FrameworkId,
-		terminals: TerminalElements,
+		terminalEl: HTMLElement,
 		onPortalUpdate: (update: PortalUpdate) => void
 	): Promise<void> {
 		if (this.booting || this.pod) return;
@@ -92,8 +88,7 @@ export class IdeSession {
 			}
 			this.pod = pod;
 
-			this.outputTerminal = await pod.createDefaultTerminal(terminals.output);
-			this.bashTerminal = await pod.createDefaultTerminal(terminals.bash);
+			this.outputTerminal = await pod.createDefaultTerminal(terminalEl);
 
 			for (const file of this.projectFiles) {
 				if (this.cancelled(token)) return;
@@ -150,7 +145,7 @@ export class IdeSession {
 		repo: string,
 		ref: string,
 		dir: string,
-		terminals: TerminalElements,
+		terminalEl: HTMLElement,
 		onPortalUpdate: (update: PortalUpdate) => void
 	): Promise<void> {
 		if (this.booting || this.pod) return;
@@ -180,8 +175,7 @@ export class IdeSession {
 			}
 			this.pod = pod;
 
-			this.outputTerminal = await pod.createDefaultTerminal(terminals.output);
-			this.bashTerminal = await pod.createDefaultTerminal(terminals.bash);
+			this.outputTerminal = await pod.createDefaultTerminal(terminalEl);
 
 			pod.onPortal(({ url, port }) => {
 				if (this.cancelled(token)) return;
@@ -295,15 +289,18 @@ export class IdeSession {
 		}
 	}
 
-	/** Starts an interactive bash shell in the bash terminal (first call only). */
-	startBash(): void {
-		if (this.bashStarted || !this.pod || !this.bashTerminal) return;
-		this.bashStarted = true;
+	/**
+	 * Spawns an interactive bash shell into a freshly mounted terminal element.
+	 * One call per terminal tab. The shell runs until pod teardown even if its
+	 * tab is closed.
+	 */
+	async startBash(el: HTMLElement): Promise<void> {
+		if (!this.pod || !this.podReady) return;
 		try {
-			void this.pod.run('bash', ['-i'], { terminal: this.bashTerminal, cwd: this.workdir });
+			const terminal = await this.pod.createDefaultTerminal(el);
+			void this.pod.run('bash', ['-i'], { terminal, cwd: this.workdir });
 		} catch (error) {
 			console.error('Failed to start bash:', error);
-			this.bashStarted = false;
 		}
 	}
 

@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
-	import { IdeSession, type PortalUpdate, type TerminalElements } from '$lib/ide/session.svelte';
+	import { IdeSession, type PortalUpdate } from '$lib/ide/session.svelte';
 	import type { FrameworkId } from '$lib/config/frameworks';
 
 	const SEGMENT = /^[\w.-]+$/;
@@ -28,8 +28,8 @@
 		window.location.href = `/ide?framework=${framework}`;
 	}
 
-	function boot(terminals: TerminalElements, onPortalUpdate: (update: PortalUpdate) => void) {
-		return session.bootFromGitHub(owner, repo, ref, dir, terminals, onPortalUpdate);
+	function boot(terminalEl: HTMLElement, onPortalUpdate: (update: PortalUpdate) => void) {
+		return session.bootFromGitHub(owner, repo, ref, dir, terminalEl, onPortalUpdate);
 	}
 </script>
 

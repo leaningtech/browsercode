@@ -11,7 +11,7 @@ with a POSIX filesystem, terminals and instant preview URLs ("portals").
 | ----------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | What boots  | A precompiled **ext2 disk image** per tool (`wss://disks.browserpod.io/…`) containing the CLI and its node_modules | A blank pod, **hydrated at runtime** from a framework template in `static/templates/` |
 | Persistence | `storageKey` per disk-image version — user changes persist across sessions in IndexedDB                            | None — every visit starts fresh from the template                                     |
-| UI          | Terminal (the CLI's own TUI) + preview portal                                                                      | Monaco editor + file tree + Output/Bash terminals + preview portal                    |
+| UI          | Terminal (the CLI's own TUI) + preview portal                                                                      | Monaco editor + file tree + terminal tabs + preview portal                            |
 | Boot entry  | `bootCLI()` in `src/lib/utils/main.ts`                                                                             | `IdeSession.boot()` in `src/lib/ide/session.svelte.ts`                                |
 
 ## Routing
@@ -43,7 +43,7 @@ the teardown mechanism for the running pod.
 
 1. Each framework template is a real project checked into `static/templates/<dir>/` with a `manifest.txt` listing every file BrowserPod needs to load (one path per line). `package-lock.json` is included deliberately so `npm install` inside the pod is fast and deterministic.
 2. `IdeSession.boot()` fetches the manifest, fetches each file, and writes them into the pod FS under `/home/user/` — the pod has a proper filesystem, so the editor reads/writes through `pod.openFile`/`pod.createFile` (`src/lib/ide/pod-fs.ts`).
-3. Setup commands then the dev server run via `pod.run('npm', …, { cwd: '/home/user' })`, streaming into the Output terminal. The Bash tab lazily starts an interactive `bash -i` on first click.
+3. Setup commands then the dev server run via `pod.run('npm', …, { cwd: '/home/user' })`, streaming into the first Terminal tab. The "+" control spawns additional closeable terminal tabs, each running an interactive `bash -i` (available once the pod is ready).
 4. Framework registry: `src/lib/config/frameworks.ts`. Astro and Angular are **not** implemented — blocked by BrowserPod (Astro's install is too big; Angular insists on `ng serve`).
 
 ## Portals (previews)

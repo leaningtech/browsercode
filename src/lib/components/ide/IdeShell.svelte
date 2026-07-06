@@ -8,7 +8,7 @@
 	import PreviewLoader from '$lib/components/ide/PreviewLoader.svelte';
 	import { fade } from 'svelte/transition';
 	import { cubicIn } from 'svelte/easing';
-	import type { IdeSession, PortalUpdate, TerminalElements } from '$lib/ide/session.svelte';
+	import type { IdeSession, PortalUpdate } from '$lib/ide/session.svelte';
 	import { frameworkRailItems, type FrameworkId } from '$lib/config/frameworks';
 
 	type PortalItem = { port: number; url: string };
@@ -23,7 +23,7 @@
 	}: {
 		session: IdeSession;
 		boot: (
-			terminals: TerminalElements,
+			terminalEl: HTMLElement,
 			onPortalUpdate: (update: PortalUpdate) => void
 		) => Promise<void>;
 		onSelectFramework: (framework: FrameworkId) => void;
@@ -68,7 +68,6 @@
 	let leftColEl = $state<HTMLElement | null>(null);
 
 	let outputEl = $state<HTMLElement | null>(null);
-	let bashEl = $state<HTMLElement | null>(null);
 
 	function fitTerminals() {
 		window.dispatchEvent(new Event('resize'));
@@ -245,9 +244,9 @@
 			return;
 		}
 		await tick();
-		if (!outputEl || !bashEl) throw new Error('Terminal containers are not ready yet');
+		if (!outputEl) throw new Error('Terminal container is not ready yet');
 		try {
-			await boot({ output: outputEl, bash: bashEl }, (update) => applyPortalUpdate(update));
+			await boot(outputEl, (update) => applyPortalUpdate(update));
 		} catch (error) {
 			console.error('Failed initializing BrowserPod:', error);
 			session.loading = false;
@@ -444,7 +443,7 @@
 						? 'flex: 1 1 0; min-height: 0; height: 100%;'
 						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; max-height: 600px; min-height: 0;`}
 				>
-					<TerminalTabs {session} bind:outputEl bind:bashEl />
+					<TerminalTabs {session} bind:outputEl />
 				</div>
 			</div>
 
