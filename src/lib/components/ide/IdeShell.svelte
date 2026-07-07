@@ -32,6 +32,7 @@
 	let isCompatibleBrowser = $state(true);
 	let activePanel = $state<'files' | null>('files');
 	let showProjectMenu = $state(false);
+	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
 
 	// ── Portal state (same shape as the agents page; Portal.svelte renders it) ──
 	let portals = $state<PortalItem[]>([]);
@@ -384,13 +385,37 @@
 				class="side-panel flex shrink-0 flex-col bg-[#0f0f10]"
 				style="width: {isMobile ? 240 : filePanelWidth}px;"
 			>
-				<div class="flex items-center border-b border-white/[0.04] px-3 py-2">
+				<div class="flex items-center justify-between border-b border-white/[0.04] px-3 py-1.5">
 					<span class="text-[10px] font-medium tracking-widest text-zinc-600 uppercase">
 						Files
 					</span>
+					<div class="flex items-center gap-0.5">
+						<button
+							type="button"
+							title="New file"
+							disabled={!session.podReady}
+							onclick={() => fileTree?.startCreate('file')}
+							class="rounded p-1 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300 disabled:pointer-events-none disabled:opacity-40"
+						>
+							<Icon icon="mingcute:file-new-line" width="13" height="13" />
+						</button>
+						<button
+							type="button"
+							title="New folder"
+							disabled={!session.podReady}
+							onclick={() => fileTree?.startCreate('folder')}
+							class="rounded p-1 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300 disabled:pointer-events-none disabled:opacity-40"
+						>
+							<Icon icon="mingcute:new-folder-line" width="13" height="13" />
+						</button>
+					</div>
 				</div>
 				<div class="flex-1 overflow-y-auto p-1.5">
-					<FileTreePanel {session} onFileOpen={() => isMobile && (activePanel = null)} />
+					<FileTreePanel
+						bind:this={fileTree}
+						{session}
+						onFileOpen={() => isMobile && (activePanel = null)}
+					/>
 				</div>
 			</div>
 

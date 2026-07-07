@@ -45,6 +45,7 @@ the teardown mechanism for the running pod.
 2. `IdeSession.boot()` fetches the manifest, fetches each file, and writes them into the pod FS under `/home/user/` — the pod has a proper filesystem, so the editor reads/writes through `pod.openFile`/`pod.createFile` (`src/lib/ide/pod-fs.ts`).
 3. Setup commands then the dev server run via `pod.run('npm', …, { cwd: '/home/user' })`, streaming into the first Terminal tab. The "+" control spawns additional closeable terminal tabs, each running an interactive `bash -i` (available once the pod is ready).
 4. Framework registry: `src/lib/config/frameworks.ts`. Astro and Angular are **not** implemented — blocked by BrowserPod (Astro's install is too big; Angular insists on `ng serve`).
+5. File management: creating files/folders uses the direct BrowserPod API (`createFile`/`createDirectory`); rename and delete are translated to `mv`/`rm` run through `bash -c` in a hidden terminal (`createCustomTerminal`), fire-and-trust with an optimistic tree update — `pod.run` exposes no exit code, and probing results through `openFile` is unreliable (the file API's view can lag the process world), so results are deliberately not verified. Hidden-terminal output is mirrored to the browser console as `[ide-fs]`. Pod→UI sync (picking up `touch`/`rm` made from terminal tabs) is not implemented yet — a pod-side watcher was tried and wedged the boot, so it needs a design that provably doesn't contend with `npm install`.
 
 ## Portals (previews)
 

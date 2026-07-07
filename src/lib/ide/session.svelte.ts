@@ -20,6 +20,8 @@ export type PortalUpdate = { port: number; url: string | null; active: boolean }
 export class IdeSession {
 	framework = $state<FrameworkId>(defaultFrameworkId);
 	projectFiles = $state<string[]>([]);
+	/** Explicitly-known directories (from UI folder actions); lets empty folders render in the tree. */
+	projectDirs = $state<string[]>([]);
 	selectedFile = $state('');
 	fileContent = $state('');
 	savedFileContent = $state('');
@@ -36,6 +38,10 @@ export class IdeSession {
 
 	pod: BrowserPod | null = null;
 	outputTerminal: Terminal | null = null;
+	/** Lazily created hidden terminal that carries UI-initiated fs commands. */
+	private fsTerminal: Terminal | null = null;
+	/** Serializes fs commands so two never share the hidden terminal at once. */
+	private fsQueue: Promise<unknown> = Promise.resolve();
 
 	private unmounted = false;
 	private bootToken = 0;
@@ -255,6 +261,104 @@ export class IdeSession {
 		}
 	}
 
+	private clearSelection(): void {
+		this.selectedFile = '';
+		this.fileContent = '';
+		this.savedFileContent = '';
+	}
+
+	/** True if the tree already knows an entry at `path` (or something nested under it). */
+	private entryExists(path: string): boolean {
+		const under = (p: string) => p === path || p.startsWith(`${path}/`);
+		return this.projectFiles.some(under) || this.projectDirs.some(under);
+	}
+
+	/**
+	 * Runs a shell command in a hidden terminal (BrowserPod has no rename/delete
+	 * API). Fire-and-trust: `run` resolves on process exit but exposes no exit
+	 * code, and probing the result through the file API is unreliable (its view
+	 * can lag the process world), so callers update the tree optimistically once
+	 * the command finishes. Serialized on a queue so two commands never share the
+	 * hidden terminal at once. Returns an error message or null.
+	 */
+	private runFsCommand(command: string): Promise<string | null> {
+		const task = async (): Promise<string | null> => {
+			if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+			try {
+				if (!this.fsTerminal) {
+					const decoder = new TextDecoder();
+					this.fsTerminal = await this.pod.createCustomTerminal({
+						onOutput: (chunk) => console.debug('[ide-fs]', decoder.decode(chunk, { stream: true }))
+					});
+				}
+				await this.pod.run('bash', ['-c', command], {
+					echo: true,
+					terminal: this.fsTerminal,
+					cwd: this.workdir
+				});
+				return null;
+			} catch (error) {
+				return error instanceof Error ? error.message : String(error);
+			}
+		};
+		const result = this.fsQueue.then(task, task);
+		this.fsQueue = result.catch(() => undefined);
+		return result;
+	}
+
+	/** Creates an empty file and opens it in the editor. Returns an error message or null. */
+	async createFile(path: string): Promise<string | null> {
+		if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+		if (this.entryExists(path)) return 'Something with that name already exists';
+		try {
+			await writePodFile(this.pod, `${this.workdir}/${path}`, '');
+		} catch (error) {
+			return error instanceof Error ? error.message : String(error);
+		}
+		this.projectFiles = [...this.projectFiles, path];
+		await this.loadFile(path);
+		return null;
+	}
+
+	/** Creates a folder. Returns an error message or null. */
+	async createFolder(path: string): Promise<string | null> {
+		if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+		if (this.entryExists(path)) return 'Something with that name already exists';
+		try {
+			await this.pod.createDirectory(`${this.workdir}/${path}`, { recursive: true });
+		} catch (error) {
+			return error instanceof Error ? error.message : String(error);
+		}
+		this.projectDirs = [...this.projectDirs, path];
+		return null;
+	}
+
+	/** Renames a file or folder; the editor selection follows the moved path. Returns an error message or null. */
+	async renameEntry(from: string, to: string, isDir: boolean): Promise<string | null> {
+		if (this.entryExists(to)) return 'Something with that name already exists';
+		const failure = await this.runFsCommand(`mv -- ${shQuote(from)} ${shQuote(to)}`);
+		if (failure) return failure;
+		const remap = (p: string) =>
+			p === from ? to : p.startsWith(`${from}/`) ? to + p.slice(from.length) : p;
+		this.projectFiles = this.projectFiles.map(remap);
+		this.projectDirs = this.projectDirs.map(remap);
+		if (!isDir && this.selectedFile === from) this.selectedFile = to;
+		else if (isDir && this.selectedFile.startsWith(`${from}/`))
+			this.selectedFile = to + this.selectedFile.slice(from.length);
+		return null;
+	}
+
+	/** Deletes a file or folder recursively. Returns an error message or null. */
+	async deleteEntry(path: string): Promise<string | null> {
+		const failure = await this.runFsCommand(`rm -rf -- ${shQuote(path)}`);
+		if (failure) return failure;
+		const gone = (p: string) => p === path || p.startsWith(`${path}/`);
+		this.projectFiles = this.projectFiles.filter((p) => !gone(p));
+		this.projectDirs = this.projectDirs.filter((p) => !gone(p));
+		if (gone(this.selectedFile)) this.clearSelection();
+		return null;
+	}
+
 	async loadFile(path: string): Promise<void> {
 		if (!this.pod || !this.podReady || this.unmounted) return;
 		this.loading = true;
@@ -309,6 +413,11 @@ export class IdeSession {
 		this.bootToken += 1;
 		if (this.pod) void shutdownPod(this.pod);
 	}
+}
+
+/** Single-quotes a path for `bash -c`*/
+function shQuote(value: string): string {
+	return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 async function fetchManifest(config: FrameworkConfig): Promise<string[]> {
