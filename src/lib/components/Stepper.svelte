@@ -1,109 +1,77 @@
 <script lang="ts">
-	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
+	import { page } from '$app/stores';
 	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { toolItems } from '$lib/config/tools';
+	import { frameworkRailItems } from '$lib/config/frameworks';
+	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
 	let currentStep = 1;
 	const totalSteps = 7;
 
-	let highlightedAgent: 'codex' | 'opencode' = 'codex';
-	let agentCycleTimer: ReturnType<typeof setInterval> | null = null;
-	let copied = false;
-	let copyTimer: ReturnType<typeof setTimeout> | null = null;
-
-	const firstPrompt = 'Build a basic Express.js demo in a new folder and preview it.';
-
 	const dispatch = createEventDispatcher();
 
-	const agents = {
-		codex: {
-			label: 'Codex CLI',
-			icon: 'hugeicons:chat-gpt',
-			helper: 'Codex CLI — coming soon',
-			useIcon: true
-		},
-		opencode: {
-			label: 'OpenCode',
-			icon: null,
-			helper: 'OpenCode — coming soon',
-			useIcon: false
-		}
-	} as const;
+	// Measured from the real sidebar buttons (via data-tour-target) rather than hand-computed
+	// pixel math, so the pointers stay accurate if the sidebar's layout ever changes again.
+	// These are just sane fallbacks in case a target isn't found for some reason.
+	let agentsTop = 113;
+	let ideTop = 155;
+	let helpBottom = 28;
 
-	// Sidebar order: [IDE, divider, Claude, Gemini, Codex, OpenCode]. Each nav button is 40px tall
-	// with 2px gap; the IDE button + divider above the agents add ~45px (40 + 2 + 1 + 2).
-	// Nav starts ~93px from viewport top (favicon header + divider + pt-2). Agent button N center
-	// ≈ 93 + 45 + (N-1)*42. Codex is agent button 3 → ~222px; OpenCode is agent button 4 → ~264px.
-	const agentButtonOffsets = {
-		codex: 222,
-		opencode: 264
-	};
+	function centerOf(selector: string): DOMRect | null {
+		return document.querySelector(selector)?.getBoundingClientRect() ?? null;
+	}
 
-	// GitHub icon is in the bottom section of the sidebar.
-	// We use a bottom offset from the viewport bottom.
-	// Bottom section: py-2 (8px) + 3 buttons (40px each) + gap-0.5 (2px) between each.
-	// From bottom: 8px padding + 8px (half of last question button) → GitHub is 3rd from bottom.
-	// GitHub button center from bottom ≈ 8 + 40 + 2 + 40 + 2 + 20 = 112px
-	const githubButtonBottomOffset = 112;
+	function measureTourTargets() {
+		const agentsRect = centerOf('[data-tour-target="agents"]');
+		if (agentsRect) agentsTop = agentsRect.top + agentsRect.height / 2;
+
+		const ideRect = centerOf('[data-tour-target="ide"]');
+		if (ideRect) ideTop = ideRect.top + ideRect.height / 2;
+
+		const helpRect = centerOf('[data-tour-target="help"]');
+		if (helpRect) helpBottom = window.innerHeight - (helpRect.top + helpRect.height / 2);
+	}
+
+	// Re-measure every time the tour is actually opened — it can be triggered long after this
+	// component first mounted (from Help, or the Home page), by which point the initial-mount
+	// measurement may be stale if the viewport was resized in between. The backdrop below only
+	// exists while the modal is open, so this action re-fires on every fresh open.
+	function measureOnMount(node: HTMLElement) {
+		void node;
+		measureTourTargets();
+	}
 
 	onMount(() => {
+		measureTourTargets();
+
+		// The tour only auto-opens the first time someone lands on Home — deep-linking straight
+		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal.
 		const isFirstTime = !localStorage.getItem('hasVisited');
-		if (isFirstTime) {
+		if (isFirstTime && $page.route.id === '/') {
 			stepperState.open = true;
 			localStorage.setItem('hasVisited', 'true');
 		}
 	});
 
-	onDestroy(() => {
-		if (agentCycleTimer) clearInterval(agentCycleTimer);
-		if (copyTimer) clearTimeout(copyTimer);
-	});
-
-	const agentOrder: Array<'codex' | 'opencode'> = ['codex', 'opencode'];
-
-	function startAgentCycle() {
-		if (agentCycleTimer) return;
-		agentCycleTimer = setInterval(() => {
-			const idx = agentOrder.indexOf(highlightedAgent);
-			highlightedAgent = agentOrder[(idx + 1) % agentOrder.length];
-		}, 1800);
-	}
-
-	function stopAgentCycle() {
-		if (agentCycleTimer) {
-			clearInterval(agentCycleTimer);
-			agentCycleTimer = null;
-		}
-	}
-
 	function nextStep() {
 		if (currentStep < totalSteps) {
 			currentStep += 1;
-			if (currentStep === 4) {
-				highlightedAgent = 'codex';
-				startAgentCycle();
-			} else {
-				stopAgentCycle();
-			}
+			measureTourTargets();
 		}
 	}
 
 	function prevStep() {
 		if (currentStep > 1) {
 			currentStep -= 1;
-			if (currentStep === 4) {
-				highlightedAgent = 'codex';
-				startAgentCycle();
-			} else {
-				stopAgentCycle();
-			}
+			measureTourTargets();
 		}
 	}
 
 	function finish() {
-		stopAgentCycle();
 		stepperState.open = false;
 		dispatch('close');
 	}
@@ -122,30 +90,30 @@
 		}
 	}
 
-	async function copyPrompt() {
-		try {
-			await navigator.clipboard.writeText(firstPrompt);
-			copied = true;
-			if (copyTimer) clearTimeout(copyTimer);
-			copyTimer = setTimeout(() => (copied = false), 1500);
-		} catch (err) {
-			console.error('Failed to copy prompt:', err);
-		}
+	// Already viewing an active agent session? Leaving it from here should ask first, same as
+	// the sidebar does.
+	function goAgents() {
+		navigateWithLeaveGuard('/agents', $page.route.id === '/agents/[tool]');
 	}
+
+	function goIde() {
+		navigateWithLeaveGuard('/ide', $page.route.id === '/agents/[tool]');
+	}
+
+	// Steps 3-5 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
+	const sidebarSteps = new Set([3, 4, 5]);
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 {#if stepperState.open}
-	<!-- Backdrop. On step 4 we leave the sidebar uncovered so the CLI
-	     buttons remain visible and visually "highlighted" by the surrounding dim.
-	     On step 3 we leave the sidebar uncovered so the GitHub button is visible.
-	     Escape-to-close is handled by the window listener above. -->
+	<!-- Backdrop. Escape-to-close is handled by the window listener above. -->
 	<div
 		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/60 transition-[left] duration-500 ease-out"
-		style="left: {currentStep === 3 || currentStep === 4 ? 'var(--width-sidebar)' : '0'};"
+		style="left: {sidebarSteps.has(currentStep) ? 'var(--width-sidebar)' : '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
+		use:measureOnMount
 	>
 		<div
 			class="relative w-full max-w-xl rounded-xl border border-white/10 bg-bc-panel shadow-2xl"
@@ -167,11 +135,11 @@
 						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
 					</div>
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						BrowserCode Preview
+						Welcome to BrowserCode
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode runs Claude Code and Gemini CLI, and other AI coding agents in the browser,
-						unmodified.
+						Run AI coding agents like Claude Code and Gemini CLI, or spin up a full IDE playground
+						for popular frameworks — everything sandboxed right in this browser tab.
 					</p>
 				{:else if currentStep === 2}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
@@ -209,72 +177,73 @@
 					</a>
 				{:else if currentStep === 3}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						Breaking BrowserCode
+						Run AI agents from the sidebar
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
-						This is our first beta, so please bend, stretch and break it. When you find issues,
-						please raise it using
-						<a
-							href="https://github.com/leaningtech/browsercode"
-							target="_blank"
-							rel="noopener noreferrer"
-							class="inline-flex items-center gap-1 font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
-						>
-							<Icon icon="simple-icons:github" width="13" height="13" />
-							GitHub
-						</a>
-					</p>
-				{:else if currentStep === 4}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						More AI coding CLIs coming soon
-					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode boots with Claude Code, with Gemini CLI also available now. Support for
-						<span
-							class="font-medium transition-colors duration-300"
-							class:text-zinc-100={highlightedAgent === 'codex'}
-							class:text-zinc-500={highlightedAgent !== 'codex'}>Codex CLI</span
-						>
-						and
-						<span
-							class="font-medium transition-colors duration-300"
-							class:text-zinc-100={highlightedAgent === 'opencode'}
-							class:text-zinc-500={highlightedAgent !== 'opencode'}>OpenCode</span
-						>
-						is coming soon.
+						Claude Code and Gemini CLI are ready to go now. Codex CLI and OpenCode are coming soon.
 					</p>
 
-					<div
-						class="mt-6 flex items-center gap-3 rounded-lg border border-white/5 bg-black/30 px-4 py-3"
-					>
-						{#if agents[highlightedAgent].useIcon}
-							<Icon
-								icon={String(agents[highlightedAgent].icon)}
-								width="22"
-								height="22"
-								class="text-zinc-200 transition-colors duration-300"
-							/>
-						{:else}
-							<img src={opencodeLogoSrc} alt="OpenCode" class="h-[22px] w-[22px]" />
-						{/if}
-						<div class="flex-1 text-sm text-zinc-300">
-							<span class="font-medium">{agents[highlightedAgent].label}</span>
-							<span class="ml-2 text-zinc-500">— coming soon</span>
-						</div>
-						<div class="flex gap-1">
+					<div class="mt-6 grid grid-cols-2 gap-2">
+						{#each toolItems as item (item.id)}
+							<div
+								class="flex items-center gap-2 rounded-lg border border-white/5 bg-black/30 px-3 py-2.5"
+							>
+								<span
+									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {item.disabled
+										? 'bg-white/5 text-white/20'
+										: item.accentClass}"
+								>
+									{#if item.icon}
+										<Icon icon={item.icon} width="16" height="16" />
+									{:else}
+										<img
+											src={opencodeLogoSrc}
+											alt=""
+											class="h-3.5 w-3.5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
+										/>
+									{/if}
+								</span>
+								<span
+									class="flex-1 truncate text-xs {item.disabled
+										? 'text-zinc-500'
+										: 'text-zinc-300'}"
+								>
+									{item.label}
+								</span>
+								{#if item.disabled}
+									<span class="text-[10px] text-zinc-600">Soon</span>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else if currentStep === 4}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						Or build in the IDE playground
+					</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						Boot a curated framework template, or clone any GitHub repo straight into a full editor,
+						terminal, and live preview. Also from the sidebar.
+					</p>
+
+					<div class="mt-6 flex flex-wrap gap-2">
+						{#each frameworkRailItems as fw (fw.id)}
 							<span
-								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-								class:bg-zinc-200={highlightedAgent === 'codex'}
-								class:bg-zinc-700={highlightedAgent !== 'codex'}
-							></span>
-							<span
-								class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-								class:bg-zinc-200={highlightedAgent === 'opencode'}
-								class:bg-zinc-700={highlightedAgent !== 'opencode'}
-							></span>
-						</div>
+								class="flex items-center gap-1.5 rounded-md border border-white/5 bg-black/30 px-2.5 py-1.5 text-xs text-zinc-400"
+							>
+								<Icon icon={fw.icon} width="14" height="14" />
+								{fw.label}
+							</span>
+						{/each}
 					</div>
 				{:else if currentStep === 5}
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						This is our first beta
+					</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						Please bend, stretch and break it. If something's off, let us know from Help in the
+						sidebar — it's also where the getting-started basics and this tour live.
+					</p>
+				{:else if currentStep === 6}
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
 						Give us a star on GitHub
 					</h1>
@@ -291,35 +260,26 @@
 							GitHub
 						</a>
 					</p>
-				{:else if currentStep === 6}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Get started</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						BrowserCode will boot now. You can switch AI coding agent at any time from the sidebar.
-					</p>
 				{:else if currentStep === 7}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">Try this</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						Use this as your first prompt for BrowserCode:
-					</p>
+					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+						Ready when you are
+					</h1>
+					<p class="mb-6 text-sm leading-relaxed text-zinc-400">Pick a path to get started.</p>
 
-					<div
-						class="mt-5 flex items-start gap-3 rounded-lg border border-white/10 bg-black/40 p-4"
-					>
-						<code class="flex-1 font-mono text-sm leading-relaxed text-zinc-200 select-all">
-							{firstPrompt}
-						</code>
+					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
-							on:click={copyPrompt}
-							class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-zinc-100"
-							aria-label="Copy prompt"
+							on:click={goAgents}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-emerald-500"
 						>
-							{#if copied}
-								<Icon icon="mingcute:check-line" width="14" height="14" />
-								Copied
-							{:else}
-								<Icon icon="mingcute:copy-2-line" width="14" height="14" />
-								Copy
-							{/if}
+							<Icon icon="mingcute:robot-line" width="18" height="18" />
+							Start with agents
+						</button>
+						<button
+							on:click={goIde}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/10"
+						>
+							<Icon icon="mingcute:code-line" width="18" height="18" />
+							Start with IDE
 						</button>
 					</div>
 				{/if}
@@ -363,56 +323,59 @@
 							Next
 							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
 						</button>
-					{:else}
-						<button
-							on:click={finish}
-							class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white"
-						>
-							<Icon icon="mingcute:check-fill" width="14" height="14" />
-							Get started
-						</button>
 					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- Step 4: helper tooltip that jumps between the Claude, Codex, and OpenCode sidebar buttons.
-	     Sits above the backdrop (z-50) so it's visible, positioned over the sidebar strip. -->
-	{#if currentStep === 4}
-		<div
-			class="pointer-events-none fixed z-[60] ml-3 flex items-center transition-[top] duration-500 ease-out"
-			style="left: var(--width-sidebar); top: {agentButtonOffsets[
-				highlightedAgent
-			]}px; transform: translateY(-50%);"
-		>
-			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
-			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
-			>
-				{agents[highlightedAgent].helper}
-			</span>
-		</div>
-	{/if}
-
-	<!-- Step 3: helper tooltip pointing to the GitHub icon in the sidebar bottom section. -->
+	<!-- Step 3: helper tooltip pointing at the Agents sidebar button. -->
 	{#if currentStep === 3}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
-			style="left: var(--width-sidebar); bottom: {githubButtonBottomOffset}px; transform: translateY(50%);"
+			style="left: var(--width-sidebar); top: {agentsTop}px; transform: translateY(-50%);"
 		>
 			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
 			<span
 				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
 			>
-				<Icon icon="simple-icons:github" width="12" height="12" />
-				Report issues on GitHub
+				Run AI agents, sandboxed
 			</span>
 		</div>
 	{/if}
 
-	<!-- Step 5: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
+	<!-- Step 4: helper tooltip pointing at the Ide sidebar button. -->
+	{#if currentStep === 4}
+		<div
+			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
+			style="left: var(--width-sidebar); top: {ideTop}px; transform: translateY(-50%);"
+		>
+			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span
+				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+			>
+				Frameworks & GitHub, in one click
+			</span>
+		</div>
+	{/if}
+
+	<!-- Step 5: helper tooltip pointing at the Help sidebar button. -->
 	{#if currentStep === 5}
+		<div
+			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
+			style="left: var(--width-sidebar); bottom: {helpBottom}px; transform: translateY(50%);"
+		>
+			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span
+				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+			>
+				Found a bug? Start here
+			</span>
+		</div>
+	{/if}
+
+	<!-- Step 6: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
+	{#if currentStep === 6}
 		<div
 			class="pointer-events-none fixed z-[60] flex items-center"
 			style="top: 24px; right: 160px; transform: translateY(-50%);"

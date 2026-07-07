@@ -27,5 +27,5 @@
 {#if showLanding}
 	<IdeLanding />
 {:else}
-	<IdeShell {session} {boot} onSelectFramework={selectFramework} />
+	<IdeShell {session} {boot} />
 {/if}

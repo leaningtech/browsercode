@@ -38,12 +38,32 @@
 	}
 </script>
 
-<div class="flex h-full w-full items-center justify-center overflow-auto bg-zinc-950 p-6 text-zinc-300">
+<div
+	class="flex h-full w-full items-center justify-center overflow-auto bg-zinc-950 p-6 text-zinc-300"
+>
 	<div class="w-full max-w-lg">
-		<h1 class="mb-1 text-lg font-semibold text-zinc-100">Playground</h1>
-		<p class="mb-6 text-[13px] text-white/40">
+		<h1 class="mb-1 text-lg font-semibold text-zinc-100">IDE Playground</h1>
+		<p class="mb-4 text-[13px] text-white/40">
 			Start from a framework template or clone a GitHub repo.
 		</p>
+
+		<a
+			href="https://browserpod.io"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="mb-6 flex items-start gap-2.5 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/5"
+		>
+			<Icon
+				icon="mingcute:cube-3d-line"
+				width="16"
+				height="16"
+				class="mt-0.5 shrink-0 text-zinc-400"
+			/>
+			<span class="text-[12px] leading-relaxed text-white/45">
+				Runs entirely in a <span class="text-zinc-200">BrowserPod</span> sandbox — a WebAssembly Node.js
+				environment with a real filesystem, npm and git. Nothing installs on your machine.
+			</span>
+		</a>
 
 		<div class="mb-6">
 			<div class="mb-2 text-[11px] font-medium tracking-widest text-zinc-600 uppercase">
