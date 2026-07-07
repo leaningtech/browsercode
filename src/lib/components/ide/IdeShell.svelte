@@ -9,7 +9,6 @@
 	import { fade } from 'svelte/transition';
 	import { cubicIn } from 'svelte/easing';
 	import type { IdeSession, PortalUpdate } from '$lib/ide/session.svelte';
-	import { frameworkRailItems, type FrameworkId } from '$lib/config/frameworks';
 
 	type PortalItem = { port: number; url: string };
 
@@ -30,7 +29,6 @@
 
 	let isCompatibleBrowser = $state(true);
 	let activePanel = $state<'files' | null>('files');
-	let showProjectMenu = $state(false);
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
 
 	// ── Portal state (same shape as the agents page; Portal.svelte renders it) ──

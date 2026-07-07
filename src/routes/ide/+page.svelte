@@ -12,13 +12,6 @@
 
 	const session = new IdeSession();
 
-	// Full reload tears the pod down cleanly
-	function selectFramework(nextFramework: FrameworkId) {
-		const url = new URL(window.location.href);
-		url.searchParams.set('framework', nextFramework);
-		window.location.href = url.toString();
-	}
-
 	function boot(terminalEl: HTMLElement, onPortalUpdate: (update: PortalUpdate) => void) {
 		return session.boot(framework, terminalEl, onPortalUpdate);
 	}
