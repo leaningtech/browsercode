@@ -4,6 +4,7 @@
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import UtilityBar from '$lib/components/UtilityBar.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
+	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
 	import IosUnsupportedModal from '$lib/components/IosUnsupportedModal.svelte';
 	import { page } from '$app/stores';
 	import { toolItems } from '$lib/config/tools';
@@ -25,11 +26,7 @@
 				? 'Playground IDE — BrowserCode'
 				: $page.route.id === '/agents'
 					? 'Agents — BrowserCode'
-					: $page.route.id === '/about'
-						? 'About — BrowserCode'
-						: $page.route.id === '/help'
-							? 'Help — BrowserCode'
-							: 'BrowserCode — Start coding on your browser tab'
+					: 'BrowserCode — Start coding on your browser tab'
 	);
 
 	let pageDescription = $derived(
@@ -39,9 +36,7 @@
 				? 'Build and preview web apps right in your browser, on BrowserCode.'
 				: $page.route.id === '/agents'
 					? 'Use your favorite CLI agents without any installations, sandboxed.'
-					: $page.route.id === '/help'
-						? 'Get help getting started, or report an issue with BrowserCode.'
-						: 'BrowserCode runs a full Node.js sandbox in WebAssembly — no installs, no servers.'
+					: 'BrowserCode runs a full Node.js sandbox in WebAssembly — no installs, no servers.'
 	);
 
 	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);
@@ -67,9 +62,10 @@
 <IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden">
-	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but Help/About
-	     both need to be able to trigger it from anywhere via stepperState. -->
+	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but the sidebar's
+	     Help flyout and the Home page both need to trigger it from anywhere via stepperState. -->
 	<Stepper />
+	<LeaveWarningModal />
 	<Sidebar />
 
 	<!-- GitHub Ribbon -->

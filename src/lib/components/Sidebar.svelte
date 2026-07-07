@@ -6,18 +6,21 @@
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
+	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+
+	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 
 	// Full reloads are deliberate here: they're the teardown mechanism for a running pod
-	// (see CLAUDE.md). Every cross-section navigation in this file goes through them.
+	// (see CLAUDE.md). Every cross-section navigation in this file goes through them. Leaving an
+	// active agent session asks for confirmation first, since it would tear down a live terminal.
 	function navigate(path: string) {
-		window.location.href = path;
+		navigateWithLeaveGuard(path, isActiveAgentSession);
 	}
 
 	let isHome = $derived($page.route.id === '/');
 	let isAgentsSection = $derived($page.route.id?.startsWith('/agents') ?? false);
 	let isIdeSection = $derived($page.route.id?.startsWith('/ide') ?? false);
-	let isAboutSection = $derived($page.route.id === '/about');
-	let isHelpSection = $derived($page.route.id === '/help');
 
 	// Which agent is currently booted, if any — drives the status dot and the flyout's "active" badge.
 	let activeTool = $derived(
@@ -237,27 +240,53 @@
 		</div>
 		<div class="group relative flex items-center justify-center">
 			<button
-				onclick={() => navigate('/about')}
-				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 transition-all duration-150
-					{isAboutSection ? 'text-white/65' : 'text-white/30 hover:bg-white/5 hover:text-white/65'}"
-			>
-				<Icon icon="mingcute:information-line" width="26" height="26" />
-			</button>
-			{@render tooltip('About BrowserCode')}
-		</div>
-		<div class="group relative flex items-center justify-center">
-			<button
 				onclick={() => {
-					navigate('/help');
-					trackEvent('Clicked Help');
+					stepperState.open = true;
+					trackEvent('Clicked Help', { action: 'tour-direct' });
 				}}
 				data-tour-target="help"
-				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 transition-all duration-150
-					{isHelpSection ? 'text-white/65' : 'text-white/30 hover:bg-white/5 hover:text-white/65'}"
+				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/65"
 			>
 				<Icon icon="mingcute:question-line" width="26" height="26" />
 			</button>
-			{@render tooltip('Help, issues & getting started')}
+
+			<!-- Anchored to the bottom (not top), since this button sits near the sidebar's bottom
+			     edge — a top-anchored flyout could overflow past the viewport. Left padding (not
+			     margin) keeps the gap to the button part of this element's own hit-box, so the
+			     pointer never crosses dead space while moving from the icon into the menu. -->
+			<div
+				class="invisible absolute bottom-0 left-full z-50 w-52 pl-2 opacity-0 transition-opacity duration-100 group-hover:visible group-hover:opacity-100"
+			>
+				<div
+					class="rounded-lg border border-white/8 bg-[#0e0e0e] p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+				>
+					<button
+						type="button"
+						onclick={() => {
+							stepperState.open = true;
+							trackEvent('Clicked Help', { action: 'tour' });
+						}}
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-white/6 hover:text-zinc-100"
+					>
+						<span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/5">
+							<Icon icon="mingcute:route-line" width="14" height="14" />
+						</span>
+						<span class="flex-1 truncate">UI tour</span>
+					</button>
+					<a
+						href="https://github.com/leaningtech/browsercode/issues/new"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={() => trackEvent('Clicked Help', { action: 'report-bug' })}
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-white/6 hover:text-zinc-100"
+					>
+						<span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/5">
+							<Icon icon="mingcute:bug-line" width="14" height="14" />
+						</span>
+						<span class="flex-1 truncate">Report a bug</span>
+					</a>
+				</div>
+			</div>
 		</div>
 	</div>
 </aside>

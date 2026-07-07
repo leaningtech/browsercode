@@ -10,6 +10,10 @@
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
 	import { requestSingleTabLock } from '$lib/utils/tabLock';
+	import {
+		navigateWithLeaveGuard,
+		consumeIntentionalNavigation
+	} from '$lib/stores/leaveWarning.svelte';
 
 	type PortalItem = { port: number; url: string };
 	type PortalUpdate = { port: number; url: string | null; active: boolean };
@@ -62,6 +66,17 @@
 	let showDuplicateTabWarning = false;
 	let closeFallback = false;
 	let releaseTabLock: () => void = () => {};
+	let showTerminalTip = false;
+
+	function dismissTerminalTip() {
+		showTerminalTip = false;
+		localStorage.setItem('hasSeenAgentTerminalTip', 'true');
+	}
+
+	// Any keypress means they've already found the terminal — no need to keep the tip up.
+	function handleAnyKeydown() {
+		if (showTerminalTip) dismissTerminalTip();
+	}
 
 	function attemptCloseTab() {
 		window.close();
@@ -89,7 +104,8 @@
 
 	function selectTool(id: string) {
 		if (validToolIds.has(id)) {
-			window.location.href = `/agents/${id}`;
+			// Already an active agent session here — always confirm before tearing it down.
+			navigateWithLeaveGuard(`/agents/${id}`, true);
 		}
 		showToolMenu = false;
 	}
@@ -183,6 +199,18 @@
 		copiedTimeout = setTimeout(() => (copied = false), 1200);
 	}
 
+	// Only browsers get to show text here, and only their own generic wording — the custom
+	// "your work will be lost" copy is reserved for in-app navigation via the leave-warning modal.
+	// A `window.location.href` assignment fires this same event, so navigation we already
+	// confirmed in-app is marked "intentional" and skipped here to avoid a duplicate prompt —
+	// this only fires for real browser-driven unloads: tab close, refresh, back/forward, or a
+	// typed URL.
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		if (consumeIntentionalNavigation()) return;
+		event.preventDefault();
+		event.returnValue = '';
+	}
+
 	onMount(() => {
 		updateIsMobile();
 		const mql = window.matchMedia('(max-width: 768px)');
@@ -198,6 +226,14 @@
 			if (!acquired) {
 				showDuplicateTabWarning = true;
 				return;
+			}
+
+			// Only warn on tab close/refresh/back-button once a session is actually running here —
+			// the duplicate-tab case above has nothing booted, so there's no work to lose.
+			window.addEventListener('beforeunload', handleBeforeUnload);
+
+			if (!localStorage.getItem('hasSeenAgentTerminalTip')) {
+				showTerminalTip = true;
 			}
 
 			bootCLI((update: PortalUpdate | string) => {
@@ -220,11 +256,14 @@
 
 		return () => {
 			mql.removeEventListener('change', updateIsMobile);
+			window.removeEventListener('beforeunload', handleBeforeUnload);
 			clearTimeout(copiedTimeout);
 			releaseTabLock();
 		};
 	});
 </script>
+
+<svelte:window onkeydown={handleAnyKeydown} />
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
 	{#if showDuplicateTabWarning}
@@ -265,6 +304,32 @@
 		>
 			<Terminal />
 		</div>
+
+		<!-- Non-blocking tip: this is a real terminal, not a GUI — clicks alone won't do much. -->
+		{#if showTerminalTip && !(isMobile && activeMobileView !== 'terminal')}
+			<div class="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center px-4">
+				<div
+					class="pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-white/10 bg-[#111111]/95 px-4 py-3 shadow-2xl backdrop-blur-sm"
+				>
+					<span
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-blue-400"
+					>
+						<Icon icon="mingcute:keyboard-line" width="18" height="18" />
+					</span>
+					<div class="flex-1 text-[12.5px] leading-relaxed text-zinc-300">
+						<span class="font-medium text-zinc-100">This is a real terminal.</span>
+						Click into it and use your keyboard — mouse clicks alone won't do much here.
+					</div>
+					<button
+						onclick={dismissTerminalTip}
+						aria-label="Dismiss"
+						class="shrink-0 rounded-md p-1 text-white/30 transition hover:bg-white/10 hover:text-white/70"
+					>
+						<Icon icon="mingcute:close-line" width="14" height="14" />
+					</button>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Portal overlay (desktop, portal active) -->
 		{#if !isMobile && portals.length > 0 && isPortalVisible}
@@ -403,7 +468,7 @@
 					{/each}
 					<div class="my-2 h-px bg-white/[0.06]"></div>
 					<button
-						onclick={() => (window.location.href = '/ide')}
+						onclick={() => navigateWithLeaveGuard('/ide', true)}
 						class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
 					>
 						<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">

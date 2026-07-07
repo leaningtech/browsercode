@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
@@ -7,14 +7,10 @@
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
+	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
 	let currentStep = 1;
 	const totalSteps = 7;
-
-	let copied = false;
-	let copyTimer: ReturnType<typeof setTimeout> | null = null;
-
-	const firstPrompt = 'Build a basic Express.js demo in a new folder and preview it.';
 
 	const dispatch = createEventDispatcher();
 
@@ -40,6 +36,15 @@
 		if (helpRect) helpBottom = window.innerHeight - (helpRect.top + helpRect.height / 2);
 	}
 
+	// Re-measure every time the tour is actually opened — it can be triggered long after this
+	// component first mounted (from Help, or the Home page), by which point the initial-mount
+	// measurement may be stale if the viewport was resized in between. The backdrop below only
+	// exists while the modal is open, so this action re-fires on every fresh open.
+	function measureOnMount(node: HTMLElement) {
+		void node;
+		measureTourTargets();
+	}
+
 	onMount(() => {
 		measureTourTargets();
 
@@ -52,16 +57,18 @@
 		}
 	});
 
-	onDestroy(() => {
-		if (copyTimer) clearTimeout(copyTimer);
-	});
-
 	function nextStep() {
-		if (currentStep < totalSteps) currentStep += 1;
+		if (currentStep < totalSteps) {
+			currentStep += 1;
+			measureTourTargets();
+		}
 	}
 
 	function prevStep() {
-		if (currentStep > 1) currentStep -= 1;
+		if (currentStep > 1) {
+			currentStep -= 1;
+			measureTourTargets();
+		}
 	}
 
 	function finish() {
@@ -83,15 +90,14 @@
 		}
 	}
 
-	async function copyPrompt() {
-		try {
-			await navigator.clipboard.writeText(firstPrompt);
-			copied = true;
-			if (copyTimer) clearTimeout(copyTimer);
-			copyTimer = setTimeout(() => (copied = false), 1500);
-		} catch (err) {
-			console.error('Failed to copy prompt:', err);
-		}
+	// Already viewing an active agent session? Leaving it from here should ask first, same as
+	// the sidebar does.
+	function goAgents() {
+		navigateWithLeaveGuard('/agents', $page.route.id === '/agents/[tool]');
+	}
+
+	function goIde() {
+		navigateWithLeaveGuard('/ide', $page.route.id === '/agents/[tool]');
 	}
 
 	// Steps 3-5 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
@@ -107,6 +113,7 @@
 		style="left: {sidebarSteps.has(currentStep) ? 'var(--width-sidebar)' : '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
+		use:measureOnMount
 	>
 		<div
 			class="relative w-full max-w-xl rounded-xl border border-white/10 bg-bc-panel shadow-2xl"
@@ -257,29 +264,22 @@
 					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
 						Ready when you are
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						Pick an agent or the IDE playground from the sidebar to get started. Once you're in an
-						agent, try this as your first prompt:
-					</p>
+					<p class="mb-6 text-sm leading-relaxed text-zinc-400">Pick a path to get started.</p>
 
-					<div
-						class="mt-5 flex items-start gap-3 rounded-lg border border-white/10 bg-black/40 p-4"
-					>
-						<code class="flex-1 font-mono text-sm leading-relaxed text-zinc-200 select-all">
-							{firstPrompt}
-						</code>
+					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
-							on:click={copyPrompt}
-							class="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/10 hover:text-zinc-100"
-							aria-label="Copy prompt"
+							on:click={goAgents}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-emerald-500"
 						>
-							{#if copied}
-								<Icon icon="mingcute:check-line" width="14" height="14" />
-								Copied
-							{:else}
-								<Icon icon="mingcute:copy-2-line" width="14" height="14" />
-								Copy
-							{/if}
+							<Icon icon="mingcute:robot-line" width="18" height="18" />
+							Start with agents
+						</button>
+						<button
+							on:click={goIde}
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/10"
+						>
+							<Icon icon="mingcute:code-line" width="18" height="18" />
+							Start with IDE
 						</button>
 					</div>
 				{/if}
@@ -322,14 +322,6 @@
 						>
 							Next
 							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
-						</button>
-					{:else}
-						<button
-							on:click={finish}
-							class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white"
-						>
-							<Icon icon="mingcute:check-fill" width="14" height="14" />
-							Get started
 						</button>
 					{/if}
 				</div>
