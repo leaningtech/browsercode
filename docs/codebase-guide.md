@@ -85,7 +85,7 @@ that import `monaco-editor` and are meant to be replaced wholesale, along with `
 (VS Code brings its own explorer).
 
 - Monaco is loaded lazily (dynamic import in `EditorPane`) so its chunk stays off the agents routes; `monaco.ts` wires the Vite `?worker` workers, the `browsercode-dark` theme, and the file-suffix → language mapping. Svelte/Vue files highlight as HTML (Monaco has no grammar for them); TS/JS semantic validation is off (no resolvable node_modules in the pod).
-- Open files are tabs: `IdeSession.openFiles` holds one `{ path, content, savedContent }` entry per tab and `selectedFile` is the active path. `EditorPane` renders the tab strip and keeps one Monaco model per tab (plus a saved view state for cursor/scroll), so switching tabs preserves undo history and position. Switching or closing a dirty tab flushes it to the pod so the 1s autosave debounce can't drop an edit; renames remap open tab paths, deletes close the affected tabs.
+- Open files are tabs: `IdeSession.openFiles` holds one `{ path, content, savedContent, preview }` entry per tab and `selectedFile` is the active path. `EditorPane` renders the tab strip and keeps one Monaco model per tab (plus a saved view state for cursor/scroll), so switching tabs preserves undo history and position. Switching or closing a dirty tab flushes it to the pod so the 1s autosave debounce can't drop an edit; renames remap open tab paths, deletes close the affected tabs. Single-clicking a file in the tree opens a preview tab (italic label) that the next single-click reuses; double-clicking or editing pins it.
 - Terminal styling: BrowserPod terminals are xterm.js — restyling means overriding `.xterm-*` CSS classes (see `TerminalTabs.svelte` / agents `Terminal.svelte`).
 
 ## Headers / CORS

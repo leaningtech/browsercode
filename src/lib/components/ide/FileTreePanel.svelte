@@ -48,8 +48,10 @@
 		else expandedFolders.add(path);
 	}
 
+	// Single-click opens as a preview tab; double-clicking pins it.
+	// click fires before dblclick, so the pin lands on the tab the click just opened.
 	function openFile(path: string) {
-		void session.openFile(path);
+		void session.openFile(path, true);
 		onFileOpen?.();
 	}
 
@@ -299,6 +301,7 @@
 		{:else}
 			<button
 				onclick={() => openFile(node.path)}
+				ondblclick={() => session.pinFile(node.path)}
 				oncontextmenu={(e) => openMenu(e, node.path, false)}
 				class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] transition {session.selectedFile ===
 				node.path

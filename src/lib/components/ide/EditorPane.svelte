@@ -44,10 +44,15 @@
 				scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
 				fixedOverflowWidgets: true
 			});
-			// Mirror every edit back into the tab it belongs to.
+			// Mirror every edit back into the tab it belongs to; a real edit pins a preview tab.
 			editor.onDidChangeModelContent(() => {
 				const entry = session.openFiles.find((file) => file.path === renderedPath);
-				if (entry && editor) entry.content = editor.getValue();
+				if (!entry || !editor) return;
+				const value = editor.getValue();
+				// Our own setValue (tab load) fires this event too; ignore it so it can't pin.
+				if (entry.content === value) return;
+				entry.content = value;
+				entry.preview = false;
 			});
 		});
 
@@ -141,13 +146,17 @@
 					? 'bg-white/[0.04] text-white/80'
 					: 'text-white/30 hover:text-white/55'}"
 			>
+				<!-- Focus as a preview open so clicking a tab never changes its pin state. -->
 				<button
-					onclick={() => void session.openFile(file.path)}
+					onclick={() => void session.openFile(file.path, true)}
+					ondblclick={() => session.pinFile(file.path)}
 					title={file.path}
 					class="inline-flex h-8 items-center gap-1.5 border-none bg-transparent pl-3 text-[11px] font-medium"
 				>
 					<Icon icon="mingcute:file-line" width="11" height="11" class="shrink-0" />
-					<span class="max-w-40 truncate">{file.path.split('/').pop()}</span>
+					<span class="max-w-40 truncate" class:italic={file.preview}>
+						{file.path.split('/').pop()}
+					</span>
 				</button>
 				<button
 					onclick={() => session.closeFile(file.path)}

@@ -12,8 +12,11 @@ import { trackEvent } from '$lib/utils/useLazyTracking';
 
 export type PortalUpdate = { port: number; url: string | null; active: boolean };
 
-/** A file open as an editor tab; `content !== savedContent` means it has unsaved edits. */
-export type OpenFile = { path: string; content: string; savedContent: string };
+/**
+ * A file open as an editor tab. A `preview` tab (opened by single-click)
+ * is reused by the next preview open; double-clicking or editing pins it.
+ */
+export type OpenFile = { path: string; content: string; savedContent: string; preview: boolean };
 
 /**
  * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
@@ -49,6 +52,8 @@ export class IdeSession {
 	private fsQueue: Promise<unknown> = Promise.resolve();
 	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
 	private savingPaths = new SvelteSet<string>();
+	/** Tabs pinned (double-clicked) while their first read was still in flight. */
+	private pendingPins = new SvelteSet<string>();
 
 	private unmounted = false;
 	private bootToken = 0;
@@ -366,27 +371,54 @@ export class IdeSession {
 		return null;
 	}
 
-	/** Opens `path` as a tab (or focuses its existing tab) and makes it the active file. */
-	async openFile(path: string): Promise<void> {
+	/**
+	 * Opens `path` as a tab (or focuses its existing tab) and makes it the active
+	 * file. A preview open reuses the current preview tab's slot instead of adding
+	 * a tab; a permanent open pins the tab. An already-open tab keeps its pin
+	 * state on a preview open, so focusing tabs never re-previews them.
+	 */
+	async openFile(path: string, preview = false): Promise<void> {
 		if (!this.pod || !this.podReady || this.unmounted) return;
-		if (this.selectedFile === path && this.activeFile) return;
-		this.flushActive();
-		if (this.openFiles.some((file) => file.path === path)) {
+		const existing = this.openFiles.find((file) => file.path === path);
+		if (existing) {
+			if (!preview) existing.preview = false;
+			if (this.selectedFile === path) return;
+			this.flushActive();
 			this.selectedFile = path;
 			return;
 		}
+		this.flushActive();
 		this.loading = true;
 		this.selectedFile = path;
 		try {
 			const content = await readPodFile(this.pod, `${this.workdir}/${path}`);
 			if (this.unmounted || this.openFiles.some((file) => file.path === path)) return;
-			this.openFiles = [...this.openFiles, { path, content, savedContent: content }];
+			// A pin that arrived while the read was in flight wins over the preview flag.
+			const entry: OpenFile = {
+				path,
+				content,
+				savedContent: content,
+				preview: preview && !this.pendingPins.delete(path)
+			};
+			const previewIndex = entry.preview ? this.openFiles.findIndex((file) => file.preview) : -1;
+			this.openFiles =
+				previewIndex >= 0
+					? this.openFiles.map((file, i) => (i === previewIndex ? entry : file))
+					: [...this.openFiles, entry];
 		} catch (error) {
 			console.error('Failed to load file:', error);
+			this.pendingPins.delete(path);
 			if (this.selectedFile === path) this.selectedFile = this.openFiles.at(-1)?.path ?? '';
 		} finally {
 			this.loading = false;
 		}
+	}
+
+	/** Promotes a preview tab to a permanent one; safe to call while the tab is still loading. */
+	pinFile(path: string): void {
+		const entry = this.openFiles.find((file) => file.path === path);
+		if (entry) entry.preview = false;
+		else this.pendingPins.add(path);
 	}
 
 	/** Closes a tab, flushing unsaved edits first; the neighbour tab (next, else previous) becomes active. */
