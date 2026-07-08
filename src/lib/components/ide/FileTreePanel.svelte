@@ -49,7 +49,7 @@
 	}
 
 	function openFile(path: string) {
-		void session.loadFile(path);
+		void session.openFile(path);
 		onFileOpen?.();
 	}
 
@@ -157,7 +157,7 @@
 		}
 		const to = parent ? `${parent}/${name}` : name;
 		actionBusy = true;
-		const failure = await session.renameEntry(target.path, to, target.isDir);
+		const failure = await session.renameEntry(target.path, to);
 		actionBusy = false;
 		if (failure) {
 			actionError = failure;

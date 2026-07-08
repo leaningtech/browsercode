@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import Icon from '@iconify/svelte';
 	import type * as Monaco from 'monaco-editor';
 	import type { IdeSession } from '$lib/ide/session.svelte';
@@ -10,6 +11,11 @@
 	let monacoMod = $state.raw<typeof import('./monaco') | null>(null);
 	let editor = $state.raw<Monaco.editor.IStandaloneCodeEditor | null>(null);
 	let destroyed = false;
+
+	// One Monaco model per open tab (keyed by its file URI) keeps content and undo
+	// history alive across switches; view states park cursor/scroll per path.
+	const viewStates = new SvelteMap<string, Monaco.editor.ICodeEditorViewState | null>();
+	let renderedPath = '';
 
 	// Responsive font
 	const FONT_QUERY = '(min-width: 640px)';
@@ -25,8 +31,7 @@
 			if (destroyed || !container) return;
 			monacoMod = mod;
 			editor = mod.monaco.editor.create(container, {
-				value: session.fileContent,
-				language: mod.languageFor(session.selectedFile),
+				model: null,
 				theme: 'browsercode-dark',
 				automaticLayout: true,
 				fontSize: fontSizeFor(media.matches),
@@ -39,35 +44,72 @@
 				scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
 				fixedOverflowWidgets: true
 			});
-			// Mirror every edit back into shared state.
+			// Mirror every edit back into the tab it belongs to.
 			editor.onDidChangeModelContent(() => {
-				if (editor) session.fileContent = editor.getValue();
+				const entry = session.openFiles.find((file) => file.path === renderedPath);
+				if (entry && editor) entry.content = editor.getValue();
 			});
 		});
 
 		return () => media.removeEventListener('change', onMediaChange);
 	});
 
-	// Push session state into the editor.
+	/** Returns (creating if needed) the Monaco model that backs `path`. */
+	function modelFor(mod: typeof import('./monaco'), path: string, content: string) {
+		const uri = mod.monaco.Uri.file(path);
+		return (
+			mod.monaco.editor.getModel(uri) ??
+			mod.monaco.editor.createModel(content, mod.languageFor(path), uri)
+		);
+	}
+
+	// Show the active tab: park the outgoing view state, attach the incoming
+	// model, restore its cursor/scroll.
 	$effect(() => {
-		const file = session.selectedFile;
-		const content = session.fileContent;
+		const entry = session.openFiles.find((file) => file.path === session.selectedFile);
 		if (!editor || !monacoMod) return;
-		const model = editor.getModel();
-		if (!model) return;
-		const language = monacoMod.languageFor(file);
-		if (model.getLanguageId() !== language)
-			monacoMod.monaco.editor.setModelLanguage(model, language);
-		if (content !== model.getValue()) model.setValue(content);
+		if (!entry) {
+			if (renderedPath) viewStates.set(renderedPath, editor.saveViewState());
+			editor.setModel(null);
+			renderedPath = '';
+			return;
+		}
+		if (entry.path === renderedPath) {
+			// Session-side content change — push it into the model.
+			const model = editor.getModel();
+			if (model && model.getValue() !== entry.content) model.setValue(entry.content);
+			return;
+		}
+		if (renderedPath) viewStates.set(renderedPath, editor.saveViewState());
+		const model = modelFor(monacoMod, entry.path, entry.content);
+		if (model.getValue() !== entry.content) model.setValue(entry.content);
+		editor.setModel(model);
+		const viewState = viewStates.get(entry.path);
+		if (viewState) editor.restoreViewState(viewState);
+		renderedPath = entry.path;
 	});
 
-	// Autosave: debounce a write to 1s after the last edit.
+	// Dispose models and view states whose tab has been closed (or renamed away).
+	$effect(() => {
+		const open = new Set(session.openFiles.map((file) => file.path));
+		if (!monacoMod || !editor) return;
+		for (const model of monacoMod.monaco.editor.getModels()) {
+			const path = model.uri.path.slice(1);
+			if (open.has(path) || model === editor.getModel()) continue;
+			model.dispose();
+			viewStates.delete(path);
+		}
+	});
+
+	// Autosave: debounce a write of the active tab to 1s after the last edit.
+	// The path is captured so the save lands on the right tab even after a switch.
 	let saveTimeout: ReturnType<typeof setTimeout>;
 
 	$effect(() => {
+		const path = session.selectedFile;
 		if (session.dirty && !session.loading) {
 			clearTimeout(saveTimeout);
-			saveTimeout = setTimeout(() => void session.saveFile(), 1000);
+			saveTimeout = setTimeout(() => void session.saveFile(path), 1000);
 		}
 	});
 
@@ -77,20 +119,62 @@
 		clearTimeout(saveTimeout);
 		editor?.dispose();
 		editor = null;
+		monacoMod?.monaco.editor.getModels().forEach((model) => model.dispose());
 	});
 </script>
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
-	<div class="flex h-8 shrink-0 items-center border-b border-white/[0.06] bg-[#111111] px-3">
-		<div class="flex items-center gap-1.5 text-[11px] text-white/35">
-			<Icon icon="mingcute:code-line" width="11" height="11" />
-			<span class="font-medium tracking-wide">Editor</span>
-			<span class="text-white/20">·</span>
-			<span class="max-w-50 truncate text-white/50">{session.selectedFile}</span>
-		</div>
+	<div
+		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-white/[0.06] bg-[#111111]"
+	>
+		{#if session.openFiles.length === 0}
+			<div class="flex items-center gap-1.5 px-3 text-[11px] text-white/35">
+				<Icon icon="mingcute:code-line" width="11" height="11" />
+				<span class="font-medium tracking-wide">Editor</span>
+			</div>
+		{/if}
+		{#each session.openFiles as file (file.path)}
+			{@const active = session.selectedFile === file.path}
+			{@const dirty = file.content !== file.savedContent}
+			<div
+				class="group flex h-8 shrink-0 items-center transition {active
+					? 'bg-white/[0.04] text-white/80'
+					: 'text-white/30 hover:text-white/55'}"
+			>
+				<button
+					onclick={() => void session.openFile(file.path)}
+					title={file.path}
+					class="inline-flex h-8 items-center gap-1.5 border-none bg-transparent pl-3 text-[11px] font-medium"
+				>
+					<Icon icon="mingcute:file-line" width="11" height="11" class="shrink-0" />
+					<span class="max-w-40 truncate">{file.path.split('/').pop()}</span>
+				</button>
+				<button
+					onclick={() => session.closeFile(file.path)}
+					aria-label="Close {file.path}"
+					class="inline-flex h-8 items-center border-none bg-transparent px-1.5 text-white/25 transition hover:text-white/70"
+				>
+					<!-- Dirty tabs show a dot where the close button sits; hover swaps it back. -->
+					{#if dirty}
+						<span class="h-1.5 w-1.5 rounded-full bg-white/50 group-hover:hidden"></span>
+					{/if}
+					<Icon
+						icon="mingcute:close-line"
+						width="10"
+						height="10"
+						class={dirty ? 'hidden group-hover:block' : ''}
+					/>
+				</button>
+			</div>
+		{/each}
 	</div>
 	<div class="relative min-h-0 flex-1 overflow-hidden bg-zinc-950">
 		<div bind:this={container} class="h-full w-full"></div>
+		{#if session.openFiles.length === 0 && !session.loading && editor}
+			<div class="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950">
+				<span class="text-[11px] text-white/25">No file open</span>
+			</div>
+		{/if}
 		{#if session.loading || !editor}
 			<div
 				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-zinc-950"

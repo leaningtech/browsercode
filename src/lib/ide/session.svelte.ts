@@ -1,4 +1,5 @@
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
+import { SvelteSet } from 'svelte/reactivity';
 import {
 	frameworkConfigs,
 	defaultFrameworkId,
@@ -11,6 +12,9 @@ import { trackEvent } from '$lib/utils/useLazyTracking';
 
 export type PortalUpdate = { port: number; url: string | null; active: boolean };
 
+/** A file open as an editor tab; `content !== savedContent` means it has unsaved edits. */
+export type OpenFile = { path: string; content: string; savedContent: string };
+
 /**
  * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
  * the selected framework template into its filesystem, starts the dev server and
@@ -22,9 +26,10 @@ export class IdeSession {
 	projectFiles = $state<string[]>([]);
 	/** Explicitly-known directories (from UI folder actions); lets empty folders render in the tree. */
 	projectDirs = $state<string[]>([]);
+	/** Files open as editor tabs, in tab-strip order. */
+	openFiles = $state<OpenFile[]>([]);
+	/** Path of the active tab; '' when no tab is open. */
 	selectedFile = $state('');
-	fileContent = $state('');
-	savedFileContent = $state('');
 	loading = $state(true);
 	isSaving = $state(false);
 	hasPortal = $state(false);
@@ -42,6 +47,8 @@ export class IdeSession {
 	private fsTerminal: Terminal | null = null;
 	/** Serializes fs commands so two never share the hidden terminal at once. */
 	private fsQueue: Promise<unknown> = Promise.resolve();
+	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
+	private savingPaths = new SvelteSet<string>();
 
 	private unmounted = false;
 	private bootToken = 0;
@@ -61,8 +68,14 @@ export class IdeSession {
 		return this.mode === 'github' ? undefined : this.config.appPort;
 	}
 
+	private get activeFile(): OpenFile | undefined {
+		return this.openFiles.find((file) => file.path === this.selectedFile);
+	}
+
+	/** True when the active tab has unsaved edits. */
 	get dirty(): boolean {
-		return this.fileContent !== this.savedFileContent;
+		const file = this.activeFile;
+		return !!file && file.content !== file.savedContent;
 	}
 
 	private cancelled(token: number): boolean {
@@ -107,7 +120,7 @@ export class IdeSession {
 			const initialFile = this.projectFiles.includes(this.config.defaultFile)
 				? this.config.defaultFile
 				: this.projectFiles[0];
-			if (initialFile) await this.loadFile(initialFile);
+			if (initialFile) await this.openFile(initialFile);
 
 			pod.onPortal(({ url, port }) => {
 				if (this.cancelled(token)) return;
@@ -214,7 +227,7 @@ export class IdeSession {
 			// The working tree exists now — let the editor read from the pod.
 			this.podReady = true;
 			const initialFile = this.projectFiles[0];
-			if (initialFile) await this.loadFile(initialFile);
+			if (initialFile) await this.openFile(initialFile);
 			else this.loading = false;
 
 			trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` });
@@ -259,12 +272,6 @@ export class IdeSession {
 			console.error('Failed to read package.json:', error);
 			return null;
 		}
-	}
-
-	private clearSelection(): void {
-		this.selectedFile = '';
-		this.fileContent = '';
-		this.savedFileContent = '';
 	}
 
 	/** True if the tree already knows an entry at `path` (or something nested under it). */
@@ -316,7 +323,7 @@ export class IdeSession {
 			return error instanceof Error ? error.message : String(error);
 		}
 		this.projectFiles = [...this.projectFiles, path];
-		await this.loadFile(path);
+		await this.openFile(path);
 		return null;
 	}
 
@@ -333,8 +340,8 @@ export class IdeSession {
 		return null;
 	}
 
-	/** Renames a file or folder; the editor selection follows the moved path. Returns an error message or null. */
-	async renameEntry(from: string, to: string, isDir: boolean): Promise<string | null> {
+	/** Renames a file or folder; open tabs and the selection follow the moved path. Returns an error message or null. */
+	async renameEntry(from: string, to: string): Promise<string | null> {
 		if (this.entryExists(to)) return 'Something with that name already exists';
 		const failure = await this.runFsCommand(`mv -- ${shQuote(from)} ${shQuote(to)}`);
 		if (failure) return failure;
@@ -342,54 +349,84 @@ export class IdeSession {
 			p === from ? to : p.startsWith(`${from}/`) ? to + p.slice(from.length) : p;
 		this.projectFiles = this.projectFiles.map(remap);
 		this.projectDirs = this.projectDirs.map(remap);
-		if (!isDir && this.selectedFile === from) this.selectedFile = to;
-		else if (isDir && this.selectedFile.startsWith(`${from}/`))
-			this.selectedFile = to + this.selectedFile.slice(from.length);
+		for (const file of this.openFiles) file.path = remap(file.path);
+		this.selectedFile = remap(this.selectedFile);
 		return null;
 	}
 
-	/** Deletes a file or folder recursively. Returns an error message or null. */
+	/** Deletes a file or folder recursively; tabs under the path close. Returns an error message or null. */
 	async deleteEntry(path: string): Promise<string | null> {
 		const failure = await this.runFsCommand(`rm -rf -- ${shQuote(path)}`);
 		if (failure) return failure;
 		const gone = (p: string) => p === path || p.startsWith(`${path}/`);
 		this.projectFiles = this.projectFiles.filter((p) => !gone(p));
 		this.projectDirs = this.projectDirs.filter((p) => !gone(p));
-		if (gone(this.selectedFile)) this.clearSelection();
+		this.openFiles = this.openFiles.filter((file) => !gone(file.path));
+		if (gone(this.selectedFile)) this.selectedFile = this.openFiles.at(-1)?.path ?? '';
 		return null;
 	}
 
-	async loadFile(path: string): Promise<void> {
+	/** Opens `path` as a tab (or focuses its existing tab) and makes it the active file. */
+	async openFile(path: string): Promise<void> {
 		if (!this.pod || !this.podReady || this.unmounted) return;
+		if (this.selectedFile === path && this.activeFile) return;
+		this.flushActive();
+		if (this.openFiles.some((file) => file.path === path)) {
+			this.selectedFile = path;
+			return;
+		}
 		this.loading = true;
 		this.selectedFile = path;
 		try {
 			const content = await readPodFile(this.pod, `${this.workdir}/${path}`);
-			if (this.unmounted || this.selectedFile !== path) return;
-			this.savedFileContent = content;
-			this.fileContent = content;
+			if (this.unmounted || this.openFiles.some((file) => file.path === path)) return;
+			this.openFiles = [...this.openFiles, { path, content, savedContent: content }];
 		} catch (error) {
 			console.error('Failed to load file:', error);
+			if (this.selectedFile === path) this.selectedFile = this.openFiles.at(-1)?.path ?? '';
 		} finally {
 			this.loading = false;
 		}
 	}
 
-	async saveFile(): Promise<void> {
+	/** Closes a tab, flushing unsaved edits first; the neighbour tab (next, else previous) becomes active. */
+	closeFile(path: string): void {
+		const index = this.openFiles.findIndex((file) => file.path === path);
+		if (index < 0) return;
+		const entry = this.openFiles[index];
+		if (entry.content !== entry.savedContent) void this.saveEntry(entry);
+		this.openFiles = this.openFiles.filter((file) => file.path !== path);
+		if (this.selectedFile === path)
+			this.selectedFile = (this.openFiles[index] ?? this.openFiles[index - 1])?.path ?? '';
+	}
+
+	/** Best-effort save of the active tab before it loses focus, so a pending autosave can't be lost. */
+	private flushActive(): void {
+		const file = this.activeFile;
+		if (file && file.content !== file.savedContent) void this.saveEntry(file);
+	}
+
+	async saveFile(path = this.selectedFile): Promise<void> {
+		const entry = this.openFiles.find((file) => file.path === path);
+		if (entry) await this.saveEntry(entry);
+	}
+
+	private async saveEntry(entry: OpenFile): Promise<void> {
 		// Saving only makes sense once the dev server is reachable; earlier writes
 		// would race the template hydration.
-		if (!this.pod || !this.selectedFile || !this.hasPortal || this.unmounted) return;
-		if (this.isSaving) return;
+		if (!this.pod || !this.hasPortal || this.unmounted) return;
+		if (this.savingPaths.has(entry.path)) return;
+		this.savingPaths.add(entry.path);
 		this.isSaving = true;
-		const path = this.selectedFile;
-		const content = this.fileContent;
+		const content = entry.content;
 		try {
-			await writePodFile(this.pod, `${this.workdir}/${path}`, content);
-			if (this.selectedFile === path) this.savedFileContent = content;
+			await writePodFile(this.pod, `${this.workdir}/${entry.path}`, content);
+			entry.savedContent = content;
 		} catch (error) {
 			console.error('Failed to save file:', error);
 		} finally {
-			this.isSaving = false;
+			this.savingPaths.delete(entry.path);
+			this.isSaving = this.savingPaths.size > 0;
 		}
 	}
 

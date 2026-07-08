@@ -251,8 +251,10 @@
 		<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
 			<!-- Switching frameworks or cloning a repo happens from the sidebar's Ide flyout. -->
 			<span class="truncate text-white/60">{session.displayLabel}</span>
-			<span class="text-white/20">/</span>
-			<span class="truncate text-white/60">{session.selectedFile}</span>
+			{#if session.selectedFile}
+				<span class="text-white/20">/</span>
+				<span class="truncate text-white/60">{session.selectedFile}</span>
+			{/if}
 			{#if session.isSaving}
 				<span class="ml-1 shrink-0 text-emerald-500/70">saving…</span>
 			{/if}
