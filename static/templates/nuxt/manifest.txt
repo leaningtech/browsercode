@@ -1,8 +1,8 @@
 app/app.vue
 manifest.txt
 nuxt.config.ts
-package.json
 package-lock.json
+package.json
 public/favicon.ico
 public/robots.txt
 tsconfig.json

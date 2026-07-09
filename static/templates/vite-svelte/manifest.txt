@@ -1,4 +1,3 @@
-.npmrc
 README.md
 index.html
 jsconfig.json

@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.5",
-    "vite": "7.2.4"
+    "vite": "7.3.6"
   },
   "overrides": {
     "esbuild": "npm:esbuild-wasm@*",
