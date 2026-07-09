@@ -182,3 +182,43 @@
     border-right-color: var(--border);
   }
 }
+
+/* ── BrowserPod badge ─────────────────────────────────────── */
+.bp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+}
+
+.bp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+  animation: bp-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes bp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-dot {
+    animation: none;
+  }
+}

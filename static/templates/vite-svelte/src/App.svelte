@@ -6,13 +6,14 @@
 </script>
 
 <section id="center">
+  <p class="bp-badge"><span class="bp-dot" aria-hidden="true"></span>Served By BrowserPod</p>
   <div class="hero">
     <img src={heroImg} class="base" width="170" height="179" alt="" />
     <img src={svelteLogo} class="framework" alt="Svelte logo" />
     <img src={viteLogo} class="vite" alt="Vite logo" />
   </div>
   <div>
-    <h1>Get started</h1>
+    <h1>Get Started</h1>
     <p>Edit <code>src/App.svelte</code> and save to test <code>HMR</code></p>
   </div>
   <Counter />
