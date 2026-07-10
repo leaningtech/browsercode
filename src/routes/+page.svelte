@@ -128,8 +128,8 @@
 
 	<!-- ── Section 2: about — slides up as a window over the hero ─────────────────────── -->
 	<div
-		class="absolute inset-x-0 top-9 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-[20px] border-t border-bc-mist/15"
-		style="background-color: rgba(7,12,24,0.6); background-image: linear-gradient(155deg, rgba(74,125,255,0.09), rgba(7,12,24,0) 70%); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); box-shadow: 0 -26px 80px rgba(0,0,0,0.55); transform: translateY({panelOpen
+		class="panel-sheet absolute inset-x-0 top-9 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-[20px] border-t border-bc-mist/15"
+		style="transform: translateY({panelOpen
 			? '0%'
 			: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
 	>

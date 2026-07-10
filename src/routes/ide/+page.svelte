@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
@@ -15,10 +16,26 @@
 	function boot(terminalEl: HTMLElement, onPortalUpdate: (update: PortalUpdate) => void) {
 		return session.boot(framework, terminalEl, onPortalUpdate);
 	}
+
+	// Same reveal treatment as the landing page's About panel: starts closed so the transition
+	// actually animates in on arrival, rather than snapping straight to open.
+	let entered = $state(false);
+	onMount(() => {
+		requestAnimationFrame(() => {
+			entered = true;
+		});
+	});
 </script>
 
-{#if showLanding}
-	<IdeLanding />
-{:else}
-	<IdeShell {session} {boot} />
-{/if}
+<div
+	class="panel-sheet flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-t-[20px] border-t border-bc-mist/15"
+	style="transform: translateY({entered
+		? '0%'
+		: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
+>
+	{#if showLanding}
+		<IdeLanding />
+	{:else}
+		<IdeShell {session} {boot} />
+	{/if}
+</div>

@@ -99,7 +99,7 @@
 		parent.addEventListener('mousemove', onMove);
 		parent.addEventListener('mouseleave', onLeave);
 
-		const cursorR = 165; // radius of cursor disturbance
+		const cursorR = 64; // radius of cursor disturbance
 		const cursorPush = 30 * cursorStrength;
 
 		// how deeply patches fade out (0 = always fully visible, 1 = fully vanish)
