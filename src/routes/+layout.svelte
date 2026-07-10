@@ -8,8 +8,14 @@
 	import IosUnsupportedModal from '$lib/components/IosUnsupportedModal.svelte';
 	import { page } from '$app/stores';
 	import { toolItems } from '$lib/config/tools';
+	import { stepperState } from '$lib/stores/stepper.svelte';
 
 	let { children } = $props();
+
+	// The tour's "star us" slide (step 6) points at this ribbon, so it needs to sit above the
+	// tour's backdrop for that one step only — back below it (its normal spot, under the sidebar
+	// flyouts) the rest of the time.
+	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 6);
 
 	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
 
@@ -70,7 +76,9 @@
 
 	<!-- GitHub Ribbon -->
 	<div
-		class="pointer-events-none fixed top-0 right-0 z-40 hidden overflow-hidden md:block"
+		class="pointer-events-none fixed top-0 right-0 hidden overflow-hidden md:block {ribbonAboveTour
+			? 'z-[60]'
+			: 'z-40'}"
 		style="width: 150px; height: 175px;"
 	>
 		<a

@@ -4,21 +4,26 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import { page } from '$app/stores';
-	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { stepperState, openTour } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
-	let currentStep = 1;
 	const totalSteps = 7;
 
 	const dispatch = createEventDispatcher();
 
+	// The step lives in the shared store (not a local `let`) so +layout.svelte can read it for the
+	// GitHub ribbon z-index, and — more importantly — so opening the tour from anywhere (see
+	// openTour() in the store) can reliably reset it. A local reactive statement watching
+	// stepperState.open here couldn't do that: legacy `$:` blocks in a non-runes component only
+	// re-run off their own component's `let` dependencies, not off external $state proxy reads.
+
 	// Measured from the real sidebar buttons (via data-tour-target) rather than hand-computed
 	// pixel math, so the pointers stay accurate if the sidebar's layout ever changes again.
 	// These are just sane fallbacks in case a target isn't found for some reason.
-	let agentsTop = 113;
-	let ideTop = 155;
+	let ideTop = 113;
+	let agentsTop = 155;
 	let helpBottom = 28;
 
 	function centerOf(selector: string): DOMRect | null {
@@ -52,21 +57,21 @@
 		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal.
 		const isFirstTime = !localStorage.getItem('hasVisited');
 		if (isFirstTime && $page.route.id === '/') {
-			stepperState.open = true;
+			openTour();
 			localStorage.setItem('hasVisited', 'true');
 		}
 	});
 
 	function nextStep() {
-		if (currentStep < totalSteps) {
-			currentStep += 1;
+		if (stepperState.step < totalSteps) {
+			stepperState.step += 1;
 			measureTourTargets();
 		}
 	}
 
 	function prevStep() {
-		if (currentStep > 1) {
-			currentStep -= 1;
+		if (stepperState.step > 1) {
+			stepperState.step -= 1;
 			measureTourTargets();
 		}
 	}
@@ -107,10 +112,11 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if stepperState.open}
-	<!-- Backdrop. Escape-to-close is handled by the window listener above. -->
+	<!-- Backdrop. Escape-to-close is handled by the window listener above. The GitHub ribbon
+	     (step 6) is raised above this via z-index in +layout.svelte, so it stays sharp there. -->
 	<div
-		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/60 transition-[left] duration-500 ease-out"
-		style="left: {sidebarSteps.has(currentStep) ? 'var(--width-sidebar)' : '0'};"
+		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-[left] duration-500 ease-out"
+		style="left: {sidebarSteps.has(stepperState.step) ? 'var(--width-sidebar)' : '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
 		use:measureOnMount
@@ -126,23 +132,23 @@
 				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-zinc-500"
 			>
 				<span class="font-medium tracking-wide text-zinc-400 uppercase">BrowserCode</span>
-				<span class="font-mono text-zinc-600">{currentStep} / {totalSteps}</span>
+				<span class="font-mono text-zinc-600">{stepperState.step} / {totalSteps}</span>
 			</div>
 
 			<div class="p-8">
-				{#if currentStep === 1}
+				{#if stepperState.step === 1}
 					<div class="mb-5 flex justify-center">
 						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
 					</div>
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
 						Welcome to BrowserCode
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						Run AI coding agents like Claude Code and Gemini CLI, or spin up a full IDE playground
 						for popular frameworks — everything sandboxed right in this browser tab.
 					</p>
-				{:else if currentStep === 2}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+				{:else if stepperState.step === 2}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
 						Powered by BrowserPod
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
@@ -175,9 +181,28 @@
 							class="text-zinc-500"
 						/>
 					</a>
-				{:else if currentStep === 3}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						Run AI agents from the sidebar
+				{:else if stepperState.step === 3}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+						Build in the IDE playground
+					</h1>
+					<p class="text-sm leading-relaxed text-zinc-400">
+						Boot a curated framework template straight into a full editor, terminal, and live
+						preview. From the sidebar.
+					</p>
+
+					<div class="mt-6 flex flex-wrap gap-2">
+						{#each frameworkRailItems as fw (fw.id)}
+							<span
+								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-zinc-400"
+							>
+								<Icon icon={fw.icon} width="14" height="14" />
+								{fw.label}
+							</span>
+						{/each}
+					</div>
+				{:else if stepperState.step === 4}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+						Or run AI agents from the sidebar
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						Claude Code and Gemini CLI are ready to go now. Codex CLI and OpenCode are coming soon.
@@ -216,35 +241,16 @@
 							</div>
 						{/each}
 					</div>
-				{:else if currentStep === 4}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
-						Or build in the IDE playground
-					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						Boot a curated framework template, or clone any GitHub repo straight into a full editor,
-						terminal, and live preview. Also from the sidebar.
-					</p>
-
-					<div class="mt-6 flex flex-wrap gap-2">
-						{#each frameworkRailItems as fw (fw.id)}
-							<span
-								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-zinc-400"
-							>
-								<Icon icon={fw.icon} width="14" height="14" />
-								{fw.label}
-							</span>
-						{/each}
-					</div>
-				{:else if currentStep === 5}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+				{:else if stepperState.step === 5}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
 						This is our first beta
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						Please bend, stretch and break it. If something's off, let us know from Help in the
 						sidebar — it's also where the getting-started basics and this tour live.
 					</p>
-				{:else if currentStep === 6}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+				{:else if stepperState.step === 6}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
 						Give us a star on GitHub
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
@@ -260,26 +266,26 @@
 							GitHub
 						</a>
 					</p>
-				{:else if currentStep === 7}
-					<h1 id="stepper-title" class="mb-3 text-3xl font-bold text-zinc-100">
+				{:else if stepperState.step === 7}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
 						Ready when you are
 					</h1>
 					<p class="mb-6 text-sm leading-relaxed text-zinc-400">Pick a path to get started.</p>
 
 					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
-							on:click={goAgents}
-							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
-						>
-							<Icon icon="mingcute:robot-line" width="18" height="18" />
-							Start with agents
-						</button>
-						<button
 							on:click={goIde}
-							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
 						>
 							<Icon icon="mingcute:code-line" width="18" height="18" />
 							Start with IDE
+						</button>
+						<button
+							on:click={goAgents}
+							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
+						>
+							<Icon icon="mingcute:robot-line" width="18" height="18" />
+							Start with agents
 						</button>
 					</div>
 				{/if}
@@ -291,7 +297,7 @@
 			>
 				<button
 					on:click={prevStep}
-					disabled={currentStep === 1}
+					disabled={stepperState.step === 1}
 					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 				>
 					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
@@ -301,11 +307,9 @@
 				<div class="flex items-center gap-1.5">
 					{#each { length: totalSteps }, i (i)}
 						<span
-							class="h-1.5 rounded-full transition-all duration-300"
-							class:w-6={i + 1 === currentStep}
-							class:bg-bc-azure={i + 1 === currentStep}
-							class:w-1.5={i + 1 !== currentStep}
-							class:bg-zinc-700={i + 1 !== currentStep}
+							class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
+							class:bg-bc-azure={i + 1 === stepperState.step}
+							class:bg-zinc-700={i + 1 !== stepperState.step}
 						></span>
 					{/each}
 				</div>
@@ -317,7 +321,7 @@
 					>
 						Skip
 					</button>
-					{#if currentStep < totalSteps}
+					{#if stepperState.step < totalSteps}
 						<button
 							on:click={nextStep}
 							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-bc-azure/85"
@@ -331,8 +335,23 @@
 		</div>
 	</div>
 
-	<!-- Step 3: helper tooltip pointing at the Agents sidebar button. -->
-	{#if currentStep === 3}
+	<!-- Step 3: helper tooltip pointing at the Ide sidebar button. -->
+	{#if stepperState.step === 3}
+		<div
+			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
+			style="left: var(--width-sidebar); top: {ideTop}px; transform: translateY(-50%);"
+		>
+			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
+			<span
+				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
+			>
+				Frameworks, ready in one click
+			</span>
+		</div>
+	{/if}
+
+	<!-- Step 4: helper tooltip pointing at the Agents sidebar button. -->
+	{#if stepperState.step === 4}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); top: {agentsTop}px; transform: translateY(-50%);"
@@ -346,23 +365,8 @@
 		</div>
 	{/if}
 
-	<!-- Step 4: helper tooltip pointing at the Ide sidebar button. -->
-	{#if currentStep === 4}
-		<div
-			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
-			style="left: var(--width-sidebar); top: {ideTop}px; transform: translateY(-50%);"
-		>
-			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
-			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
-			>
-				Frameworks & GitHub, in one click
-			</span>
-		</div>
-	{/if}
-
 	<!-- Step 5: helper tooltip pointing at the Help sidebar button. -->
-	{#if currentStep === 5}
+	{#if stepperState.step === 5}
 		<div
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); bottom: {helpBottom}px; transform: translateY(50%);"
@@ -377,7 +381,7 @@
 	{/if}
 
 	<!-- Step 6: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
-	{#if currentStep === 6}
+	{#if stepperState.step === 6}
 		<div
 			class="pointer-events-none fixed z-[60] flex items-center"
 			style="top: 24px; right: 160px; transform: translateY(-50%);"

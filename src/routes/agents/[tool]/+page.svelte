@@ -7,7 +7,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { bootCLI } from '$lib/utils/main';
-	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { openTour } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
 	import { requestSingleTabLock } from '$lib/utils/tabLock';
 	import {
@@ -515,7 +515,7 @@
 				</button>
 			{/if}
 			<button
-				onclick={() => (stepperState.open = true)}
+				onclick={openTour}
 				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none text-white/35 transition-colors hover:text-white/60"
 			>
 				<Icon icon="mingcute:question-line" width="20" height="20" />

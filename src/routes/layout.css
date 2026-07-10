@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 @theme {
+	--font-display: 'Stack Sans Text', ui-sans-serif, system-ui, sans-serif;
+
 	--color-bc-sidebar: #0f0f10;
 	--color-bc-panel: #111113;
 	--color-bc-terminal: #0d0d0f;

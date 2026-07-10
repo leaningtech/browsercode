@@ -6,7 +6,7 @@
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
-	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { openTour } from '$lib/stores/stepper.svelte';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
 	let isHome = $derived($page.route.id === '/');
@@ -93,6 +93,60 @@
 	<div class="mx-3 h-px bg-bc-mist/10"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
+		<!-- Ide: expands on hover with curated frameworks + GitHub; non-expandable while on /ide -->
+		<div
+			class="group relative flex items-center justify-center"
+			role="group"
+			onmouseenter={() => openFlyoutNow('ide')}
+			onmouseleave={scheduleCloseFlyout}
+		>
+			<button
+				onclick={() => navigate('/ide')}
+				data-tour-target="ide"
+				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
+					{isIdeSection
+					? 'bg-bc-azure/15 text-bc-azure'
+					: 'text-white/35 hover:bg-white/5 hover:text-white/70'}"
+			>
+				<Icon icon="mingcute:code-line" width="26" height="26" />
+			</button>
+
+			{#if isIdeLandingOnly}
+				{@render tooltip('Playground IDE')}
+			{:else}
+				<div
+					class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
+					'ide'
+						? 'visible opacity-100'
+						: 'invisible'}"
+				>
+					<div
+						class="solid-panel rounded-lg border border-bc-mist/15 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+					>
+						<div
+							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
+						>
+							Frameworks
+						</div>
+						{#each frameworkRailItems as fw (fw.id)}
+							<button
+								type="button"
+								onclick={() => navigate(`/ide?framework=${fw.id}`)}
+								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-mist/10 hover:text-zinc-100"
+							>
+								<span
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/5"
+								>
+									<Icon icon={fw.icon} width="14" height="14" />
+								</span>
+								<span class="flex-1 truncate">{fw.label}</span>
+							</button>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
+
 		<!-- Agents: hidden while on the bare picker (it already shows the same choices inline);
 		     shows on hover everywhere else, including once a specific agent is running. -->
 		<div
@@ -180,71 +234,6 @@
 				</div>
 			{/if}
 		</div>
-
-		<!-- Ide: expands on hover with curated frameworks + GitHub; non-expandable while on /ide -->
-		<div
-			class="group relative flex items-center justify-center"
-			role="group"
-			onmouseenter={() => openFlyoutNow('ide')}
-			onmouseleave={scheduleCloseFlyout}
-		>
-			<button
-				onclick={() => navigate('/ide')}
-				data-tour-target="ide"
-				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
-					{isIdeSection
-					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-white/35 hover:bg-white/5 hover:text-white/70'}"
-			>
-				<Icon icon="mingcute:code-line" width="26" height="26" />
-			</button>
-
-			{#if isIdeLandingOnly}
-				{@render tooltip('Playground IDE')}
-			{:else}
-				<div
-					class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
-					'ide'
-						? 'visible opacity-100'
-						: 'invisible'}"
-				>
-					<div
-						class="solid-panel rounded-lg border border-bc-mist/15 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
-					>
-						<div
-							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
-						>
-							Frameworks
-						</div>
-						{#each frameworkRailItems as fw (fw.id)}
-							<button
-								type="button"
-								onclick={() => navigate(`/ide?framework=${fw.id}`)}
-								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-mist/10 hover:text-zinc-100"
-							>
-								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/5"
-								>
-									<Icon icon={fw.icon} width="14" height="14" />
-								</span>
-								<span class="flex-1 truncate">{fw.label}</span>
-							</button>
-						{/each}
-						<div class="my-1 h-px bg-bc-mist/10"></div>
-						<button
-							type="button"
-							onclick={() => navigate('/ide')}
-							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-400 transition hover:bg-bc-mist/10 hover:text-zinc-100"
-						>
-							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
-								<Icon icon="mingcute:github-line" width="14" height="14" />
-							</span>
-							<span class="flex-1 truncate">Clone from GitHub…</span>
-						</button>
-					</div>
-				</div>
-			{/if}
-		</div>
 	</nav>
 
 	<div class="mx-3 h-px bg-bc-mist/10"></div>
@@ -281,7 +270,7 @@
 		>
 			<button
 				onclick={() => {
-					stepperState.open = true;
+					openTour();
 					trackEvent('Clicked Help', { action: 'tour-direct' });
 				}}
 				data-tour-target="help"
@@ -304,7 +293,7 @@
 					<button
 						type="button"
 						onclick={() => {
-							stepperState.open = true;
+							openTour();
 							trackEvent('Clicked Help', { action: 'tour' });
 						}}
 						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-azure/10 hover:text-zinc-100"
