@@ -10,12 +10,14 @@
 </script>
 
 <div
-	class="flex h-full w-full items-center justify-center overflow-auto bg-zinc-950 p-6 text-zinc-300"
+	class="bc-page-bg flex h-full w-full items-center justify-center overflow-auto p-6 text-zinc-300"
 >
 	<div class="w-full max-w-lg text-center">
 		<h1 class="mb-1 text-lg font-semibold text-zinc-100">Agents</h1>
 		<p class="mb-8 text-[13px] text-white/40">
-			Use your favorite CLI agents without any installations, sandboxed.
+			Use your favorite CLI agents without any installations, <span class="text-bc-mist"
+				>sandboxed</span
+			>.
 		</p>
 
 		<div class="grid grid-cols-2 gap-3">
@@ -26,7 +28,7 @@
 					class="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-left transition
 						{item.disabled
 						? 'cursor-not-allowed border-white/5 bg-white/[0.02]'
-						: 'border-white/8 bg-[#111111] hover:border-white/20 hover:bg-white/5'}"
+						: 'glass-panel border-bc-mist/12 hover:border-bc-mist/30'}"
 				>
 					<span
 						class="flex h-11 w-11 items-center justify-center rounded-lg {item.disabled
@@ -46,7 +48,9 @@
 					<span class="flex items-center gap-1.5 text-[13px] font-medium">
 						<span class={item.disabled ? 'text-white/30' : 'text-zinc-200'}>{item.label}</span>
 						{#if item.disabled}
-							<span class="rounded bg-white/6 px-1.5 py-0.5 text-[10px] font-medium text-white/30">
+							<span
+								class="rounded bg-bc-gold/10 px-1.5 py-0.5 text-[10px] font-medium text-bc-gold/80"
+							>
 								Soon
 							</span>
 						{/if}

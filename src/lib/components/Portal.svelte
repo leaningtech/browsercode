@@ -64,7 +64,7 @@
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		<!-- Header -->
 		<div
-			class="flex h-10 shrink-0 items-center justify-between border-b border-white/6 bg-[#111111] px-3"
+			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-mist/10 bg-[#050c1a] px-3"
 		>
 			<div class="flex items-center gap-2 text-[13px] text-white/35">
 				<Icon icon="mingcute:eye-2-line" width="14" height="14" />
@@ -76,7 +76,7 @@
 					{#if portals.length > 1}
 						<div class="relative">
 							<select
-								class="h-7 min-w-18 appearance-none rounded border border-white/10 bg-white/5 pr-5 pl-2 text-[12px] text-white/50 outline-none hover:border-white/20 hover:text-white/70"
+								class="h-7 min-w-18 appearance-none rounded border border-bc-mist/15 bg-white/5 pr-5 pl-2 text-[12px] text-white/50 outline-none hover:border-bc-mist/30 hover:text-white/70"
 								onchange={onPortChange}
 								value={selectedPort ?? undefined}
 								aria-label="Select portal port"
@@ -103,25 +103,25 @@
 
 					{#if showMenu}
 						<div
-							class="absolute top-[calc(100%+4px)] right-0 z-30 min-w-42 rounded-lg border border-white/10 bg-[#111111] p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
+							class="solid-panel absolute top-[calc(100%+4px)] right-0 z-30 min-w-42 rounded-lg border border-bc-mist/15 p-1 shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
 						>
 							<button
 								onclick={onCopyLink}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-bc-azure/10"
 							>
 								<Icon icon="mingcute:copy-2-line" width="13" height="13" />
 								Copy link
 							</button>
 							<button
 								onclick={onOpenNewTab}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-bc-azure/10"
 							>
 								<Icon icon="mingcute:external-link-line" width="13" height="13" />
 								Open in new tab
 							</button>
 							<button
 								onclick={onShowQrCode}
-								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-white/6"
+								class="flex w-full cursor-pointer items-center gap-2 rounded border-none bg-transparent px-2 py-1.5 text-left text-[12px] text-white/70 transition-colors hover:bg-bc-azure/10"
 							>
 								<Icon icon="mingcute:qrcode-2-line" width="13" height="13" />
 								Show QR code
@@ -144,7 +144,7 @@
 
 				{#if showInfo}
 					<div
-						class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md"
+						class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-bc-abyss/90 backdrop-blur-md"
 					>
 						<button
 							onclick={onCloseOverlays}
@@ -159,7 +159,7 @@
 						</div>
 
 						{#if qrError}
-							<div class="mt-3 text-center text-[12px] text-rose-300/90">{qrError}</div>
+							<div class="mt-3 text-center text-[12px] text-bc-coral">{qrError}</div>
 						{:else}
 							<div class="mt-3 max-w-50 truncate text-center text-[12px] text-white/40">
 								{src}

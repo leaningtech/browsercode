@@ -116,14 +116,14 @@
 		use:measureOnMount
 	>
 		<div
-			class="relative w-full max-w-xl rounded-xl border border-white/10 bg-bc-panel shadow-2xl"
+			class="glass-panel relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"
 		>
 			<!-- Header strip, mirroring the IDE panel chrome -->
 			<div
-				class="flex items-center justify-between border-b border-white/10 px-5 py-3 text-xs text-zinc-500"
+				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-zinc-500"
 			>
 				<span class="font-medium tracking-wide text-zinc-400 uppercase">BrowserCode</span>
 				<span class="font-mono text-zinc-600">{currentStep} / {totalSteps}</span>
@@ -161,9 +161,9 @@
 						href="https://browserpod.io"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="mt-6 flex items-center gap-3 rounded-lg border border-white/5 bg-black/30 px-4 py-3 transition-colors duration-150 hover:border-white/10 hover:bg-black/40"
+						class="glass-panel mt-6 flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
 					>
-						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-zinc-200" />
+						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-bc-mist" />
 						<div class="flex-1 text-sm text-zinc-300">
 							<span class="font-medium">BrowserPod</span>
 							<span class="ml-2 text-zinc-500">Learn more</span>
@@ -186,7 +186,7 @@
 					<div class="mt-6 grid grid-cols-2 gap-2">
 						{#each toolItems as item (item.id)}
 							<div
-								class="flex items-center gap-2 rounded-lg border border-white/5 bg-black/30 px-3 py-2.5"
+								class="glass-panel flex items-center gap-2 rounded-lg border border-bc-mist/10 px-3 py-2.5"
 							>
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {item.disabled
@@ -211,7 +211,7 @@
 									{item.label}
 								</span>
 								{#if item.disabled}
-									<span class="text-[10px] text-zinc-600">Soon</span>
+									<span class="text-[10px] text-bc-gold/70">Soon</span>
 								{/if}
 							</div>
 						{/each}
@@ -228,7 +228,7 @@
 					<div class="mt-6 flex flex-wrap gap-2">
 						{#each frameworkRailItems as fw (fw.id)}
 							<span
-								class="flex items-center gap-1.5 rounded-md border border-white/5 bg-black/30 px-2.5 py-1.5 text-xs text-zinc-400"
+								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-zinc-400"
 							>
 								<Icon icon={fw.icon} width="14" height="14" />
 								{fw.label}
@@ -269,14 +269,14 @@
 					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
 							on:click={goAgents}
-							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-emerald-500"
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
 						>
 							<Icon icon="mingcute:robot-line" width="18" height="18" />
 							Start with agents
 						</button>
 						<button
 							on:click={goIde}
-							class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/10"
+							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
 						>
 							<Icon icon="mingcute:code-line" width="18" height="18" />
 							Start with IDE
@@ -286,7 +286,9 @@
 			</div>
 
 			<!-- Footer with nav + step pips -->
-			<div class="flex items-center justify-between border-t border-white/10 bg-black/20 px-5 py-3">
+			<div
+				class="flex items-center justify-between border-t border-bc-mist/10 bg-black/20 px-5 py-3"
+			>
 				<button
 					on:click={prevStep}
 					disabled={currentStep === 1}
@@ -301,7 +303,7 @@
 						<span
 							class="h-1.5 rounded-full transition-all duration-300"
 							class:w-6={i + 1 === currentStep}
-							class:bg-zinc-100={i + 1 === currentStep}
+							class:bg-bc-azure={i + 1 === currentStep}
 							class:w-1.5={i + 1 !== currentStep}
 							class:bg-zinc-700={i + 1 !== currentStep}
 						></span>
@@ -318,7 +320,7 @@
 					{#if currentStep < totalSteps}
 						<button
 							on:click={nextStep}
-							class="inline-flex items-center gap-1.5 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-white"
+							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-bc-azure/85"
 						>
 							Next
 							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
@@ -335,9 +337,9 @@
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); top: {agentsTop}px; transform: translateY(-50%);"
 		>
-			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
 			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
 			>
 				Run AI agents, sandboxed
 			</span>
@@ -350,9 +352,9 @@
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); top: {ideTop}px; transform: translateY(-50%);"
 		>
-			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
 			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
 			>
 				Frameworks & GitHub, in one click
 			</span>
@@ -365,9 +367,9 @@
 			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
 			style="left: var(--width-sidebar); bottom: {helpBottom}px; transform: translateY(50%);"
 		>
-			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
 			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
 			>
 				Found a bug? Start here
 			</span>
@@ -381,12 +383,12 @@
 			style="top: 24px; right: 160px; transform: translateY(-50%);"
 		>
 			<span
-				class="flex items-center gap-2 rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-black shadow-lg"
+				class="flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
 			>
 				<Icon icon="simple-icons:github" width="12" height="12" />
 				Star us on GitHub!
 			</span>
-			<span class="h-2 w-2 rotate-45 bg-zinc-100"></span>
+			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
 		</div>
 	{/if}
 {/if}

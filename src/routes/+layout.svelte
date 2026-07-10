@@ -78,7 +78,7 @@
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label="Star this project on GitHub"
-			class="pointer-events-auto absolute flex items-center justify-center gap-1.5 bg-[#333] py-1.5 text-xs font-semibold text-white shadow-md"
+			class="pointer-events-auto absolute flex items-center justify-center gap-1.5 bg-bc-azure py-1.5 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(74,125,255,0.45)] transition-colors duration-150 hover:bg-bc-mist hover:text-bc-abyss"
 			style="top: 38px; right: -42px; width: 190px; transform: rotate(45deg);"
 		>
 			Star me on GitHub

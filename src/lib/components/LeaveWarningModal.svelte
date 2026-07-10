@@ -33,13 +33,13 @@
 		onclick={(e) => e.target === e.currentTarget && cancel()}
 	>
 		<div
-			class="max-w-sm rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-2xl"
+			class="glass-panel max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 			role="alertdialog"
 			aria-modal="true"
 			aria-labelledby="leave-warning-title"
 		>
 			<div
-				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400"
+				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-gold/10 text-bc-gold"
 			>
 				<Icon icon="mingcute:alert-line" width="22" height="22" />
 			</div>
@@ -58,7 +58,7 @@
 				</button>
 				<button
 					onclick={confirmLeave}
-					class="rounded-md bg-rose-500/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-rose-500"
+					class="rounded-md bg-bc-coral/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-bc-coral"
 				>
 					Leave
 				</button>

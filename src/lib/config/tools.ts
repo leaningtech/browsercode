@@ -17,6 +17,7 @@ export const toolItems: ToolItem[] = [
 		icon: 'mingcute:claude-line',
 		label: 'Claude Code',
 		disabled: false,
+		// Original brand colors, not the app's accent palette — kept recognizable at a glance.
 		accentClass: 'bg-orange-500/10 text-orange-400',
 		dotClass: 'bg-orange-400'
 	},
@@ -33,16 +34,16 @@ export const toolItems: ToolItem[] = [
 		icon: 'hugeicons:chat-gpt',
 		label: 'Codex CLI',
 		disabled: true,
-		accentClass: 'bg-emerald-500/10 text-emerald-400',
-		dotClass: 'bg-emerald-400'
+		accentClass: 'bg-bc-orchid/10 text-bc-orchid',
+		dotClass: 'bg-bc-orchid'
 	},
 	{
 		id: 'opencode',
 		icon: null,
 		label: 'OpenCode',
 		disabled: true,
-		accentClass: 'bg-fuchsia-500/10 text-fuchsia-400',
-		dotClass: 'bg-fuchsia-400'
+		accentClass: 'bg-bc-coral/10 text-bc-coral',
+		dotClass: 'bg-bc-coral'
 	}
 ];
 

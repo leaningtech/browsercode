@@ -130,7 +130,7 @@
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
 	<div
-		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-white/[0.06] bg-[#111111]"
+		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-mist/10 bg-[#050c1a]"
 	>
 		{#if session.openFiles.length === 0}
 			<div class="flex items-center gap-1.5 px-3 text-[11px] text-white/35">
@@ -143,7 +143,7 @@
 			{@const dirty = file.content !== file.savedContent}
 			<div
 				class="group flex h-8 shrink-0 items-center transition {active
-					? 'bg-white/[0.04] text-white/80'
+					? 'bg-bc-azure/10 text-bc-mist'
 					: 'text-white/30 hover:text-white/55'}"
 			>
 				<!-- Focus as a preview open so clicking a tab never changes its pin state. -->
@@ -177,18 +177,18 @@
 			</div>
 		{/each}
 	</div>
-	<div class="relative min-h-0 flex-1 overflow-hidden bg-zinc-950">
+	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-abyss">
 		<div bind:this={container} class="h-full w-full"></div>
 		{#if session.openFiles.length === 0 && !session.loading && editor}
-			<div class="absolute inset-0 z-10 flex items-center justify-center bg-zinc-950">
+			<div class="absolute inset-0 z-10 flex items-center justify-center bg-bc-abyss">
 				<span class="text-[11px] text-white/25">No file open</span>
 			</div>
 		{/if}
 		{#if session.loading || !editor}
 			<div
-				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-zinc-950"
+				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-bc-abyss"
 			>
-				<span class="loader-spin text-emerald-500">
+				<span class="loader-spin text-bc-azure">
 					<Icon icon="mingcute:loading-3-line" width="18" height="18" />
 				</span>
 				<span class="text-[11px] text-white/25">Loading…</span>

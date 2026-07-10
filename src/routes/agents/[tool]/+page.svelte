@@ -70,7 +70,6 @@
 
 	function dismissTerminalTip() {
 		showTerminalTip = false;
-		localStorage.setItem('hasSeenAgentTerminalTip', 'true');
 	}
 
 	// Any keypress means they've already found the terminal — no need to keep the tip up.
@@ -232,9 +231,8 @@
 			// the duplicate-tab case above has nothing booted, so there's no work to lose.
 			window.addEventListener('beforeunload', handleBeforeUnload);
 
-			if (!localStorage.getItem('hasSeenAgentTerminalTip')) {
-				showTerminalTip = true;
-			}
+			// Shown on every boot, not just the first ever visit — it's an easy thing to miss.
+			showTerminalTip = true;
 
 			bootCLI((update: PortalUpdate | string) => {
 				if (typeof update === 'string') {
@@ -271,10 +269,10 @@
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
 		>
 			<div
-				class="max-w-sm rounded-xl border border-white/10 bg-[#111111] px-6 py-7 text-center shadow-2xl"
+				class="glass-panel max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 			>
 				<div
-					class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400"
+					class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-gold/10 text-bc-gold"
 				>
 					<Icon icon="mingcute:alert-line" width="22" height="22" />
 				</div>
@@ -287,7 +285,7 @@
 				{:else}
 					<button
 						onclick={attemptCloseTab}
-						class="rounded-md bg-white/10 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-white/15"
+						class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-bc-azure"
 					>
 						Close
 					</button>
@@ -309,10 +307,10 @@
 		{#if showTerminalTip && !(isMobile && activeMobileView !== 'terminal')}
 			<div class="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center px-4">
 				<div
-					class="pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-white/10 bg-[#111111]/95 px-4 py-3 shadow-2xl backdrop-blur-sm"
+					class="glass-panel pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-bc-mist/15 px-4 py-3 shadow-2xl"
 				>
 					<span
-						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-500/10 text-blue-400"
+						class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bc-azure/10 text-bc-azure"
 					>
 						<Icon icon="mingcute:keyboard-line" width="18" height="18" />
 					</span>

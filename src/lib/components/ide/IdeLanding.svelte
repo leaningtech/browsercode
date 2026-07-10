@@ -39,7 +39,7 @@
 </script>
 
 <div
-	class="flex h-full w-full items-center justify-center overflow-auto bg-zinc-950 p-6 text-zinc-300"
+	class="bc-page-bg flex h-full w-full items-center justify-center overflow-auto p-6 text-zinc-300"
 >
 	<div class="w-full max-w-lg">
 		<h1 class="mb-1 text-lg font-semibold text-zinc-100">IDE Playground</h1>
@@ -51,13 +51,13 @@
 			href="https://browserpod.io"
 			target="_blank"
 			rel="noopener noreferrer"
-			class="mb-6 flex items-start gap-2.5 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/5"
+			class="glass-panel mb-6 flex items-start gap-2.5 rounded-lg border border-bc-mist/12 px-3 py-2.5 text-left transition hover:border-bc-mist/30"
 		>
 			<Icon
 				icon="mingcute:cube-3d-line"
 				width="16"
 				height="16"
-				class="mt-0.5 shrink-0 text-zinc-400"
+				class="mt-0.5 shrink-0 text-bc-mist"
 			/>
 			<span class="text-[12px] leading-relaxed text-white/45">
 				Runs entirely in a <span class="text-zinc-200">BrowserPod</span> sandbox — a WebAssembly Node.js
@@ -66,14 +66,14 @@
 		</a>
 
 		<div class="mb-6">
-			<div class="mb-2 text-[11px] font-medium tracking-widest text-zinc-600 uppercase">
+			<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
 				Frameworks
 			</div>
 			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 				{#each frameworkRailItems as fw (fw.id)}
 					<button
 						onclick={() => openFramework(fw.id)}
-						class="flex items-center gap-2 rounded-lg border border-white/8 bg-[#111111] px-3 py-2 text-left text-[13px] text-zinc-300 transition hover:border-white/20 hover:bg-white/5"
+						class="glass-panel flex items-center gap-2 rounded-lg border border-bc-mist/12 px-3 py-2 text-left text-[13px] text-zinc-300 transition hover:border-bc-mist/30"
 					>
 						<Icon icon={fw.icon} width="16" height="16" class="shrink-0" />
 						<span class="truncate">{fw.label}</span>
@@ -83,7 +83,7 @@
 		</div>
 
 		<div>
-			<div class="mb-2 text-[11px] font-medium tracking-widest text-zinc-600 uppercase">
+			<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
 				Clone from GitHub
 			</div>
 			<div class="flex gap-2">
@@ -92,17 +92,17 @@
 					oninput={() => (error = '')}
 					onkeydown={(e) => e.key === 'Enter' && openRepo()}
 					placeholder="github.com/owner/repo/tree/main/dir"
-					class="min-w-0 flex-1 rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-[13px] text-zinc-200 outline-none placeholder:text-white/25 focus:border-white/25"
+					class="glass-panel min-w-0 flex-1 rounded-lg border border-bc-mist/15 px-3 py-2 text-[13px] text-zinc-200 outline-none placeholder:text-white/25 focus:border-bc-azure/50"
 				/>
 				<button
 					onclick={openRepo}
-					class="shrink-0 rounded-lg bg-emerald-600/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-emerald-500"
+					class="shrink-0 rounded-lg bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-bc-azure"
 				>
 					Clone
 				</button>
 			</div>
 			{#if error}
-				<p class="mt-2 text-[12px] text-rose-300/90">{error}</p>
+				<p class="mt-2 text-[12px] text-bc-coral">{error}</p>
 			{/if}
 		</div>
 	</div>

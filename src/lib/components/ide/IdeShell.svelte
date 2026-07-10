@@ -9,6 +9,7 @@
 	import { fade } from 'svelte/transition';
 	import { cubicIn } from 'svelte/easing';
 	import type { IdeSession, PortalUpdate } from '$lib/ide/session.svelte';
+	import { consumeIntentionalNavigation } from '$lib/stores/leaveWarning.svelte';
 
 	type PortalItem = { port: number; url: string };
 
@@ -221,6 +222,20 @@
 		return () => mql.removeEventListener('change', onChange);
 	});
 
+	// Catches tab close/refresh/back-forward while a pod is running here — the in-app leave-warning
+	// modal (triggered via the sidebar) already asks and marks the navigation intentional, so this
+	// only fires for real browser-driven unloads.
+	function handleBeforeUnload(event: BeforeUnloadEvent) {
+		if (consumeIntentionalNavigation()) return;
+		event.preventDefault();
+		event.returnValue = '';
+	}
+
+	onMount(() => {
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	});
+
 	onMount(async () => {
 		if (typeof Atomics?.waitAsync !== 'function') {
 			isCompatibleBrowser = false;
@@ -243,10 +258,10 @@
 	});
 </script>
 
-<div class="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-zinc-300">
+<div class="bc-page-bg flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-zinc-300">
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 	<header
-		class="flex h-10 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#111111] px-3"
+		class="flex h-10 shrink-0 items-center justify-between border-b border-bc-mist/10 bg-[#050c1a] px-3"
 	>
 		<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
 			<!-- Switching frameworks or cloning a repo happens from the sidebar's Ide flyout. -->
@@ -256,7 +271,7 @@
 				<span class="truncate text-white/60">{session.selectedFile}</span>
 			{/if}
 			{#if session.isSaving}
-				<span class="ml-1 shrink-0 text-emerald-500/70">saving…</span>
+				<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
 			{/if}
 		</div>
 	</header>
@@ -268,12 +283,12 @@
 		bind:this={bodyEl}
 	>
 		<!-- Icon rail -->
-		<aside class="flex w-10 shrink-0 flex-col border-r border-white/[0.06] bg-[#111111]">
+		<aside class="flex w-10 shrink-0 flex-col border-r border-bc-mist/10 bg-[#050c1a]">
 			<div class="flex flex-col gap-0.5 p-1 pt-2">
 				<button
 					onclick={() => (activePanel = activePanel === 'files' ? null : 'files')}
 					class="flex items-center justify-center rounded p-1.5 transition {activePanel === 'files'
-						? 'bg-white/10 text-white'
+						? 'bg-bc-azure/15 text-bc-azure'
 						: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
 					title="Files"
 				>
@@ -295,10 +310,10 @@
 		<!-- Side panel: files or frameworks -->
 		{#if activePanel}
 			<div
-				class="side-panel flex shrink-0 flex-col bg-[#0f0f10]"
+				class="side-panel flex shrink-0 flex-col bg-[#050c1a]"
 				style="width: {isMobile ? 240 : filePanelWidth}px;"
 			>
-				<div class="flex items-center justify-between border-b border-white/[0.04] px-3 py-1.5">
+				<div class="flex items-center justify-between border-b border-bc-mist/10 px-3 py-1.5">
 					<span class="text-[10px] font-medium tracking-widest text-zinc-600 uppercase">
 						Files
 					</span>
@@ -407,13 +422,13 @@
 			>
 				{#if !isCompatibleBrowser}
 					<div
-						class="absolute inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-4 backdrop-blur-md"
+						class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
 					>
 						<div
-							class="max-w-85 rounded-xl border border-white/8 bg-[#111111] px-6 py-8 text-center"
+							class="glass-panel max-w-85 rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
 						>
 							<div
-								class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400"
+								class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
 							>
 								<Icon icon="mingcute:alert-line" width="22" height="22" />
 							</div>
@@ -456,7 +471,7 @@
 	<!-- ── Mobile tab bar ──────────────────────────────────────────────────── -->
 	{#if isMobile}
 		<nav
-			class="flex shrink-0 items-stretch border-t border-white/[0.06] bg-[#111111]"
+			class="flex shrink-0 items-stretch border-t border-bc-mist/10 bg-[#050c1a]"
 			style="height: calc(44px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			<button
@@ -516,7 +531,7 @@
 	.divider-line {
 		position: absolute;
 		border-radius: 9999px;
-		background: rgba(255, 255, 255, 0.07);
+		background: rgba(183, 205, 255, 0.1);
 		transition:
 			background 0.15s,
 			box-shadow 0.15s;
@@ -537,7 +552,7 @@
 	.divider-col.active .divider-line,
 	.divider-row:hover .divider-line,
 	.divider-row.active .divider-line {
-		background: rgba(255, 255, 255, 0.25);
+		background: rgba(74, 125, 255, 0.5);
 	}
 
 	/* ── Mobile ────────────────────────────────────────────────────────────── */
@@ -568,8 +583,8 @@
 		color: rgba(255, 255, 255, 0.7);
 	}
 	.mobile-tab-btn.active {
-		color: rgba(255, 255, 255, 0.95);
-		background: rgba(255, 255, 255, 0.04);
+		color: #b7cdff;
+		background: rgba(74, 125, 255, 0.1);
 	}
 
 	/* On mobile, overlay the files/frameworks side panel so it doesn't squeeze

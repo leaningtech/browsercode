@@ -44,13 +44,13 @@
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
 	<div
-		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-white/[0.06] bg-[#111111]"
+		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-mist/10 bg-[#050c1a]"
 	>
 		<button
 			onclick={() => selectTab(MAIN)}
 			class="inline-flex h-8 shrink-0 items-center gap-1 border-none bg-transparent px-3 text-[11px] font-medium transition {activeTab ===
 			MAIN
-				? 'bg-white/[0.04] text-white/80'
+				? 'bg-bc-azure/10 text-bc-mist'
 				: 'text-white/30 hover:text-white/55'}"
 		>
 			<Icon icon="mingcute:terminal-line" width="11" height="11" />
@@ -59,7 +59,7 @@
 		{#each bashTabs as tab (tab.id)}
 			<div
 				class="flex h-8 shrink-0 items-center transition {activeTab === tab.id
-					? 'bg-white/[0.04] text-white/80'
+					? 'bg-bc-azure/10 text-bc-mist'
 					: 'text-white/30 hover:text-white/55'}"
 			>
 				<button

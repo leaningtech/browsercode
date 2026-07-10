@@ -17,7 +17,7 @@
 	}
 </script>
 
-<div class="flex h-full w-full flex-col overflow-y-auto bg-zinc-950 text-zinc-300">
+<div class="bc-page-bg flex h-full w-full flex-col overflow-y-auto text-zinc-300">
 	<!-- ── Section 1: hero ─────────────────────────────────────────────────── -->
 	<section
 		class="relative flex min-h-full shrink-0 flex-col items-center justify-center px-6 py-16 text-center"
@@ -42,14 +42,14 @@
 		<div class="flex flex-col gap-3 sm:flex-row">
 			<button
 				onclick={goAgents}
-				class="flex items-center justify-center gap-2 rounded-lg bg-emerald-600/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-emerald-500"
+				class="flex items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
 			>
 				<Icon icon="mingcute:robot-line" width="18" height="18" />
 				Start with agents
 			</button>
 			<button
 				onclick={goIde}
-				class="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/10"
+				class="glass-panel flex items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
 			>
 				<Icon icon="mingcute:code-line" width="18" height="18" />
 				Start with frameworks
@@ -66,7 +66,7 @@
 	</section>
 
 	<!-- ── Section 2: about ────────────────────────────────────────────────── -->
-	<section id="about" class="mx-auto w-full max-w-xl shrink-0 px-6 py-16">
+	<section id="about" class="mx-auto w-full max-w-3xl shrink-0 px-6 py-16">
 		<img src={favicon} alt="BrowserCode" class="mb-5 h-12 w-12" />
 
 		<h2 class="mb-4 text-3xl font-bold text-zinc-50">What is BrowserCode?</h2>
@@ -101,10 +101,10 @@
 
 		<button
 			onclick={() => (stepperState.open = true)}
-			class="mb-8 flex w-full items-center gap-3 rounded-lg border border-white/8 bg-white/[0.03] px-4 py-3 text-left transition hover:border-white/20 hover:bg-white/5"
+			class="glass-panel mb-8 flex w-full items-center gap-3 rounded-lg border border-bc-mist/12 px-4 py-3 text-left transition hover:border-bc-mist/30"
 		>
 			<span
-				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400"
+				class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-azure/10 text-bc-azure"
 			>
 				<Icon icon="mingcute:route-line" width="18" height="18" />
 			</span>
@@ -115,7 +115,7 @@
 			<Icon icon="mingcute:arrow-right-line" width="16" height="16" class="text-white/25" />
 		</button>
 
-		<div class="mb-2 text-[11px] font-medium tracking-widest text-zinc-600 uppercase">
+		<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
 			Get involved
 		</div>
 		<div class="grid gap-2.5 sm:grid-cols-3">
@@ -123,7 +123,7 @@
 				href="https://github.com/leaningtech/browsercode"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="group flex flex-col gap-2 rounded-lg border border-white/8 bg-[#111111] px-4 py-3.5 transition hover:border-white/20 hover:bg-white/5"
+				class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-mist/12 px-4 py-3.5 transition hover:border-bc-mist/30"
 			>
 				<div class="flex items-center justify-between">
 					<Icon icon="simple-icons:github" width="20" height="20" class="text-zinc-200" />
@@ -143,7 +143,7 @@
 				href="https://discord.leaningtech.com"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="group flex flex-col gap-2 rounded-lg border border-white/8 bg-[#111111] px-4 py-3.5 transition hover:border-white/20 hover:bg-white/5"
+				class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-mist/12 px-4 py-3.5 transition hover:border-bc-mist/30"
 			>
 				<div class="flex items-center justify-between">
 					<Icon icon="simple-icons:discord" width="20" height="20" class="text-zinc-200" />
@@ -163,7 +163,7 @@
 				href="https://browserpod.io"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="group flex flex-col gap-2 rounded-lg border border-white/8 bg-[#111111] px-4 py-3.5 transition hover:border-white/20 hover:bg-white/5"
+				class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-mist/12 px-4 py-3.5 transition hover:border-bc-mist/30"
 			>
 				<div class="flex items-center justify-between">
 					<img src={browserpodLogo} alt="" class="h-5 w-5 opacity-70 grayscale" />

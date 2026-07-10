@@ -8,6 +8,15 @@
 	--color-bc-statusbar: #0a0a0b;
 	--width-sidebar: 4rem;
 	--width-panel: 15rem;
+
+	/* Brand accent palette — deep navy base, plus five highlight colors used sparingly
+	   across menus, the agents picker, and the ide playground picker. */
+	--color-bc-abyss: #020914;
+	--color-bc-azure: #4a7dff;
+	--color-bc-mist: #b7cdff;
+	--color-bc-orchid: #c73da6;
+	--color-bc-gold: #ffd633;
+	--color-bc-coral: #ff6161;
 }
 
 @media (width <= 850px) {
@@ -18,10 +27,40 @@
 
 html,
 body {
-	background-color: #0d0d0e;
+	background-color: var(--color-bc-abyss);
+	background-image:
+		radial-gradient(680px circle at 12% 8%, rgba(74, 125, 255, 0.16), transparent 60%),
+		radial-gradient(560px circle at 88% 92%, rgba(199, 61, 166, 0.12), transparent 60%);
+	background-attachment: fixed;
 	color: #d4d4d8;
 	overflow: hidden;
 	height: 100dvh;
+}
+
+/* Liquid-glass surface: a translucent, blurred card that lets the ambient background glow
+   bleed through — used for the sidebar and picker cards. */
+.glass-panel {
+	background: linear-gradient(155deg, rgba(74, 125, 255, 0.1), rgba(2, 9, 20, 0.62));
+	backdrop-filter: blur(20px) saturate(140%);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+/* Same tint as .glass-panel but fully opaque, no blur — used for flyout/dropdown menus, where
+   see-through content underneath would hurt legibility of the menu items sitting on top. The
+   solid background-color is the base layer; the gradient is a decorative tint painted over it,
+   so every pixel stays opaque even where the gradient itself is semi-transparent. */
+.solid-panel {
+	background-color: #050c1a;
+	background-image: linear-gradient(155deg, rgba(74, 125, 255, 0.16), transparent 65%);
+}
+
+/* Same ambient glow as the body, reapplied per-page — each route's root container paints over
+   the body, so without this the glow behind glass panels would never actually be visible. */
+.bc-page-bg {
+	background-color: var(--color-bc-abyss);
+	background-image:
+		radial-gradient(680px circle at 12% 8%, rgba(74, 125, 255, 0.16), transparent 60%),
+		radial-gradient(560px circle at 88% 92%, rgba(199, 61, 166, 0.12), transparent 60%);
 }
 
 /* Scrollbar styling */
@@ -45,5 +84,5 @@ body {
 
 /* Selection styling */
 ::selection {
-	background-color: rgba(16, 185, 129, 0.3);
+	background-color: rgba(74, 125, 255, 0.35);
 }
