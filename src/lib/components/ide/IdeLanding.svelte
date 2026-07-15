@@ -7,9 +7,7 @@
 	}
 </script>
 
-<div
-	class="bc-page-bg flex h-full w-full items-center justify-center overflow-auto p-6 text-zinc-300"
->
+<div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-zinc-300">
 	<div class="w-full max-w-lg">
 		<h1 class="mb-1 font-display text-lg font-semibold text-zinc-100">IDE Playground</h1>
 		<p class="mb-4 text-[13px] text-white/40">Start from a framework template.</p>
@@ -27,7 +25,7 @@
 				class="mt-0.5 shrink-0 text-bc-mist"
 			/>
 			<span class="text-[12px] leading-relaxed text-white/45">
-				Runs entirely in a <span class="text-zinc-200">BrowserPod</span> sandbox — a WebAssembly Node.js
+				Runs entirely in a <span class="text-zinc-200">BrowserPod</span> sandbox, a WebAssembly Node.js
 				environment with a real filesystem, npm and git. Nothing installs on your machine.
 			</span>
 		</a>

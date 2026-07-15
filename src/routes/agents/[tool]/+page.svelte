@@ -330,7 +330,7 @@
 						</span>
 						<div class="flex-1 text-[12.5px] leading-relaxed text-zinc-300">
 							<span class="font-medium text-zinc-100">This is a real terminal.</span>
-							Click into it and use your keyboard — mouse clicks alone won't do much here.
+							Click into it and use your keyboard. Mouse clicks alone won't do much here.
 						</div>
 						<button
 							onclick={dismissTerminalTip}

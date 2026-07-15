@@ -145,7 +145,7 @@
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						Run AI coding agents like Claude Code and Gemini CLI, or spin up a full IDE playground
-						for popular frameworks — everything sandboxed right in this browser tab.
+						for popular frameworks, with everything sandboxed right in this browser tab.
 					</p>
 				{:else if stepperState.step === 2}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
@@ -247,7 +247,7 @@
 					</h1>
 					<p class="text-sm leading-relaxed text-zinc-400">
 						Please bend, stretch and break it. If something's off, let us know from Help in the
-						sidebar — it's also where the getting-started basics and this tour live.
+						sidebar, which is also where the getting-started basics and this tour live.
 					</p>
 				{:else if stepperState.step === 6}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">

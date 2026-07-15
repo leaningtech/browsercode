@@ -6,13 +6,14 @@
 </script>
 
 <footer
-	class="glass-panel hidden h-8 shrink-0 items-center justify-between border-t border-bc-mist/10 px-4 md:flex"
+	class="hidden h-8 shrink-0 items-center justify-between border-t border-bc-mist/10 px-4 md:flex"
+	style="background: transparent; backdrop-filter: blur(20px) saturate(140%); -webkit-backdrop-filter: blur(20px) saturate(140%);"
 >
 	<span class="flex items-center gap-2 text-[11.5px]">
 		<img src={favicon} alt="BrowserCode logo" class="h-4 w-4" />
-		<span class="text-white/40">BrowserCode v0.5.0</span>
-		<span class="rounded bg-bc-gold/15 px-1.5 py-0.5 font-mono text-[10px] text-bc-gold/80"
-			>Preview</span
+		<span class="text-white/40">BrowserCode</span>
+		<span class="rounded bg-bc-azure/10 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist/70"
+			>v0.5.1</span
 		>
 	</span>
 

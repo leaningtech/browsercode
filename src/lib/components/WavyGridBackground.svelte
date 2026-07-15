@@ -270,5 +270,20 @@
 <canvas
 	bind:this={canvas}
 	aria-hidden="true"
-	class="pointer-events-none absolute inset-0 z-0 h-full w-full"
+	class="pointer-events-none absolute inset-0 z-0 h-full w-full fade-edges"
 ></canvas>
+
+<style>
+	/* Fades the grid out toward all four screen edges instead of cutting off hard. Two gradient
+	   masks (one per axis) intersected together, so corners fade faster than edge midpoints. */
+	.fade-edges {
+		-webkit-mask-image:
+			linear-gradient(to right, transparent, black 12%, black 88%, transparent),
+			linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+		-webkit-mask-composite: source-in, source-over;
+		mask-image:
+			linear-gradient(to right, transparent, black 12%, black 88%, transparent),
+			linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+		mask-composite: intersect;
+	}
+</style>
