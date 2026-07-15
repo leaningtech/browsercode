@@ -85,8 +85,8 @@
 			</h1>
 
 			<p class="mb-10 max-w-md text-[15px] leading-relaxed text-white/45">
-				BrowserCode boots a full, sandboxed Node.js environment in WebAssembly, powered by
-				BrowserPod. No installs, no servers, and no cloud compute.
+				BrowserCode is a development playground for fast-prototyping. It boots a sandboxed Node.js environment
+				in WebAssembly, powered by BrowserPod. No installs, no servers, and no cloud compute.
 			</p>
 
 			<div class="flex flex-col gap-3 sm:flex-row">
