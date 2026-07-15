@@ -85,8 +85,9 @@
 			</h1>
 
 			<p class="mb-10 max-w-md text-[15px] leading-relaxed text-white/45">
-				BrowserCode is a development playground for fast-prototyping. It boots a sandboxed Node.js environment
-				in WebAssembly, powered by BrowserPod. No installs, no servers, and no cloud compute.
+				BrowserCode is a development playground for fast-prototyping. It boots a sandboxed Node.js
+				environment in WebAssembly, powered by BrowserPod. No installs, no servers, and no cloud
+				compute.
 			</p>
 
 			<div class="flex flex-col gap-3 sm:flex-row">
@@ -129,7 +130,7 @@
 	<!-- ── Section 2: about — slides up as a window over the hero ─────────────────────── -->
 	<div
 		class="panel-sheet absolute inset-x-0 top-9 bottom-0 z-20 flex flex-col overflow-hidden rounded-t-[20px] border-t border-bc-mist/15"
-		style="transform: translateY({panelOpen
+		style="backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transform: translateY({panelOpen
 			? '0%'
 			: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
 	>
