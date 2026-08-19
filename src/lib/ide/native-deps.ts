@@ -11,6 +11,9 @@ type Manifest = {
 /** What the repo declares, package name to version spec, dependencies and devDependencies. */
 type DeclaredDeps = Map<string, string>;
 
+/** Reads the repo's own value for an entry, never an earlier patch's, so rule order cannot matter. */
+type CurrentValue = (section: string, name: string) => string | undefined;
+
 type SectionPatch = {
 	/** Top-level manifest key holding a name to value map. */
 	section: string;
@@ -21,7 +24,7 @@ type SectionPatch = {
 
 type FrameworkRule = {
 	applies: (deps: DeclaredDeps) => boolean;
-	patches: SectionPatch[];
+	patches: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
 };
 
 /** Ours wins: for where the repo's own value is the thing that breaks the pod. */
@@ -51,14 +54,35 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 	// Vite 8+
 	{
 		applies: (deps) => majorAtLeast(deps, 'vite', 8),
-		patches: [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.2' })]
+		patches: () => [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.2' })]
 	},
 	// Vite 7 and earlier
 	{
 		applies: (deps) => majorBelow(deps, 'vite', 8),
-		patches: [force('overrides', WASM_BUNDLERS)]
+		patches: () => [force('overrides', WASM_BUNDLERS)]
+	},
+	// Next.js
+	{
+		applies: (deps) => deps.has('next'),
+		patches: (deps, current) => {
+			const dev = nextDevWithWebpack(current('scripts', 'dev'), deps);
+			return dev ? [force('scripts', { dev })] : [];
+		}
 	}
 ];
+
+/**
+ * Turbopack needs native bindings the pod cannot execute. Dropping its flags is enough through Next
+ * 15; 16 defaults to it and needs `--webpack` to opt out.
+ */
+function nextDevWithWebpack(script: string | undefined, deps: DeclaredDeps): string | undefined {
+	if (!script) return undefined;
+	const withoutTurbopack = script.replace(/ --turbo(?:pack)?\b/g, '');
+	if (!majorAtLeast(deps, 'next', 16) || withoutTurbopack.includes('--webpack')) {
+		return withoutTurbopack;
+	}
+	return withoutTurbopack.replace(/\bnext\s+dev\b/, '$& --webpack');
+}
 
 /** Highest major the spec could install. Null means no ceiling at all. */
 function highestMajor(spec: string): number | null {
@@ -116,6 +140,10 @@ export function patchClonedManifest(
 	const deps: DeclaredDeps = new Map(
 		Object.entries({ ...manifest.dependencies, ...manifest.devDependencies })
 	);
+	const currentValue: CurrentValue = (section, name) => {
+		const held = manifest[section];
+		return isRecord(held) ? held[name] : undefined;
+	};
 	// Working copies, seeded from the manifest the first time a rule touches the section. A section
 	// holding anything other than a map is treated as absent; npm would reject it anyway.
 	const sections = new Map<string, Record<string, string>>();
@@ -132,7 +160,7 @@ export function patchClonedManifest(
 	const notes: string[] = [];
 	for (const rule of FRAMEWORK_RULES) {
 		if (!rule.applies(deps)) continue;
-		for (const { section: sectionName, mode, entries } of rule.patches) {
+		for (const { section: sectionName, mode, entries } of rule.patches(deps, currentValue)) {
 			const section = workingCopy(sectionName);
 			for (const [name, value] of Object.entries(entries)) {
 				if (mode === 'fill' && alreadyPresent(section, sectionName, name, deps)) continue;
