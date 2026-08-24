@@ -45,16 +45,17 @@ const DEP_SECTIONS = new Set([
 	'peerDependencies'
 ]);
 
+/** Native binaries the pod cannot execute. */
 const WASM_BUNDLERS = {
-	esbuild: 'npm:esbuild-wasm@0.25.11',
-	rollup: 'npm:@rollup/wasm-node@4.52.4'
+	esbuild: 'npm:esbuild-wasm@*',
+	rollup: 'npm:@rollup/wasm-node@*'
 };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
-	// Vite 8+
+	// Vite 8.2+
 	{
-		applies: (deps) => majorAtLeast(deps, 'vite', 8),
-		patches: () => [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.2' })]
+		applies: (deps) => minorAtLeast(deps, 'vite', 8, 2),
+		patches: () => [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.5' })]
 	},
 	// Vite 7 and earlier
 	{
@@ -90,6 +91,27 @@ function highestMajor(spec: string): number | null {
 	const versions = spec.match(/\d+(?:\.\d+)*/g);
 	if (!versions) return null;
 	return Math.max(...versions.map((version) => Number.parseInt(version, 10)));
+}
+
+/** Highest minor the spec could install within `major`, Infinity when it leaves the minor free. */
+function highestMinor(spec: string, major: number): number {
+	// A caret or a bare major floats the minor: `^8.1.1` installs 8.2 today, so it reads as 8.x.
+	if (spec.includes('^')) return Infinity;
+	const minors = (spec.match(/\d+(?:\.\d+)*/g) ?? [])
+		.map((version) => version.split('.').map(Number))
+		.filter(([declared]) => declared === major)
+		.map(([, minor]) => minor ?? Infinity);
+	return minors.length > 0 ? Math.max(...minors) : Infinity;
+}
+
+/** True when `name` is declared and can install `major.minor` or newer. */
+function minorAtLeast(deps: DeclaredDeps, name: string, major: number, minor: number): boolean {
+	const spec = deps.get(name);
+	if (spec === undefined) return false;
+	const highest = highestMajor(spec);
+	if (highest === null) return true;
+	if (highest !== major) return highest > major;
+	return highestMinor(spec, major) >= minor;
 }
 
 /** True when `name` is declared and can install `major` or newer, an unversioned spec included. */
