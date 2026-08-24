@@ -76,9 +76,23 @@
 	let activePanel = $state<'files' | 'search' | null>('files');
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
 
+	// ── Mobile state ──────────────────────────────────────────────────────────
+	let isMobile = $state(false);
+	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>('editor');
+
 	// Frameworks with a declared app port keep the preview pinned to it; other
-	// ports stay reachable through the port selector.
+	// ports stay reachable through the toolbar's port menu.
 	const portal = new PortalState({ preferredPort: () => session.appPort });
+
+	let isPreviewVisible = $state(true);
+	let previewCollapsed = $derived(!isPreviewVisible && !isMobile);
+
+	/** Collapses to the stub without unmounting: a remount would lose the previewed app's route. */
+	function togglePreview(): void {
+		isPreviewVisible = !isPreviewVisible;
+		// xterm only refits on a resize event.
+		setTimeout(() => fitTerminals(), 0);
+	}
 
 	// Recomputed as the preview moves ports, so a report always carries the live portal URL.
 	let bugReportHref = $derived(bugReportUrl({ repo: session.repo, previewUrl: portal.url }));
@@ -92,10 +106,6 @@
 
 	let bootLines = $derived(BOOT_LOG[session.mode]);
 	let activeLine = $derived(STAGE_LINE[session.bootStage]);
-
-	// ── Mobile state ──────────────────────────────────────────────────────────
-	let isMobile = $state(false);
-	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>('editor');
 
 	// ── Resize state ──────────────────────────────────────────────────────────
 	let filePanelWidth = $state(208);
@@ -369,14 +379,18 @@
 			<!-- Left column: editor + terminal -->
 			<div
 				class="flex h-full min-h-0 flex-col overflow-hidden"
-				class:mobile-hidden={isMobile &&
+				class:pane-hidden={isMobile &&
 					activeMobileView !== 'editor' &&
 					activeMobileView !== 'terminal'}
 				bind:this={leftColEl}
-				style={isMobile ? 'width: 100%;' : `width: ${leftColFraction * 100}%;`}
+				style={isMobile
+					? 'width: 100%;'
+					: previewCollapsed
+						? 'flex: 1 1 0; min-width: 0;'
+						: `width: ${leftColFraction * 100}%;`}
 			>
 				<div
-					class:mobile-hidden={isMobile && activeMobileView !== 'editor'}
+					class:pane-hidden={isMobile && activeMobileView !== 'editor'}
 					style={isMobile ? 'height: 100%; flex-shrink: 0;' : 'flex: 1 1 0; min-height: 0;'}
 				>
 					<EditorPane {session} />
@@ -396,7 +410,7 @@
 				{/if}
 
 				<div
-					class:mobile-hidden={isMobile && activeMobileView !== 'terminal'}
+					class:pane-hidden={isMobile && activeMobileView !== 'terminal'}
 					style={isMobile
 						? 'flex: 1 1 0; min-height: 0; height: 100%;'
 						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; max-height: 600px; min-height: 0;`}
@@ -406,7 +420,7 @@
 			</div>
 
 			<!-- Divider: editor column / preview -->
-			{#if !isMobile}
+			{#if !isMobile && isPreviewVisible}
 				<button
 					type="button"
 					class="divider divider-col"
@@ -420,63 +434,90 @@
 
 			<!-- Right column: preview -->
 			<div
-				class="relative flex min-h-0 min-w-0 flex-1 flex-col"
-				class:mobile-hidden={isMobile && activeMobileView !== 'preview'}
+				class="relative flex min-h-0 min-w-0 flex-col"
+				class:pane-hidden={isMobile && activeMobileView !== 'preview'}
 				class:pointer-events-none={dragging !== null}
-				style={isMobile ? 'width: 100%; height: 100%;' : ''}
+				style={isMobile
+					? 'width: 100%; height: 100%;'
+					: previewCollapsed
+						? 'flex: 0 0 1.75rem;'
+						: 'flex: 1 1 0;'}
 			>
-				{#if !isCompatibleBrowser}
-					<div
-						class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
+				{#if previewCollapsed}
+					<button
+						onclick={togglePreview}
+						title="Show preview"
+						aria-label="Show preview"
+						class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-mist/10 bg-bc-navy py-1.5 text-white/40 transition hover:bg-white/5 hover:text-white/80"
 					>
+						<Icon icon="mingcute:left-line" width="13" height="13" />
+						{#if portal.selectedPort !== null}
+							<span
+								class="font-mono text-[10px] tracking-wider tabular-nums [writing-mode:vertical-rl]"
+								>port {portal.selectedPort}</span
+							>
+						{/if}
+					</button>
+				{/if}
+
+				<div class="relative flex min-h-0 flex-1 flex-col" class:pane-hidden={previewCollapsed}>
+					{#if !isCompatibleBrowser}
 						<div
-							class="glass-panel max-w-85 rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
+							class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
 						>
 							<div
-								class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
+								class="glass-panel max-w-85 rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
 							>
-								<Icon icon="mingcute:alert-line" width="22" height="22" />
+								<div
+									class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
+								>
+									<Icon icon="mingcute:alert-line" width="22" height="22" />
+								</div>
+								<h3 class="mb-2 text-sm font-semibold text-zinc-50">Incompatible Browser</h3>
+								<p class="text-[12px] leading-relaxed text-zinc-400">
+									Requires <strong class="text-zinc-200">Atomics.waitAsync</strong> (Chrome, Edge, Safari
+									16.4+).
+								</p>
 							</div>
-							<h3 class="mb-2 text-sm font-semibold text-zinc-50">Incompatible Browser</h3>
-							<p class="text-[12px] leading-relaxed text-zinc-400">
-								Requires <strong class="text-zinc-200">Atomics.waitAsync</strong> (Chrome, Edge, Safari
-								16.4+).
-							</p>
 						</div>
-					</div>
-				{:else}
-					{#if portal.portals.length > 0}
-						<Portal
-							src={portal.url}
-							frameStatus={portal.frameStatus}
-							onFrameLoad={portal.reportFrameLoaded}
-							portals={portal.portals}
-							selectedPort={portal.selectedPort}
-							showMenu={portal.showMenu}
-							showInfo={portal.showInfo}
-							copied={portal.copied}
-							qrError={portal.qrError}
-							onPortChange={portal.onPortChange}
-							onToggleMenu={portal.toggleMenu}
-							onCopyLink={portal.copyUrl}
-							onOpenNewTab={portal.openInNewTab}
-							onShowQrCode={portal.showQRCode}
-							onCloseOverlays={portal.closeOverlays}
-							onQrResult={portal.reportQrResult}
-						/>
-					{/if}
-					<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
-					{#if loaderVisible}
-						<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
-							<LoadingScene
-								lines={bootLines}
-								{activeLine}
-								flash={previewLive}
-								onFlashComplete={() => (loaderVisible = false)}
+					{:else}
+						{#if portal.portals.length > 0}
+							<Portal
+								src={portal.url}
+								frameStatus={portal.frameStatus}
+								onFrameLoad={portal.reportFrameLoaded}
+								portals={portal.portals}
+								selectedPort={portal.selectedPort}
+								showMenu={portal.showMenu}
+								showPorts={portal.showPorts}
+								showInfo={portal.showInfo}
+								copied={portal.copied}
+								qrError={portal.qrError}
+								onSelectPort={portal.selectPort}
+								onTogglePorts={portal.togglePorts}
+								onToggleMenu={portal.toggleMenu}
+								onCopyLink={portal.copyUrl}
+								onOpenNewTab={portal.openInNewTab}
+								onShowQrCode={portal.showQRCode}
+								onCloseOverlays={portal.closeOverlays}
+								onQrResult={portal.reportQrResult}
+								onBeforeReload={() => session.saveAll()}
+								onCollapse={isMobile ? undefined : togglePreview}
 							/>
-						</div>
+						{/if}
+						<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
+						{#if loaderVisible}
+							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
+								<LoadingScene
+									lines={bootLines}
+									{activeLine}
+									flash={previewLive}
+									onFlashComplete={() => (loaderVisible = false)}
+								/>
+							</div>
+						{/if}
 					{/if}
-				{/if}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -570,8 +611,8 @@
 
 	/* ── Mobile ────────────────────────────────────────────────────────────── */
 	/* Keep hidden panes mounted (terminals/iframes need persistent DOM) but
-	   take them out of layout so the active pane fills the viewport. */
-	.mobile-hidden {
+	   take them out of layout so the visible panes fill the space. */
+	.pane-hidden {
 		display: none !important;
 	}
 

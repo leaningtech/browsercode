@@ -377,10 +377,12 @@
 						portals={portal.portals}
 						selectedPort={portal.selectedPort}
 						showMenu={portal.showMenu}
+						showPorts={portal.showPorts}
 						showInfo={portal.showInfo}
 						copied={portal.copied}
 						qrError={portal.qrError}
-						onPortChange={portal.onPortChange}
+						onSelectPort={portal.selectPort}
+						onTogglePorts={portal.togglePorts}
 						onToggleMenu={portal.toggleMenu}
 						onCopyLink={portal.copyUrl}
 						onOpenNewTab={portal.openInNewTab}
@@ -399,10 +401,12 @@
 						portals={portal.portals}
 						selectedPort={portal.selectedPort}
 						showMenu={portal.showMenu}
+						showPorts={portal.showPorts}
 						showInfo={portal.showInfo}
 						copied={portal.copied}
 						qrError={portal.qrError}
-						onPortChange={portal.onPortChange}
+						onSelectPort={portal.selectPort}
+						onTogglePorts={portal.togglePorts}
 						onToggleMenu={portal.toggleMenu}
 						onCopyLink={portal.copyUrl}
 						onOpenNewTab={portal.openInNewTab}
