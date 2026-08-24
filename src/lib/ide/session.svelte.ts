@@ -15,6 +15,7 @@ import {
 } from '$lib/pod/fs';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
 import { patchClonedManifest } from './native-deps';
+import { isImagePath, loadPodImage, releaseImage, type ImagePayload } from './media';
 import { fetchRepoTree } from '$lib/github/api';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { PortalUpdate } from '$lib/pod/portals';
@@ -29,7 +30,14 @@ const COLOR_ENV = ['FORCE_COLOR=3', 'COLORTERM=truecolor'];
  * A file open as an editor tab. A `preview` tab (opened by single-click)
  * is reused by the next preview open; double-clicking or editing pins it.
  */
-export type OpenFile = { path: string; content: string; savedContent: string; preview: boolean };
+export type OpenFile = {
+	path: string;
+	content: string;
+	savedContent: string;
+	preview: boolean;
+	/** Set on image tabs, which render as a picture and never save. */
+	image?: ImagePayload;
+};
 
 /** Where the boot pipeline currently is; drives the loader's progress readout. `copying` is
  * framework-only, `cloning` GitHub-only. */
@@ -461,6 +469,7 @@ export class IdeSession {
 		const gone = (p: string) => p === path || p.startsWith(`${path}/`);
 		this.projectFiles = this.projectFiles.filter((p) => !gone(p));
 		this.projectDirs = this.projectDirs.filter((p) => !gone(p));
+		for (const file of this.openFiles) if (gone(file.path)) releaseImage(file.image);
 		this.openFiles = this.openFiles.filter((file) => !gone(file.path));
 		if (gone(this.selectedFile)) this.selectedFile = this.openFiles.at(-1)?.path ?? '';
 		return null;
@@ -486,20 +495,28 @@ export class IdeSession {
 		this.loading = true;
 		this.selectedFile = path;
 		try {
-			const content = await readPodFile(this.pod, `${this.workdir}/${path}`);
-			if (this.unmounted || this.openFiles.some((file) => file.path === path)) return;
+			const absPath = `${this.workdir}/${path}`;
+			const image = isImagePath(path) ? await loadPodImage(this.pod, absPath) : undefined;
+			const content = image ? '' : await readPodFile(this.pod, absPath);
+			if (this.unmounted || this.openFiles.some((file) => file.path === path)) {
+				releaseImage(image);
+				return;
+			}
 			// A pin that arrived while the read was in flight wins over the preview flag.
 			const entry: OpenFile = {
 				path,
 				content,
 				savedContent: content,
-				preview: preview && !this.pendingPins.delete(path)
+				preview: preview && !this.pendingPins.delete(path),
+				image
 			};
 			const previewIndex = entry.preview ? this.openFiles.findIndex((file) => file.preview) : -1;
-			this.openFiles =
-				previewIndex >= 0
-					? this.openFiles.map((file, i) => (i === previewIndex ? entry : file))
-					: [...this.openFiles, entry];
+			if (previewIndex >= 0) {
+				releaseImage(this.openFiles[previewIndex].image);
+				this.openFiles = this.openFiles.map((file, i) => (i === previewIndex ? entry : file));
+			} else {
+				this.openFiles = [...this.openFiles, entry];
+			}
 		} catch (error) {
 			console.error('Failed to load file:', error);
 			this.pendingPins.delete(path);
@@ -531,6 +548,7 @@ export class IdeSession {
 		if (index < 0) return;
 		const entry = this.openFiles[index];
 		if (entry.content !== entry.savedContent) void this.saveEntry(entry);
+		releaseImage(entry.image);
 		this.openFiles = this.openFiles.filter((file) => file.path !== path);
 		if (this.selectedFile === path)
 			this.selectedFile = (this.openFiles[index] ?? this.openFiles[index - 1])?.path ?? '';
@@ -554,6 +572,8 @@ export class IdeSession {
 	}
 
 	private async saveEntry(entry: OpenFile): Promise<void> {
+		// An image tab carries no text, so writing its content back would truncate the file.
+		if (entry.image) return;
 		// Saving only makes sense once the dev server is reachable; earlier writes
 		// would race the template hydration.
 		if (!this.pod || !this.hasPortal || this.unmounted) return;
@@ -594,6 +614,7 @@ export class IdeSession {
 	/** Tears down the pod and cancels any in-flight boot. */
 	shutdown(): void {
 		this.unmounted = true;
+		for (const file of this.openFiles) releaseImage(file.image);
 		this.bootToken += 1;
 		if (this.pod) void shutdownPod(this.pod);
 	}

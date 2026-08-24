@@ -3,6 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import Icon from '@iconify/svelte';
 	import { fileIcon } from '$lib/ide/file-icons';
+	import ImageViewer from '$lib/components/ide/ImageViewer.svelte';
 	import type * as Monaco from 'monaco-editor';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 
@@ -17,6 +18,8 @@
 	// history alive across switches; view states park cursor/scroll per path.
 	const viewStates = new SvelteMap<string, Monaco.editor.ICodeEditorViewState | null>();
 	let renderedPath = '';
+
+	let activeFile = $derived(session.openFiles.find((file) => file.path === session.selectedFile));
 
 	// Responsive font
 	const FONT_QUERY = '(min-width: 640px)';
@@ -82,11 +85,12 @@
 	// Show the active tab: park the outgoing view state, attach the incoming
 	// model, restore its cursor/scroll.
 	$effect(() => {
-		const entry = session.openFiles.find((file) => file.path === session.selectedFile);
+		const entry = activeFile;
 		if (!editor || !monacoMod) return;
 		// Track the reveal request so a jump to the already-open file still re-runs this effect.
 		void session.revealRequest;
-		if (!entry) {
+		// Detaching on an image tab stops the previous file's text showing through under it.
+		if (!entry || entry.image) {
 			if (renderedPath) viewStates.set(renderedPath, editor.saveViewState());
 			editor.setModel(null);
 			renderedPath = '';
@@ -198,6 +202,11 @@
 	</div>
 	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-abyss">
 		<div bind:this={container} class="h-full w-full"></div>
+		{#if activeFile?.image}
+			<div class="absolute inset-0 z-10">
+				<ImageViewer path={activeFile.path} image={activeFile.image} />
+			</div>
+		{/if}
 		{#if session.openFiles.length === 0 && !session.loading && editor}
 			<div class="absolute inset-0 z-10 flex items-center justify-center bg-bc-abyss">
 				<span class="text-[11px] text-white/25">No file open</span>
