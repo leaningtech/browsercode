@@ -7,6 +7,7 @@
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
 	import LoadingScene from '$lib/components/ide/LoadingScene.svelte';
+	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import { fade } from 'svelte/transition';
 	import type { BootStage, IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -265,6 +266,11 @@
 				</button>
 			</div>
 			<div class="mt-auto flex flex-col gap-0.5 p-1 pb-2">
+				<SettingsMenu
+					baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
+					activeClass="bg-bc-azure/15 text-bc-azure"
+					idleClass="text-zinc-600 hover:bg-white/5 hover:text-zinc-300"
+				/>
 				<!-- The tracker is an external URL, so resolve() does not apply here. -->
 				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a

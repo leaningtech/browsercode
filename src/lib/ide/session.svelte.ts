@@ -46,8 +46,8 @@ export type BootStage = 'booting' | 'copying' | 'cloning' | 'installing' | 'star
 /**
  * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
  * the selected framework template into its filesystem, starts the dev server and
- * exposes file/terminal/portal state. UI components render from this; the editor
- * implementation (Monaco today, VS Code Web later) stays swappable on top.
+ * exposes file/terminal/portal state. UI components render from this; it holds no
+ * editor state of its own, so Monaco lives entirely in the component layer.
  */
 export class IdeSession {
 	framework = $state<FrameworkId>(defaultFrameworkId);
