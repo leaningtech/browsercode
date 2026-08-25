@@ -82,7 +82,7 @@ function nextDevWithWebpack(script: string | undefined, deps: DeclaredDeps): str
 	if (!majorAtLeast(deps, 'next', 16) || withoutTurbopack.includes('--webpack')) {
 		return withoutTurbopack;
 	}
-	return withoutTurbopack.replace(/\bnext\s+dev\b/, '$& --webpack');
+	return withoutTurbopack.replace(/\bnext\b(?:\s+dev\b)?(?!\s+[a-z])/, '$& --webpack');
 }
 
 /** Highest major the spec could install. Null means no ceiling at all. */
