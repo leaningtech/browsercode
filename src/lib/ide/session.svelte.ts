@@ -14,7 +14,7 @@ import {
 	writeToTerminal
 } from '$lib/pod/fs';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
-import { patchClonedManifest } from './native-deps';
+import { patchClonedManifest, resolveInstallArgs } from './native-deps';
 import { fetchRepoTree } from '$lib/github/api';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { PortalUpdate } from '$lib/pod/portals';
@@ -234,7 +234,9 @@ export class IdeSession {
 			trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` });
 
 			this.bootStage = 'installing';
-			await this.runInOutput('npm', ['install']);
+			const installArgs = await this.installArgs();
+			if (this.cancelled(token)) return;
+			await this.runInOutput('npm', installArgs);
 			if (this.cancelled(token)) return;
 
 			const script = await this.resolveStartScript();
@@ -356,6 +358,18 @@ export class IdeSession {
 				`\r\n${ANSI.coral}Could not patch package.json; installing the repo as cloned.${ANSI.reset}\r\n`
 			);
 			console.warn('Could not patch the cloned manifest:', error);
+		}
+	}
+
+	/** A read failure falls back to a plain install. */
+	private async installArgs(): Promise<string[]> {
+		if (!this.pod) return ['install'];
+		try {
+			const raw = await readPodFile(this.pod, `${this.workdir}/package.json`);
+			return resolveInstallArgs(raw);
+		} catch (error) {
+			console.error('Failed to read package.json:', error);
+			return ['install'];
 		}
 	}
 
