@@ -1,5 +1,6 @@
 /**
- * Per-framework patches applied to a cloned GitHub repo's package.json before install.
+ * Per-framework patches applied to a cloned GitHub repo's package.json before install, and the
+ * `npm install` flags it needs.
  */
 
 type Manifest = {
@@ -24,7 +25,8 @@ type SectionPatch = {
 
 type FrameworkRule = {
 	applies: (deps: DeclaredDeps) => boolean;
-	patches: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
+	patches?: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
+	installFlags?: string[];
 };
 
 /** Ours wins: for where the repo's own value is the thing that breaks the pod. */
@@ -69,6 +71,11 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 			const dev = nextDevWithWebpack(current('scripts', 'dev'), deps);
 			return dev ? [force('scripts', { dev })] : [];
 		}
+	},
+	// Nuxt 4+
+	{
+		applies: (deps) => majorAtLeast(deps, 'nuxt', 4),
+		installFlags: ['--legacy-peer-deps']
 	}
 ];
 
@@ -130,6 +137,18 @@ function majorBelow(deps: DeclaredDeps, name: string, major: number): boolean {
 	return highest !== null && highest < major;
 }
 
+function parseManifest(manifestRaw: string): Manifest | null {
+	try {
+		return JSON.parse(manifestRaw) as Manifest;
+	} catch {
+		return null;
+	}
+}
+
+function declaredDeps(manifest: Manifest): DeclaredDeps {
+	return new Map(Object.entries({ ...manifest.dependencies, ...manifest.devDependencies }));
+}
+
 function isRecord(value: unknown): value is Record<string, string> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -153,15 +172,9 @@ function alreadyPresent(
 export function patchClonedManifest(
 	manifestRaw: string
 ): { patched: string; notes: string[] } | null {
-	let manifest: Manifest;
-	try {
-		manifest = JSON.parse(manifestRaw) as Manifest;
-	} catch {
-		return null;
-	}
-	const deps: DeclaredDeps = new Map(
-		Object.entries({ ...manifest.dependencies, ...manifest.devDependencies })
-	);
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return null;
+	const deps = declaredDeps(manifest);
 	const currentValue: CurrentValue = (section, name) => {
 		const held = manifest[section];
 		return isRecord(held) ? held[name] : undefined;
@@ -181,7 +194,7 @@ export function patchClonedManifest(
 
 	const notes: string[] = [];
 	for (const rule of FRAMEWORK_RULES) {
-		if (!rule.applies(deps)) continue;
+		if (!rule.applies(deps) || !rule.patches) continue;
 		for (const { section: sectionName, mode, entries } of rule.patches(deps, currentValue)) {
 			const section = workingCopy(sectionName);
 			for (const [name, value] of Object.entries(entries)) {
@@ -200,4 +213,17 @@ export function patchClonedManifest(
 	const indent = manifestRaw.match(/^([ \t]+)"/m)?.[1] ?? '  ';
 	const patched = JSON.stringify(manifest, null, indent) + (manifestRaw.endsWith('\n') ? '\n' : '');
 	return { patched, notes };
+}
+
+/** Deduplicated so two matching rules asking for the same flag pass it once. */
+export function resolveInstallArgs(manifestRaw: string): string[] {
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return ['install'];
+	const deps = declaredDeps(manifest);
+	const flags = new Set<string>();
+	for (const rule of FRAMEWORK_RULES) {
+		if (!rule.applies(deps)) continue;
+		for (const flag of rule.installFlags ?? []) flags.add(flag);
+	}
+	return ['install', ...flags];
 }

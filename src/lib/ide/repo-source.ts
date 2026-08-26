@@ -2,7 +2,7 @@
 import { fetchRepoTree } from '$lib/github/api';
 import { POD_HOME, readPodFile, writePodFile } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
-import { patchClonedManifest } from './native-deps';
+import { patchClonedManifest, resolveInstallArgs } from './native-deps';
 import { ANSI } from './shell-rc';
 import type { BootContext, ProjectSource } from './project-source';
 
@@ -11,6 +11,8 @@ export type RepoRef = { owner: string; repo: string; ref: string; dir: string };
 export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 	const url = `https://github.com/${owner}/${repo}`;
 	const repoDir = `${POD_HOME}/${repo}`;
+	// Filled by prepare(), which reads the manifest install flags are resolved from.
+	let installArgs: string[] = ['install'];
 
 	return {
 		id: 'github',
@@ -33,32 +35,40 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 				color: false
 			}),
 		// Patched before the first tab opens, so the editor shows the manifest install will see.
-		prepare: patchManifest,
+		prepare: async (ctx: BootContext): Promise<void> => {
+			installArgs = await prepareManifest(ctx);
+		},
 		initialFile: (files: string[]) => files[0],
-		installCommands: () => [['install']],
+		installCommands: () => [installArgs],
 		startCommand: resolveStartScript,
 		trackBoot: () => trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` })
 	};
 }
 
-async function patchManifest(ctx: BootContext): Promise<void> {
+/**
+ * Patches the cloned manifest and returns the `npm install` args for it. Both come from the one
+ * read, so install does not re-read the file prepare() just wrote.
+ */
+async function prepareManifest(ctx: BootContext): Promise<string[]> {
 	const manifestPath = `${ctx.workdir}/package.json`;
 	try {
 		const raw = await readPodFile(ctx.pod, manifestPath);
 		const result = patchClonedManifest(raw);
 		if (!result) {
 			ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
-			return;
+			return resolveInstallArgs(raw);
 		}
 		await writePodFile(ctx.pod, manifestPath, result.patched);
 		// Header takes the leading blank line; the changes follow indented under it as one block.
 		ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
 		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
+		return resolveInstallArgs(result.patched);
 	} catch (error) {
 		ctx.write(
 			`\r\n${ANSI.coral}Could not patch package.json; installing the repo as cloned.${ANSI.reset}\r\n`
 		);
 		console.warn('Could not patch the cloned manifest:', error);
+		return ['install'];
 	}
 }
 
