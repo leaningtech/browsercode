@@ -1,5 +1,6 @@
 /**
- * Per-framework patches applied to a cloned GitHub repo's package.json before install.
+ * Per-framework patches applied to a cloned GitHub repo's package.json before install, and the
+ * `npm install` flags it needs.
  */
 
 type Manifest = {
@@ -11,6 +12,9 @@ type Manifest = {
 /** What the repo declares, package name to version spec, dependencies and devDependencies. */
 type DeclaredDeps = Map<string, string>;
 
+/** Reads the repo's own value for an entry, never an earlier patch's, so rule order cannot matter. */
+type CurrentValue = (section: string, name: string) => string | undefined;
+
 type SectionPatch = {
 	/** Top-level manifest key holding a name to value map. */
 	section: string;
@@ -21,7 +25,8 @@ type SectionPatch = {
 
 type FrameworkRule = {
 	applies: (deps: DeclaredDeps) => boolean;
-	patches: SectionPatch[];
+	patches?: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
+	installFlags?: string[];
 };
 
 /** Ours wins: for where the repo's own value is the thing that breaks the pod. */
@@ -42,23 +47,50 @@ const DEP_SECTIONS = new Set([
 	'peerDependencies'
 ]);
 
+/** Native binaries the pod cannot execute. */
 const WASM_BUNDLERS = {
-	esbuild: 'npm:esbuild-wasm@0.25.11',
-	rollup: 'npm:@rollup/wasm-node@4.52.4'
+	esbuild: 'npm:esbuild-wasm@*',
+	rollup: 'npm:@rollup/wasm-node@*'
 };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
-	// Vite 8+
+	// Vite 8.2+
 	{
-		applies: (deps) => majorAtLeast(deps, 'vite', 8),
-		patches: [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.2' })]
+		applies: (deps) => minorAtLeast(deps, 'vite', 8, 2),
+		patches: () => [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.5' })]
 	},
 	// Vite 7 and earlier
 	{
 		applies: (deps) => majorBelow(deps, 'vite', 8),
-		patches: [force('overrides', WASM_BUNDLERS)]
+		patches: () => [force('overrides', WASM_BUNDLERS)]
+	},
+	// Next.js
+	{
+		applies: (deps) => deps.has('next'),
+		patches: (deps, current) => {
+			const dev = nextDevWithWebpack(current('scripts', 'dev'), deps);
+			return dev ? [force('scripts', { dev })] : [];
+		}
+	},
+	// Nuxt 4+
+	{
+		applies: (deps) => majorAtLeast(deps, 'nuxt', 4),
+		installFlags: ['--legacy-peer-deps']
 	}
 ];
+
+/**
+ * Turbopack needs native bindings the pod cannot execute. Dropping its flags is enough through Next
+ * 15; 16 defaults to it and needs `--webpack` to opt out.
+ */
+function nextDevWithWebpack(script: string | undefined, deps: DeclaredDeps): string | undefined {
+	if (!script) return undefined;
+	const withoutTurbopack = script.replace(/ --turbo(?:pack)?\b/g, '');
+	if (!majorAtLeast(deps, 'next', 16) || withoutTurbopack.includes('--webpack')) {
+		return withoutTurbopack;
+	}
+	return withoutTurbopack.replace(/\bnext\b(?:\s+dev\b)?(?!\s+[a-z])/, '$& --webpack');
+}
 
 /** Highest major the spec could install. Null means no ceiling at all. */
 function highestMajor(spec: string): number | null {
@@ -66,6 +98,27 @@ function highestMajor(spec: string): number | null {
 	const versions = spec.match(/\d+(?:\.\d+)*/g);
 	if (!versions) return null;
 	return Math.max(...versions.map((version) => Number.parseInt(version, 10)));
+}
+
+/** Highest minor the spec could install within `major`, Infinity when it leaves the minor free. */
+function highestMinor(spec: string, major: number): number {
+	// A caret or a bare major floats the minor: `^8.1.1` installs 8.2 today, so it reads as 8.x.
+	if (spec.includes('^')) return Infinity;
+	const minors = (spec.match(/\d+(?:\.\d+)*/g) ?? [])
+		.map((version) => version.split('.').map(Number))
+		.filter(([declared]) => declared === major)
+		.map(([, minor]) => minor ?? Infinity);
+	return minors.length > 0 ? Math.max(...minors) : Infinity;
+}
+
+/** True when `name` is declared and can install `major.minor` or newer. */
+function minorAtLeast(deps: DeclaredDeps, name: string, major: number, minor: number): boolean {
+	const spec = deps.get(name);
+	if (spec === undefined) return false;
+	const highest = highestMajor(spec);
+	if (highest === null) return true;
+	if (highest !== major) return highest > major;
+	return highestMinor(spec, major) >= minor;
 }
 
 /** True when `name` is declared and can install `major` or newer, an unversioned spec included. */
@@ -82,6 +135,18 @@ function majorBelow(deps: DeclaredDeps, name: string, major: number): boolean {
 	if (spec === undefined) return false;
 	const highest = highestMajor(spec);
 	return highest !== null && highest < major;
+}
+
+function parseManifest(manifestRaw: string): Manifest | null {
+	try {
+		return JSON.parse(manifestRaw) as Manifest;
+	} catch {
+		return null;
+	}
+}
+
+function declaredDeps(manifest: Manifest): DeclaredDeps {
+	return new Map(Object.entries({ ...manifest.dependencies, ...manifest.devDependencies }));
 }
 
 function isRecord(value: unknown): value is Record<string, string> {
@@ -107,15 +172,13 @@ function alreadyPresent(
 export function patchClonedManifest(
 	manifestRaw: string
 ): { patched: string; notes: string[] } | null {
-	let manifest: Manifest;
-	try {
-		manifest = JSON.parse(manifestRaw) as Manifest;
-	} catch {
-		return null;
-	}
-	const deps: DeclaredDeps = new Map(
-		Object.entries({ ...manifest.dependencies, ...manifest.devDependencies })
-	);
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return null;
+	const deps = declaredDeps(manifest);
+	const currentValue: CurrentValue = (section, name) => {
+		const held = manifest[section];
+		return isRecord(held) ? held[name] : undefined;
+	};
 	// Working copies, seeded from the manifest the first time a rule touches the section. A section
 	// holding anything other than a map is treated as absent; npm would reject it anyway.
 	const sections = new Map<string, Record<string, string>>();
@@ -131,8 +194,8 @@ export function patchClonedManifest(
 
 	const notes: string[] = [];
 	for (const rule of FRAMEWORK_RULES) {
-		if (!rule.applies(deps)) continue;
-		for (const { section: sectionName, mode, entries } of rule.patches) {
+		if (!rule.applies(deps) || !rule.patches) continue;
+		for (const { section: sectionName, mode, entries } of rule.patches(deps, currentValue)) {
 			const section = workingCopy(sectionName);
 			for (const [name, value] of Object.entries(entries)) {
 				if (mode === 'fill' && alreadyPresent(section, sectionName, name, deps)) continue;
@@ -150,4 +213,17 @@ export function patchClonedManifest(
 	const indent = manifestRaw.match(/^([ \t]+)"/m)?.[1] ?? '  ';
 	const patched = JSON.stringify(manifest, null, indent) + (manifestRaw.endsWith('\n') ? '\n' : '');
 	return { patched, notes };
+}
+
+/** Deduplicated so two matching rules asking for the same flag pass it once. */
+export function resolveInstallArgs(manifestRaw: string): string[] {
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return ['install'];
+	const deps = declaredDeps(manifest);
+	const flags = new Set<string>();
+	for (const rule of FRAMEWORK_RULES) {
+		if (!rule.applies(deps)) continue;
+		for (const flag of rule.installFlags ?? []) flags.add(flag);
+	}
+	return ['install', ...flags];
 }
