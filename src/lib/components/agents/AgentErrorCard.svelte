@@ -1,11 +1,14 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { ToolItem } from '$lib/config/tools';
 
 	let {
+		tool,
 		message,
 		onRetry,
 		onCancel
 	}: {
+		tool: ToolItem;
 		/** The boot failure, verbatim — vague "something went wrong" copy helps nobody debug a pod. */
 		message: string;
 		onRetry: () => void;
@@ -23,7 +26,7 @@
 			<Icon icon="mingcute:alert-line" width="26" height="26" />
 		</span>
 		<div class="flex flex-col gap-1">
-			<span class="text-[15px] font-semibold text-zinc-50">Codex CLI didn't start</span>
+			<span class="text-[15px] font-semibold text-zinc-50">{tool.label} didn't start</span>
 			<span class="text-[12.5px] text-white/40">
 				The sandbox failed to boot, so there's nothing running in the terminal behind this.
 			</span>
@@ -37,7 +40,7 @@
 	</div>
 
 	<p class="mt-4 text-[12.5px] leading-relaxed text-white/40">
-		Retrying is usually worth a shot — the disk image streams in lazily, so a dropped connection
+		Retrying is usually worth a shot. The disk image streams in lazily, so a dropped connection
 		mid-boot is the most common cause. Check the browser console for the full stack trace.
 	</p>
 

@@ -6,13 +6,13 @@
 
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { bootCLI, describeError, type CLIBootHooks } from '$lib/agents/boot';
-	import { getCodexApiKey, setCodexApiKey } from '$lib/agents/codex';
-	import CodexErrorCard from '$lib/components/agents/CodexErrorCard.svelte';
-	import CodexLoadingCard from '$lib/components/agents/CodexLoadingCard.svelte';
-	import CodexSignInCard from '$lib/components/agents/CodexSignInCard.svelte';
+	import { bootCLI } from '$lib/agents/boot';
+	import { CredentialGate } from '$lib/agents/credential-gate.svelte';
+	import AgentErrorCard from '$lib/components/agents/AgentErrorCard.svelte';
+	import AgentLoadingCard from '$lib/components/agents/AgentLoadingCard.svelte';
+	import CredentialCard from '$lib/components/agents/CredentialCard.svelte';
 	import { openTour } from '$lib/stores/stepper.svelte';
-	import { toolItems } from '$lib/config/tools';
+	import { cliConfigs, toolItems } from '$lib/config/tools';
 	import { requestSingleTabLock } from '$lib/utils/tabLock';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import {
@@ -112,43 +112,17 @@
 
 	// Tool switching is a full page load, so the active tool is fixed for this page's lifetime
 	const activeTool = getActiveTool();
-
-	let codexStage = $state<'idle' | 'loading' | 'signin' | 'error'>('idle');
-	let codexError = $state('');
-	let codexHasKey = $state(true);
-	let codexChangeKeyOpen = $state(false);
-	let resolveSignIn: ((key: string) => void) | null = null;
-
-	// The loading card covers the terminal, so a boot that dies behind it would otherwise just
-	// spin forever. Swap it for the failure instead.
-	function reportCodexBootFailure(error: unknown) {
-		codexError = describeError(error);
-		codexStage = 'error';
-	}
+	// getActiveTool() only ever returns an id that is in toolItems, so this always resolves.
+	const toolItem = toolItems.find((item) => item.id === activeTool)!;
+	// Mirrors bootCLI's own resolution, so the gate matches the config that actually launches.
+	const credential = (cliConfigs[activeTool] ?? cliConfigs.claude).credential;
 
 	function retryBoot() {
 		markIntentionalNavigation();
 		window.location.reload();
 	}
 
-	// OPENAI_API_KEY is fixed at process launch, so boot blocks here rather than overlaying a CLI
-	// already running without a key.
-	const codexBootHooks: CLIBootHooks = {
-		beforeLaunch: async () => {
-			if (!getCodexApiKey()) {
-				codexStage = 'signin';
-				setCodexApiKey(await new Promise<string>((resolve) => (resolveSignIn = resolve)));
-				codexHasKey = true;
-			}
-			codexStage = 'idle';
-		}
-	};
-
-	// A changed key only applies to a fresh launch, so saving restarts the whole session.
-	function saveKeyAndRestart(key: string) {
-		setCodexApiKey(key);
-		retryBoot();
-	}
+	const gate = credential ? new CredentialGate(credential, { onRestart: retryBoot }) : null;
 
 	function toggleToolMenu() {
 		showToolMenu = !showToolMenu;
@@ -192,19 +166,17 @@
 				return;
 			}
 
-			// Covers pod boot, the image streaming in, and the warm-up probe.
-			if (tool === 'codex') {
-				codexHasKey = getCodexApiKey() !== null;
-				codexStage = 'loading';
-			}
+			// Covers pod boot, the image streaming in, and any warm-up probe.
+			gate?.begin();
 
-			// bootCLI already logs and writes the failure into the terminal; Codex additionally needs
-			// its overlay taken down, since it hides that terminal.
-			bootCLI(tool, consoleEl, portal.apply, tool === 'codex' ? codexBootHooks : undefined).catch(
-				(error) => {
-					if (tool === 'codex') reportCodexBootFailure(error);
-				}
-			);
+			// bootCLI already logs and writes the failure into the terminal; a gated boot additionally
+			// needs its overlay taken down, since it hides that terminal.
+			bootCLI(
+				tool,
+				consoleEl,
+				portal.apply,
+				gate ? { beforeLaunch: gate.beforeLaunch } : undefined
+			).catch((error) => gate?.reportBootFailure(error));
 		});
 
 		return () => {
@@ -277,12 +249,12 @@
 				/>
 			{/if}
 
-			<!-- The env-bound API key can only change via a relaunch, so the way in is always here. -->
-			{#if activeTool === 'codex'}
+			<!-- The env-bound secret can only change via a relaunch, so the way in is always here. -->
+			{#if gate && credential}
 				<button
-					onclick={() => (codexChangeKeyOpen = true)}
-					aria-label="OpenAI API key"
-					title="OpenAI API key"
+					onclick={gate.openChange}
+					aria-label={credential.label}
+					title={credential.label}
 					class="absolute bottom-4 z-30 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 p-2 text-white/40 backdrop-blur-sm transition hover:bg-black/60 hover:text-white/70 {isMobile
 						? 'left-4'
 						: 'left-16'}"
@@ -291,32 +263,39 @@
 				</button>
 			{/if}
 
-			{#if codexStage !== 'idle' || codexChangeKeyOpen}
+			{#if gate?.overlayVisible && credential}
 				<div
 					class="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
 				>
-					{#if codexStage === 'loading'}
-						<CodexLoadingCard
-							willAskForKey={!codexHasKey}
+					{#if gate.stage === 'loading'}
+						<AgentLoadingCard
+							tool={toolItem}
+							{credential}
+							willAskForCredential={!gate.hasCredential}
 							onCancel={() => navigateWithLeaveGuard('/agents', false)}
 						/>
-					{:else if codexStage === 'error'}
-						<CodexErrorCard
-							message={codexError}
+					{:else if gate.stage === 'error'}
+						<AgentErrorCard
+							tool={toolItem}
+							message={gate.error}
 							onRetry={retryBoot}
 							onCancel={() => navigateWithLeaveGuard('/agents', false)}
 						/>
-					{:else if codexStage === 'signin'}
-						<CodexSignInCard
+					{:else if gate.stage === 'signin'}
+						<CredentialCard
+							tool={toolItem}
+							{credential}
 							mode="boot"
-							onSubmit={(key) => resolveSignIn?.(key)}
+							onSubmit={gate.submit}
 							onCancel={() => navigateWithLeaveGuard('/agents', false)}
 						/>
 					{:else}
-						<CodexSignInCard
+						<CredentialCard
+							tool={toolItem}
+							{credential}
 							mode="change"
-							onSubmit={saveKeyAndRestart}
-							onCancel={() => (codexChangeKeyOpen = false)}
+							onSubmit={gate.saveAndRestart}
+							onCancel={gate.closeChange}
 						/>
 					{/if}
 				</div>
