@@ -14,6 +14,7 @@
 	import { PortalState } from '$lib/stores/portals.svelte';
 	import type { PortalUpdate } from '$lib/pod/portals';
 	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { startDrag } from '$lib/utils/drag';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -108,6 +109,10 @@
 	let bootLines = $derived(BOOT_LOG[session.mode]);
 	let activeLine = $derived(STAGE_LINE[session.bootStage]);
 
+	/** Editor floor, so dragging the terminal up leaves a usable strip of it. */
+	const MIN_EDITOR_FRACTION = 0.1;
+	const MAX_EDITOR_FRACTION = 0.85;
+
 	// ── Resize state ──────────────────────────────────────────────────────────
 	let filePanelWidth = $state(208);
 	let leftColFraction = $state(0.6);
@@ -122,14 +127,8 @@
 		window.dispatchEvent(new Event('resize'));
 	}
 
-	function startDrag(which: 'file' | 'col' | 'row', e: MouseEvent) {
-		e.preventDefault();
+	function startPaneDrag(which: 'file' | 'col' | 'row', event: MouseEvent) {
 		dragging = which;
-		document.body.classList.add('dragging');
-		document.body.style.cursor = which === 'row' ? 'row-resize' : 'col-resize';
-
-		const startX = e.clientX;
-		const startY = e.clientY;
 		const startFileW = filePanelWidth;
 		const startEditorFrac = editorFraction;
 		const startLeftW = leftColEl?.clientWidth ?? 0;
@@ -137,43 +136,30 @@
 		// 40px = icon rail width
 		const startTotalW = bodyEl ? bodyEl.clientWidth - 40 - (activePanel ? filePanelWidth : 0) : 1;
 
-		function onMove(ev: MouseEvent) {
-			const dx = ev.clientX - startX;
-			const dy = ev.clientY - startY;
-
-			if (which === 'file') {
-				const requested = startFileW + dx;
-				if (requested < 100) {
-					// Dragged shut — collapse the panel instead of pinning to min width
-					activePanel = null;
-					onUp();
-					return;
+		startDrag(event, {
+			cursor: which === 'row' ? 'row-resize' : 'col-resize',
+			move: (dx, dy, stop) => {
+				if (which === 'file') {
+					const requested = startFileW + dx;
+					if (requested < 100) {
+						// Dragged shut — collapse the panel instead of pinning to min width
+						activePanel = null;
+						stop();
+						return;
+					}
+					filePanelWidth = Math.max(140, Math.min(480, requested));
+				} else if (which === 'col') {
+					leftColFraction = Math.max(0.25, Math.min(0.8, (startLeftW + dx) / startTotalW));
+				} else if (which === 'row') {
+					editorFraction = Math.max(
+						MIN_EDITOR_FRACTION,
+						Math.min(MAX_EDITOR_FRACTION, (startLeftH * startEditorFrac + dy) / startLeftH)
+					);
 				}
-				filePanelWidth = Math.max(140, Math.min(480, requested));
-			} else if (which === 'col') {
-				leftColFraction = Math.max(0.25, Math.min(0.8, (startLeftW + dx) / startTotalW));
-			} else if (which === 'row') {
-				// Cap the terminal at 600px by bumping the editor's minimum fraction
-				const maxTerminalPx = 600;
-				const minEditorFrac = startLeftH > 0 ? Math.max(0.2, 1 - maxTerminalPx / startLeftH) : 0.2;
-				editorFraction = Math.max(
-					minEditorFrac,
-					Math.min(0.85, (startLeftH * startEditorFrac + dy) / startLeftH)
-				);
-			}
-			fitTerminals();
-		}
-
-		function onUp() {
-			dragging = null;
-			document.body.classList.remove('dragging');
-			document.body.style.cursor = '';
-			window.removeEventListener('mousemove', onMove);
-			window.removeEventListener('mouseup', onUp);
-		}
-
-		window.addEventListener('mousemove', onMove);
-		window.addEventListener('mouseup', onUp);
+				fitTerminals();
+			},
+			end: () => (dragging = null)
+		});
 	}
 
 	// ── Mobile detection ──────────────────────────────────────────────────────
@@ -373,7 +359,7 @@
 				type="button"
 				class="divider divider-col"
 				class:active={dragging === 'file'}
-				onmousedown={(e) => startDrag('file', e)}
+				onmousedown={(e) => startPaneDrag('file', e)}
 				aria-label="Resize side panel"
 			>
 				<div class="divider-line"></div>
@@ -408,7 +394,7 @@
 						type="button"
 						class="divider divider-row"
 						class:active={dragging === 'row'}
-						onmousedown={(e) => startDrag('row', e)}
+						onmousedown={(e) => startPaneDrag('row', e)}
 						aria-label="Resize terminal panel"
 					>
 						<div class="divider-line"></div>
@@ -419,7 +405,7 @@
 					class:pane-hidden={isMobile && activeMobileView !== 'terminal'}
 					style={isMobile
 						? 'flex: 1 1 0; min-height: 0; height: 100%;'
-						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; max-height: 600px; min-height: 0;`}
+						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; min-height: 0;`}
 				>
 					<TerminalTabs {session} bind:outputEl />
 				</div>
@@ -431,7 +417,7 @@
 					type="button"
 					class="divider divider-col"
 					class:active={dragging === 'col'}
-					onmousedown={(e) => startDrag('col', e)}
+					onmousedown={(e) => startPaneDrag('col', e)}
 					aria-label="Resize preview panel"
 				>
 					<div class="divider-line"></div>
@@ -546,14 +532,6 @@
 </div>
 
 <style>
-	:global(body.dragging) {
-		cursor: col-resize;
-		user-select: none;
-	}
-	:global(body.dragging) :global(iframe) {
-		pointer-events: none;
-	}
-
 	/* ── Dividers ──────────────────────────────────────────────────────────── */
 	.divider {
 		position: relative;

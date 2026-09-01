@@ -14,6 +14,7 @@
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { cliConfigs, toolItems } from '$lib/config/tools';
 	import { requestSingleTabLock } from '$lib/utils/tabLock';
+	import { startDrag } from '$lib/utils/drag';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import {
 		navigateWithLeaveGuard,
@@ -32,31 +33,19 @@
 	let isDragging = $state(false);
 	let containerEl = $state<HTMLElement | null>(null);
 
-	function startDrag(e: MouseEvent) {
-		e.preventDefault();
+	function startPortalDrag(event: MouseEvent) {
 		isDragging = true;
-		document.body.style.cursor = 'col-resize';
-		document.body.style.userSelect = 'none';
-
-		const startX = e.clientX;
 		const startFrac = portalFraction;
 		const totalW = containerEl?.clientWidth ?? 1;
 
-		function onMove(ev: MouseEvent) {
-			const dx = ev.clientX - startX;
-			portalFraction = Math.max(0.2, Math.min(0.8, startFrac - dx / totalW));
-		}
-
-		function onUp() {
-			isDragging = false;
-			document.body.style.cursor = '';
-			document.body.style.userSelect = '';
-			window.removeEventListener('mousemove', onMove);
-			window.removeEventListener('mouseup', onUp);
-		}
-
-		window.addEventListener('mousemove', onMove);
-		window.addEventListener('mouseup', onUp);
+		startDrag(event, {
+			cursor: 'col-resize',
+			// The pane is anchored right, so a rightward drag shrinks it.
+			move: (dx) => {
+				portalFraction = Math.max(0.2, Math.min(0.8, startFrac - dx / totalW));
+			},
+			end: () => (isDragging = false)
+		});
 	}
 
 	let isMobile = $state(false);
@@ -333,7 +322,7 @@
 				<button
 					class="group absolute top-0 bottom-0 z-20 w-1.25 cursor-col-resize"
 					style="right: calc({portalFraction * 100}% - 0.625rem);"
-					onmousedown={startDrag}
+					onmousedown={startPortalDrag}
 					tabindex="0"
 					aria-label="Resize preview panel"
 				>
