@@ -2,58 +2,17 @@
 	import { onDestroy } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import QRCode from 'qrcode';
-	import type { FrameStatus, PortalItem } from '$lib/stores/portals.svelte';
+	import type { PortalState } from '$lib/stores/portals.svelte';
 
 	type Props = {
-		src?: string;
-		/** Gates the iframe; it mounts once the dev server has answered. */
-		frameStatus?: FrameStatus;
-		portals?: PortalItem[];
-		selectedPort?: number | null;
-		showMenu?: boolean;
-		showPorts?: boolean;
-		showInfo?: boolean;
-		copied?: boolean;
-		/** Failure text for the QR panel. Owned by the caller, which sets it from `onQrResult`. */
-		qrError?: string;
-		onSelectPort?: (port: number) => void;
-		onTogglePorts?: () => void;
-		onToggleMenu?: () => void;
-		onCopyLink?: () => void;
-		onOpenNewTab?: () => void;
-		onShowQrCode?: () => void;
-		onCloseOverlays?: () => void;
-		/** Reports the QR render outcome; a message when it fails, null once one renders. */
-		onQrResult?: (error: string | null) => void;
-		/** Fires when the framed document loads. */
-		onFrameLoad?: () => void;
+		portal: PortalState;
 		/** Awaited before a reload, so a debounced editor save cannot be outrun by it. */
 		onBeforeReload?: () => Promise<void>;
+		/** Collapses the pane; omitted by hosts with nowhere to collapse to. */
 		onCollapse?: () => void;
 	};
 
-	let {
-		src = '',
-		frameStatus = 'waiting',
-		portals = [],
-		selectedPort = null,
-		showMenu = false,
-		showPorts = false,
-		showInfo = false,
-		copied = false,
-		qrError = '',
-		onSelectPort,
-		onTogglePorts,
-		onToggleMenu,
-		onCopyLink,
-		onOpenNewTab,
-		onShowQrCode,
-		onCloseOverlays,
-		onQrResult,
-		onFrameLoad,
-		onBeforeReload,
-		onCollapse
-	}: Props = $props();
+	let { portal, onBeforeReload, onCollapse }: Props = $props();
 
 	/** Matches the sweep animation below. */
 	const SWEEP_MS = 620;
@@ -65,8 +24,8 @@
 	let sweepId = $state(0);
 	let sweepTimer: ReturnType<typeof setTimeout>;
 
-	let hasChoice = $derived(portals.length > 1);
-	let anyOverlay = $derived(showMenu || showPorts || showInfo);
+	let hasChoice = $derived(portal.portals.length > 1);
+	let anyOverlay = $derived(portal.showMenu || portal.showPorts || portal.showInfo);
 
 	/**
 	 * `location.reload()` is not cross-origin accessible; `replace()` is, and unlike re-setting
@@ -74,9 +33,9 @@
 	 */
 	async function reloadFrame(): Promise<void> {
 		if (!frameEl?.contentWindow) return;
-		onCloseOverlays?.();
+		portal.closeOverlays();
 		await onBeforeReload?.();
-		frameEl.contentWindow.location.replace(src);
+		frameEl.contentWindow.location.replace(portal.url);
 		sweepId++;
 		sweeping = true;
 		clearTimeout(sweepTimer);
@@ -94,16 +53,16 @@
 				color: { dark: '#000000', light: '#ffffff' }
 			});
 			// Clears a message left by an earlier failure; this render replaced that canvas.
-			onQrResult?.(null);
+			portal.reportQrResult(null);
 		} catch (error) {
 			console.error('Failed to generate QR code:', error);
-			onQrResult?.('Unable to generate QR code');
+			portal.reportQrResult('Unable to generate QR code');
 		}
 	}
 
 	$effect(() => {
-		if (showInfo && src && localQrCodeCanvas) {
-			renderQRCode(src);
+		if (portal.showInfo && portal.url && localQrCodeCanvas) {
+			renderQRCode(portal.url);
 		}
 	});
 
@@ -113,12 +72,12 @@
 		if (!anyOverlay) return;
 		const dismiss = (event: PointerEvent): void => {
 			if (toolbarEl?.contains(event.target as Node)) return;
-			onCloseOverlays?.();
+			portal.closeOverlays();
 		};
 		const onKey = (event: KeyboardEvent): void => {
-			if (event.key === 'Escape') onCloseOverlays?.();
+			if (event.key === 'Escape') portal.closeOverlays();
 		};
-		const onBlur = (): void => onCloseOverlays?.();
+		const onBlur = (): void => portal.closeOverlays();
 		window.addEventListener('pointerdown', dismiss);
 		window.addEventListener('keydown', onKey);
 		window.addEventListener('blur', onBlur);
@@ -132,7 +91,7 @@
 	onDestroy(() => clearTimeout(sweepTimer));
 </script>
 
-{#if portals.length > 0}
+{#if portal.portals.length > 0}
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		<!-- Controls stay left so the fixed promo ribbon keeps the corner. -->
 		<div
@@ -151,12 +110,12 @@
 				<span class="tool-sep"></span>
 			{/if}
 
-			{#if src}
+			{#if portal.url}
 				<div class="relative">
 					<button
-						onclick={onTogglePorts}
+						onclick={portal.togglePorts}
 						disabled={!hasChoice}
-						aria-expanded={hasChoice ? showPorts : undefined}
+						aria-expanded={hasChoice ? portal.showPorts : undefined}
 						aria-label={hasChoice ? 'Switch preview port' : undefined}
 						title={hasChoice ? 'Switch port' : undefined}
 						class="port-plate"
@@ -164,7 +123,7 @@
 						<span class="inline-flex items-baseline gap-1.5">
 							<span class="text-[10px] tracking-wide text-white/40">port</span>
 							<span class="font-mono text-[11px] font-medium tracking-tight tabular-nums"
-								>{selectedPort}</span
+								>{portal.selectedPort}</span
 							>
 						</span>
 						{#if hasChoice}
@@ -172,15 +131,15 @@
 						{/if}
 					</button>
 
-					{#if showPorts}
+					{#if portal.showPorts}
 						<div class="portal-menu left-0 min-w-28">
-							{#each portals as item (item.port)}
+							{#each portal.portals as item (item.port)}
 								<button
-									onclick={() => onSelectPort?.(item.port)}
-									class="menu-row {item.port === selectedPort ? 'text-bc-mist' : ''}"
+									onclick={() => portal.selectPort(item.port)}
+									class="menu-row {item.port === portal.selectedPort ? 'text-bc-mist' : ''}"
 								>
 									<span class="font-mono text-[11px] tabular-nums">{item.port}</span>
-									{#if item.port === selectedPort}
+									{#if item.port === portal.selectedPort}
 										<Icon icon="mingcute:check-line" width="12" height="12" class="ml-auto" />
 									{/if}
 								</button>
@@ -200,7 +159,7 @@
 					<Icon icon="mingcute:refresh-2-line" width="14" height="14" />
 				</button>
 				<button
-					onclick={onOpenNewTab}
+					onclick={portal.openInNewTab}
 					class="tool-btn"
 					title="Open in new tab"
 					aria-label="Open preview in new tab"
@@ -210,8 +169,8 @@
 
 				<div class="relative">
 					<button
-						onclick={onToggleMenu}
-						aria-expanded={showMenu}
+						onclick={portal.toggleMenu}
+						aria-expanded={portal.showMenu}
 						class="tool-btn"
 						title="More"
 						aria-label="More preview actions"
@@ -219,33 +178,38 @@
 						<Icon icon="mingcute:more-1-line" width="14" height="14" />
 					</button>
 
-					{#if showMenu}
+					{#if portal.showMenu}
 						<div class="portal-menu left-0 min-w-38">
-							<button onclick={onCopyLink} class="menu-row {copied ? 'text-bc-mist' : ''}">
+							<button
+								onclick={portal.copyUrl}
+								class="menu-row {portal.copied ? 'text-bc-mist' : ''}"
+							>
 								<Icon
-									icon={copied ? 'mingcute:check-line' : 'mingcute:copy-2-line'}
+									icon={portal.copied ? 'mingcute:check-line' : 'mingcute:copy-2-line'}
 									width="13"
 									height="13"
 								/>
-								{copied ? 'Copied' : 'Copy link'}
+								{portal.copied ? 'Copied' : 'Copy link'}
 							</button>
-							<button onclick={onShowQrCode} class="menu-row">
+							<button onclick={portal.showQRCode} class="menu-row">
 								<Icon icon="mingcute:qrcode-2-line" width="13" height="13" />
 								Show QR code
 							</button>
 						</div>
 					{/if}
 				</div>
-				{#if showInfo}
+				{#if portal.showInfo}
 					<div class="portal-menu qr-panel left-1">
 						<div class="mx-auto mb-2 w-fit rounded bg-white p-1.5">
 							<canvas bind:this={localQrCodeCanvas} width="150" height="150" class="block"></canvas>
 						</div>
-						{#if qrError}
-							<p class="text-[11px] text-bc-coral">{qrError}</p>
+						{#if portal.qrError}
+							<p class="text-[11px] text-bc-coral">{portal.qrError}</p>
 						{:else}
 							<p class="mb-1 text-[11px] text-white/55">Scan to open this preview on your phone.</p>
-							<p class="font-mono text-[9.5px] leading-relaxed break-all text-white/30">{src}</p>
+							<p class="font-mono text-[9.5px] leading-relaxed break-all text-white/30">
+								{portal.url}
+							</p>
 						{/if}
 					</div>
 				{/if}
@@ -259,17 +223,17 @@
 		</div>
 
 		<!-- Content -->
-		{#if src}
+		{#if portal.url}
 			<div class="relative min-h-0 flex-1">
 				<!-- Mounts once the dev server answers; an early navigation hangs and stays blank. -->
-				{#if frameStatus !== 'waiting'}
+				{#if portal.frameStatus !== 'waiting'}
 					<iframe
-						{src}
+						src={portal.url}
 						id="portal"
 						title="Portal content"
 						bind:this={frameEl}
-						onload={onFrameLoad}
-						class="h-full min-h-0 w-full border-none {frameStatus === 'ready'
+						onload={portal.reportFrameLoaded}
+						class="h-full min-h-0 w-full border-none {portal.frameStatus === 'ready'
 							? 'bg-white'
 							: 'bg-bc-navy'}"
 					></iframe>

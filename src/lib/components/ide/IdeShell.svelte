@@ -489,24 +489,7 @@
 					{:else}
 						{#if portal.portals.length > 0}
 							<Portal
-								src={portal.url}
-								frameStatus={portal.frameStatus}
-								onFrameLoad={portal.reportFrameLoaded}
-								portals={portal.portals}
-								selectedPort={portal.selectedPort}
-								showMenu={portal.showMenu}
-								showPorts={portal.showPorts}
-								showInfo={portal.showInfo}
-								copied={portal.copied}
-								qrError={portal.qrError}
-								onSelectPort={portal.selectPort}
-								onTogglePorts={portal.togglePorts}
-								onToggleMenu={portal.toggleMenu}
-								onCopyLink={portal.copyUrl}
-								onOpenNewTab={portal.openInNewTab}
-								onShowQrCode={portal.showQRCode}
-								onCloseOverlays={portal.closeOverlays}
-								onQrResult={portal.reportQrResult}
+								{portal}
 								onBeforeReload={() => session.saveAll()}
 								onCollapse={isMobile ? undefined : togglePreview}
 							/>
