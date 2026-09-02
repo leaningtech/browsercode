@@ -12,7 +12,6 @@
 	import type { BootStage, IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
 	import { PortalState } from '$lib/stores/portals.svelte';
-	import type { PortalUpdate } from '$lib/pod/portals';
 	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 	import { startDrag } from '$lib/utils/drag';
 	import { watchIsMobile } from '$lib/utils/viewport';
@@ -21,44 +20,24 @@
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
 
-	// Boot-log lines the preview loader streams, per boot mode.
-	const BOOT_LOG: Record<'framework' | 'github', string[]> = {
-		framework: [
-			'booting BrowserPod',
-			'copying project files',
-			'installing dependencies',
-			'starting dev server'
-		],
-		github: [
-			'booting BrowserPod',
-			'cloning repository',
-			'installing dependencies',
-			'starting dev server'
-		]
-	};
 	// Which boot-log line is the *active* (spinning) one for each real stage.
 	const STAGE_LINE: Record<BootStage, number> = {
 		booting: 0,
-		copying: 1,
-		cloning: 1,
+		hydrating: 1,
 		installing: 2,
 		starting: 3
 	};
 
-	// The route owns the session and decides how it boots (curated framework vs GitHub clone);
-	// the shell is mode-agnostic — it just drives `boot` once the terminals are mounted and
-	// renders from session state. Switching projects happens by navigating away (the sidebar's
-	// Ide flyout or an /ide/github URL), not from here.
-	let {
-		session,
-		boot
-	}: {
-		session: IdeSession;
-		boot: (
-			terminalEl: HTMLElement,
-			onPortalUpdate: (update: PortalUpdate) => void
-		) => Promise<void>;
-	} = $props();
+	// The route picks the project source, so the shell never learns how the project arrived.
+	let { session }: { session: IdeSession } = $props();
+
+	// Only the hydrate step differs per source.
+	let bootLines = $derived([
+		'booting BrowserPod',
+		session.source.hydrateLabel,
+		'installing dependencies',
+		'starting dev server'
+	]);
 
 	let isCompatibleBrowser = $state(true);
 	let downloading = $state(false);
@@ -82,9 +61,9 @@
 	let isMobile = $state(false);
 	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>('editor');
 
-	// Frameworks with a declared app port keep the preview pinned to it; other
+	// A source with a declared app port keeps the preview pinned to it; other
 	// ports stay reachable through the toolbar's port menu.
-	const portal = new PortalState({ preferredPort: () => session.appPort });
+	const portal = new PortalState({ preferredPort: () => session.source.appPort });
 
 	let isPreviewVisible = $state(true);
 	let previewCollapsed = $derived(!isPreviewVisible && !isMobile);
@@ -97,7 +76,7 @@
 	}
 
 	// Recomputed as the preview moves ports, so a report always carries the live portal URL.
-	let bugReportHref = $derived(bugReportUrl({ repo: session.repo, previewUrl: portal.url }));
+	let bugReportHref = $derived(bugReportUrl({ repo: session.source.repo, previewUrl: portal.url }));
 
 	// Live once the framed document loaded, so the loader covers the server's start and first paint.
 	let previewLive = $derived(portal.frameStatus === 'ready');
@@ -106,7 +85,6 @@
 		if (!previewLive) loaderVisible = true;
 	});
 
-	let bootLines = $derived(BOOT_LOG[session.mode]);
 	let activeLine = $derived(STAGE_LINE[session.bootStage]);
 
 	/** Editor floor, so dragging the terminal up leaves a usable strip of it. */
@@ -190,7 +168,7 @@
 		await tick();
 		if (!outputEl) throw new Error('Terminal container is not ready yet');
 		try {
-			await boot(outputEl, portal.apply);
+			await session.boot(outputEl, portal.apply);
 		} catch (error) {
 			console.error('Failed initializing BrowserPod:', error);
 			session.loading = false;
@@ -212,7 +190,7 @@
 	>
 		<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
 			<!-- Switching projects happens by navigating away (sidebar Ide flyout or an /ide/github URL). -->
-			<span class="truncate text-white/60">{session.displayLabel}</span>
+			<span class="truncate text-white/60">{session.source.label}</span>
 			{#if session.selectedFile}
 				<span class="text-white/20">/</span>
 				<span class="truncate text-white/60">{session.selectedFile}</span>
@@ -265,7 +243,7 @@
 					rel="noopener noreferrer"
 					title="Report a bug"
 					aria-label="Report a bug"
-					onclick={() => trackEvent('Clicked Report Bug', { mode: session.mode })}
+					onclick={() => trackEvent('Clicked Report Bug', { mode: session.source.id })}
 					class="flex items-center justify-center rounded p-1.5 text-zinc-600 transition hover:bg-bc-coral/10 hover:text-bc-coral"
 				>
 					<Icon icon="mingcute:bug-line" width="18" height="18" />

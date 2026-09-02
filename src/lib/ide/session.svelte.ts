@@ -1,27 +1,10 @@
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { SvelteSet } from 'svelte/reactivity';
-import {
-	frameworkConfigs,
-	defaultFrameworkId,
-	type FrameworkConfig,
-	type FrameworkId
-} from '$lib/config/frameworks';
-import {
-	POD_HOME,
-	readPodFile,
-	writePodFile,
-	writePodBinaryFile,
-	writeToTerminal
-} from '$lib/pod/fs';
-import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
-import { patchClonedManifest } from './native-deps';
-import { isImagePath, loadPodImage, releaseImage, type ImagePayload } from './media';
-import { fetchRepoTree } from '$lib/github/api';
-import { trackEvent } from '$lib/utils/useLazyTracking';
+import { readPodFile, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import type { PortalUpdate } from '$lib/pod/portals';
-
-// Re-exported so the boot-owning routes keep a single import site for session types.
-export type { PortalUpdate };
+import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
+import { isImagePath, loadPodImage, releaseImage, type ImagePayload } from './media';
+import type { BootContext, ProjectSource } from './project-source';
 
 /** Force color: npm/vite print plain text with no TTY in the pod. */
 const COLOR_ENV = ['FORCE_COLOR=3', 'COLORTERM=truecolor'];
@@ -39,18 +22,21 @@ export type OpenFile = {
 	image?: ImagePayload;
 };
 
-/** Where the boot pipeline currently is; drives the loader's progress readout. `copying` is
- * framework-only, `cloning` GitHub-only. */
-export type BootStage = 'booting' | 'copying' | 'cloning' | 'installing' | 'starting';
+/** Where the boot pipeline currently is; drives the loader's progress readout. */
+export type BootStage = 'booting' | 'hydrating' | 'installing' | 'starting';
 
 /**
- * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates
- * the selected framework template into its filesystem, starts the dev server and
- * exposes file/terminal/portal state. UI components render from this; it holds no
- * editor state of its own, so Monaco lives entirely in the component layer.
+ * Owns the BrowserPod lifecycle for the playground IDE: boots the pod, hydrates the project its
+ * `ProjectSource` describes, starts the dev server and exposes file/terminal/portal state. UI
+ * components render from this; it holds no editor state of its own, so Monaco lives entirely in
+ * the component layer.
  */
 export class IdeSession {
-	framework = $state<FrameworkId>(defaultFrameworkId);
+	/** How this session's project gets in, and everything the UI reads about it. */
+	readonly source: ProjectSource;
+	/** Directory the project lives in inside the pod; pod file paths resolve against it. */
+	readonly workdir: string;
+
 	projectFiles = $state<string[]>([]);
 	/** Explicitly-known directories (from UI folder actions); lets empty folders render in the tree. */
 	projectDirs = $state<string[]>([]);
@@ -67,15 +53,6 @@ export class IdeSession {
 	/** Current boot pipeline step; drives the preview loader's stage readout. */
 	bootStage = $state<BootStage>('booting');
 
-	/** Which boot path produced this session; drives the label, appPort and workdir. */
-	mode = $state<'framework' | 'github'>('framework');
-	/** Directory the project lives in inside the pod; pod file paths resolve against it. */
-	workdir = POD_HOME;
-	private githubSlug = $state('');
-	/** Repo URL this session clones from: `git clone` appends `.git`, bug reports link it as-is. */
-	private githubUrl = $state('');
-	private githubRef = $state('');
-
 	pod: BrowserPod | null = null;
 	outputTerminal: Terminal | null = null;
 	/** Lazily created hidden terminal that carries UI-initiated fs commands. */
@@ -91,24 +68,9 @@ export class IdeSession {
 	private bootToken = 0;
 	private booting = false;
 
-	get config(): FrameworkConfig {
-		return frameworkConfigs[this.framework];
-	}
-
-	/** Label shown in the IDE shell; framework label, or owner/repo[/dir] in GitHub mode. */
-	get displayLabel(): string {
-		return this.mode === 'github' ? this.githubSlug : this.config.label;
-	}
-
-	/** What this session cloned; null in framework mode. Carried into bug reports. */
-	get repo(): { url: string; ref: string } | null {
-		if (this.mode !== 'github' || !this.githubUrl) return null;
-		return { url: this.githubUrl, ref: this.githubRef };
-	}
-
-	/** Preview is pinned to this port when set. Unknown for arbitrary GitHub repos. */
-	get appPort(): number | undefined {
-		return this.mode === 'github' ? undefined : this.config.appPort;
+	constructor(source: ProjectSource) {
+		this.source = source;
+		this.workdir = source.workdir;
 	}
 
 	private get activeFile(): OpenFile | undefined {
@@ -125,12 +87,8 @@ export class IdeSession {
 		return this.unmounted || token !== this.bootToken;
 	}
 
-	/**
-	 * Boots a pod from a curated framework template: hydrate the template files,
-	 * `npm install` (per the framework's setup commands), then the dev server.
-	 */
+	/** The source fills in each step; the pipeline itself is the same for all of them. */
 	async boot(
-		framework: FrameworkId,
 		terminalEl: HTMLElement,
 		onPortalUpdate: (update: PortalUpdate) => void
 	): Promise<void> {
@@ -138,133 +96,60 @@ export class IdeSession {
 		this.booting = true;
 		const token = ++this.bootToken;
 		try {
-			this.framework = framework;
 			this.bootStage = 'booting';
-			this.projectFiles = await fetchManifest(this.config);
+			this.projectFiles = await this.source.listFiles();
 			if (this.cancelled(token)) return;
 
 			const pod = await this.bootPod(terminalEl, onPortalUpdate, token);
 			if (!pod) return;
+			const ctx = this.bootContext(pod, token);
 
-			this.bootStage = 'copying';
-			for (const file of this.projectFiles) {
-				if (this.cancelled(token)) return;
-				const content = await fetchTemplateFile(this.config, file);
-				if (this.cancelled(token)) return;
-				await writePodBinaryFile(pod, `${this.workdir}/${file}`, content);
-			}
+			this.bootStage = 'hydrating';
+			await this.source.hydrate(ctx, this.projectFiles);
 			if (this.cancelled(token)) return;
 
+			// The project exists on disk now, so the editor may read from the pod.
 			this.podReady = true;
-			const initialFile = this.projectFiles.includes(this.config.defaultFile)
-				? this.config.defaultFile
-				: this.projectFiles[0];
-			if (initialFile) await this.openFile(initialFile);
-
-			trackEvent('Booted Playground', { framework: this.config.label });
-
-			this.bootStage = 'installing';
-			for (const setupCommandArgs of this.config.setupCommandArgs ?? [['install']]) {
-				if (this.cancelled(token)) return;
-				await this.runInOutput('npm', setupCommandArgs);
-			}
-
-			if (this.cancelled(token)) return;
-			this.bootStage = 'starting';
-			await this.runInOutput('npm', this.config.devCommandArgs ?? ['run', 'dev']);
-		} finally {
-			this.booting = false;
-		}
-	}
-
-	/**
-	 * Boots a pod from a GitHub repo: shallow clone, `npm install`, then the
-	 * project's dev/start script.
-	 * The file tree is fetched up front so it renders while the clone runs.
-	 */
-	async bootFromGitHub(
-		owner: string,
-		repo: string,
-		ref: string,
-		dir: string,
-		terminalEl: HTMLElement,
-		onPortalUpdate: (update: PortalUpdate) => void
-	): Promise<void> {
-		if (this.booting || this.pod) return;
-		this.booting = true;
-		this.mode = 'github';
-		this.githubSlug = dir ? `${owner}/${repo}/${dir}` : `${owner}/${repo}`;
-		this.githubUrl = `https://github.com/${owner}/${repo}`;
-		this.githubRef = ref;
-		const token = ++this.bootToken;
-		try {
-			this.bootStage = 'booting';
-			// File list up front (before the pod) so the tree renders while we clone.
-			try {
-				const files = await fetchRepoTree(owner, repo, ref, dir);
-				if (this.cancelled(token)) return;
-				this.projectFiles = files;
-			} catch (error) {
-				console.error('Failed to fetch repo file tree:', error);
-			}
-
-			const pod = await this.bootPod(terminalEl, onPortalUpdate, token);
-			if (!pod) return;
-
-			const repoDir = `${POD_HOME}/${repo}`;
-			this.workdir = dir ? `${repoDir}/${dir}` : repoDir;
-
-			// Plain shallow clone: fetch only the tip commit (--depth 1) of the requested branch
-			// and check out the full working tree. For a subdir boot we just point `workdir` at
-			// the subtree afterwards. (BrowserPod 2.12+ handles the packfile memory footprint, so
-			// the earlier --filter=blob:none / --sparse workaround is no longer needed.)
-			this.bootStage = 'cloning';
-			// git manages its own colors (no TTY here, so none) — forcing COLOR_ENV would change nothing.
-			await this.runInOutput(
-				'git',
-				['clone', '--depth', '1', '--branch', ref, `${this.githubUrl}.git`],
-				{ cwd: POD_HOME, color: false }
-			);
+			await this.source.prepare?.(ctx);
 			if (this.cancelled(token)) return;
 
-			// The working tree exists now — let the editor read from the pod.
-			this.podReady = true;
-
-			// Patch package.json before the first tab opens, so the editor shows the
-			// manifest install will actually see.
-			await this.applyManifestPatches();
-			if (this.cancelled(token)) return;
-
-			const initialFile = this.projectFiles[0];
+			const initialFile = this.source.initialFile(this.projectFiles);
 			if (initialFile) await this.openFile(initialFile);
 			else this.loading = false;
 
-			trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` });
+			this.source.trackBoot();
 
 			this.bootStage = 'installing';
-			await this.runInOutput('npm', ['install']);
+			for (const args of this.source.installCommands()) {
+				if (this.cancelled(token)) return;
+				await this.runInOutput('npm', args);
+			}
 			if (this.cancelled(token)) return;
 
-			const script = await this.resolveStartScript();
-			if (this.cancelled(token)) return;
-			if (!script) {
-				this.termWrite(
-					`\r\n${ANSI.coral}No "dev" or "start" script in package.json — nothing to run.${ANSI.reset}\r\n`
-				);
-				return;
-			}
+			const startArgs = await this.source.startCommand(ctx);
+			if (this.cancelled(token) || !startArgs) return;
 
 			this.bootStage = 'starting';
-			await this.runInOutput('npm', ['run', script]);
+			await this.runInOutput('npm', startArgs);
 		} finally {
 			this.booting = false;
 		}
 	}
 
+	/** All a source gets of the pod; `cancelled` stays bound to the boot that handed it over. */
+	private bootContext(pod: BrowserPod, token: number): BootContext {
+		return {
+			pod,
+			workdir: this.workdir,
+			write: (data) => this.termWrite(data),
+			run: (command, args, options) => this.runInOutput(command, args, options),
+			cancelled: () => this.cancelled(token)
+		};
+	}
+
 	/**
-	 * Shared front half of both boot paths: dynamic-import BrowserPod, boot the pod,
-	 * attach the Output terminal (with the banner and branded shell rc) and wire portal
-	 * events through to the host. Returns null when the boot was cancelled in flight.
+	 * Boots the pod and attaches the Output terminal, with the banner and branded shell rc.
+	 * Returns null when the boot was cancelled in flight.
 	 */
 	private async bootPod(
 		terminalEl: HTMLElement,
@@ -342,43 +227,6 @@ export class IdeSession {
 			await writePodFile(pod, BP_RC_PATH, BP_RC);
 		} catch (error) {
 			console.warn('Could not write shell rc:', error);
-		}
-	}
-
-	private async applyManifestPatches(): Promise<void> {
-		if (!this.pod) return;
-		const manifestPath = `${this.workdir}/package.json`;
-		try {
-			const raw = await readPodFile(this.pod, manifestPath);
-			const result = patchClonedManifest(raw);
-			if (!result) {
-				this.termWrite(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
-				return;
-			}
-			await writePodFile(this.pod, manifestPath, result.patched);
-			// Header takes the leading blank line; the changes follow indented under it as one block.
-			this.termWrite(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
-			for (const note of result.notes) this.termWrite(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
-		} catch (error) {
-			this.termWrite(
-				`\r\n${ANSI.coral}Could not patch package.json; installing the repo as cloned.${ANSI.reset}\r\n`
-			);
-			console.warn('Could not patch the cloned manifest:', error);
-		}
-	}
-
-	/** Pick the dev-server script from the cloned package.json: prefer `dev`, then `start`. */
-	private async resolveStartScript(): Promise<string | null> {
-		if (!this.pod) return null;
-		try {
-			const raw = await readPodFile(this.pod, `${this.workdir}/package.json`);
-			const scripts = (JSON.parse(raw) as { scripts?: Record<string, string> }).scripts ?? {};
-			if (scripts.dev) return 'dev';
-			if (scripts.start) return 'start';
-			return null;
-		} catch (error) {
-			console.error('Failed to read package.json:', error);
-			return null;
 		}
 	}
 
@@ -623,30 +471,6 @@ export class IdeSession {
 /** Single-quotes a path for `bash -c`. */
 function shQuote(value: string): string {
 	return `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
-async function fetchManifest(config: FrameworkConfig): Promise<string[]> {
-	const response = await fetch(`${config.sourceRoot}/manifest.txt`);
-	if (!response.ok) {
-		throw new Error(
-			`Failed to load manifest for ${config.id}: ${response.status} ${response.statusText}`
-		);
-	}
-	const text = await response.text();
-	return text
-		.split('\n')
-		.map((line) => line.trim())
-		.filter(Boolean);
-}
-
-async function fetchTemplateFile(config: FrameworkConfig, fileName: string): Promise<ArrayBuffer> {
-	const response = await fetch(`${config.sourceRoot}/${fileName}`);
-	if (!response.ok) {
-		throw new Error(
-			`Failed to fetch ${fileName} for ${config.id}: ${response.status} ${response.statusText}`
-		);
-	}
-	return response.arrayBuffer();
 }
 
 // shutdown() is not part of the published type definitions yet.
