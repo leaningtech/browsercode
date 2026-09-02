@@ -56,6 +56,19 @@ export const toolItems: ToolItem[] = [
 	}
 ];
 
+/** Where an unknown or not-yet-shipped tool id falls back to. */
+export const defaultToolId: ToolId = toolItems.find((item) => !item.disabled)?.id ?? 'claude';
+
+/** A disabled tool has nothing to boot, so it is not a routable id either. */
+export function isEnabledTool(id: string | undefined): id is ToolId {
+	return toolItems.some((item) => item.id === id && !item.disabled);
+}
+
+/** Route params are user input, so an id that cannot boot resolves to the default instead. */
+export function resolveToolId(param: string | undefined): ToolId {
+	return isEnabledTool(param) ? param : defaultToolId;
+}
+
 /**
  * A secret the CLI can only be handed at process launch, so declaring one switches the tool to a
  * gated boot: an overlay blocks until it is stored. Copy lives here as data, so the cards render

@@ -6,24 +6,20 @@
 
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { bootCLI } from '$lib/agents/boot';
-	import { CredentialGate } from '$lib/agents/credential-gate.svelte';
+	import { AgentSession } from '$lib/agents/session.svelte';
 	import AgentErrorCard from '$lib/components/agents/AgentErrorCard.svelte';
 	import AgentLoadingCard from '$lib/components/agents/AgentLoadingCard.svelte';
 	import CredentialCard from '$lib/components/agents/CredentialCard.svelte';
 	import { openTour } from '$lib/stores/stepper.svelte';
-	import { cliConfigs, toolItems } from '$lib/config/tools';
-	import { requestSingleTabLock } from '$lib/utils/tabLock';
+	import { toolItems } from '$lib/config/tools';
 	import { startDrag } from '$lib/utils/drag';
 	import { watchIsMobile } from '$lib/utils/viewport';
-	import {
-		navigateWithLeaveGuard,
-		installLeaveGuard,
-		markIntentionalNavigation
-	} from '$lib/stores/leaveWarning.svelte';
+	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 	import { PortalState } from '$lib/stores/portals.svelte';
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
+
+	const session = new AgentSession($page.params.tool);
 
 	let isPortalVisible = $state(true);
 	/** The div the pod's terminal attaches to, rendered by Terminal.svelte. */
@@ -62,24 +58,19 @@
 		onEmpty: () => (isPortalVisible = false)
 	});
 	let showToolMenu = $state(false);
-	let showDuplicateTabWarning = $state(false);
 	let closeFallback = $state(false);
-	// Deliberately not state: assigned once at boot and only called from the unmount cleanup.
-	let releaseTabLock: () => void = () => {};
-	let disposeLeaveGuard: () => void = () => {};
-	let showTerminalTip = $state(false);
+	let tipDismissed = $state(false);
+	// Shown on every boot, not just the first ever visit, but not in a tab that booted nothing.
+	let showTerminalTip = $derived(session.lock === 'held' && !tipDismissed);
 
 	// Same reveal treatment as the landing page's About panel: starts closed so the transition
 	// actually animates in on arrival, rather than snapping straight to open.
 	let entered = $state(false);
 
+	// Any keypress means they've already found the terminal. Guarded, so one that lands while the
+	// tab lock is still pending does not dismiss a tip that has yet to appear.
 	function dismissTerminalTip() {
-		showTerminalTip = false;
-	}
-
-	// Any keypress means they've already found the terminal; no need to keep the tip up.
-	function handleAnyKeydown() {
-		if (showTerminalTip) dismissTerminalTip();
+		if (showTerminalTip) tipDismissed = true;
 	}
 
 	function attemptCloseTab() {
@@ -91,38 +82,13 @@
 		}, 400);
 	}
 
-	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
-	const defaultTool = toolItems.find((t) => !t.disabled)?.id ?? 'claude';
-
-	function getActiveTool() {
-		const tool = $page.params.tool;
-		return tool && validToolIds.has(tool) ? tool : defaultTool;
+	function selectTool(id: string) {
+		session.switchTo(id);
+		showToolMenu = false;
 	}
-
-	// Tool switching is a full page load, so the active tool is fixed for this page's lifetime
-	const activeTool = getActiveTool();
-	// getActiveTool() only ever returns an id that is in toolItems, so this always resolves.
-	const toolItem = toolItems.find((item) => item.id === activeTool)!;
-	// Mirrors bootCLI's own resolution, so the gate matches the config that actually launches.
-	const credential = (cliConfigs[activeTool] ?? cliConfigs.claude).credential;
-
-	function retryBoot() {
-		markIntentionalNavigation();
-		window.location.reload();
-	}
-
-	const gate = credential ? new CredentialGate(credential, { onRestart: retryBoot }) : null;
 
 	function toggleToolMenu() {
 		showToolMenu = !showToolMenu;
-	}
-
-	function selectTool(id: string) {
-		if (validToolIds.has(id)) {
-			// Already an active agent session here — always confirm before tearing it down.
-			navigateWithLeaveGuard(`/agents/${id}`, true);
-		}
-		showToolMenu = false;
 	}
 
 	onMount(() => {
@@ -131,58 +97,23 @@
 			entered = true;
 		});
 
-		// Two tabs booting the same agent would both write to the same BrowserPod storage key;
-		// Claim an exclusive, tab-lifetime lock first and only boot if we actually got it.
-		const tool = getActiveTool();
-		const lock = requestSingleTabLock(`agent-session:${tool}`);
-		releaseTabLock = lock.release;
-
-		lock.acquired.then((acquired) => {
-			if (!acquired) {
-				showDuplicateTabWarning = true;
-				return;
-			}
-
-			// Only warn on tab close/refresh/back-button once a session is actually running here;
-			// The duplicate-tab case above has nothing booted, so there's no work to lose.
-			disposeLeaveGuard = installLeaveGuard();
-
-			// Shown on every boot, not just the first ever visit.
-			showTerminalTip = true;
-
-			if (!consoleEl) {
-				console.error('Terminal container is not ready yet');
-				return;
-			}
-
-			// Covers pod boot, the image streaming in, and any warm-up probe.
-			gate?.begin();
-
-			// bootCLI already logs and writes the failure into the terminal; a gated boot additionally
-			// needs its overlay taken down, since it hides that terminal.
-			bootCLI(
-				tool,
-				consoleEl,
-				portal.apply,
-				gate ? { beforeLaunch: gate.beforeLaunch } : undefined
-			).catch((error) => gate?.reportBootFailure(error));
-		});
+		if (consoleEl) session.boot(consoleEl, portal.apply);
+		else console.error('Terminal container is not ready yet');
 
 		return () => {
 			// Never leave the global chrome hidden after navigating away from an agent session.
 			zenState.on = false;
 			unwatchIsMobile();
-			disposeLeaveGuard();
 			portal.dispose();
-			releaseTabLock();
+			session.shutdown();
 		};
 	});
 </script>
 
-<svelte:window onkeydown={handleAnyKeydown} />
+<svelte:window onkeydown={dismissTerminalTip} />
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col" bind:this={containerEl}>
-	{#if showDuplicateTabWarning}
+	{#if session.lock === 'taken'}
 		<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
 		>
@@ -239,11 +170,11 @@
 			{/if}
 
 			<!-- The env-bound secret can only change via a relaunch, so the way in is always here. -->
-			{#if gate && credential}
+			{#if session.gate && session.credential}
 				<button
-					onclick={gate.openChange}
-					aria-label={credential.label}
-					title={credential.label}
+					onclick={session.gate.openChange}
+					aria-label={session.credential.label}
+					title={session.credential.label}
 					class="absolute bottom-4 z-30 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 p-2 text-white/40 backdrop-blur-sm transition hover:bg-black/60 hover:text-white/70 {isMobile
 						? 'left-4'
 						: 'left-16'}"
@@ -252,39 +183,39 @@
 				</button>
 			{/if}
 
-			{#if gate?.overlayVisible && credential}
+			{#if session.gate?.overlayVisible && session.credential}
 				<div
 					class="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
 				>
-					{#if gate.stage === 'loading'}
+					{#if session.gate.stage === 'loading'}
 						<AgentLoadingCard
-							tool={toolItem}
-							{credential}
-							willAskForCredential={!gate.hasCredential}
-							onCancel={() => navigateWithLeaveGuard('/agents', false)}
+							tool={session.tool}
+							credential={session.credential}
+							willAskForCredential={!session.gate.hasCredential}
+							onCancel={session.leave}
 						/>
-					{:else if gate.stage === 'error'}
+					{:else if session.gate.stage === 'error'}
 						<AgentErrorCard
-							tool={toolItem}
-							message={gate.error}
-							onRetry={retryBoot}
-							onCancel={() => navigateWithLeaveGuard('/agents', false)}
+							tool={session.tool}
+							message={session.gate.error}
+							onRetry={session.restart}
+							onCancel={session.leave}
 						/>
-					{:else if gate.stage === 'signin'}
+					{:else if session.gate.stage === 'signin'}
 						<CredentialCard
-							tool={toolItem}
-							{credential}
+							tool={session.tool}
+							credential={session.credential}
 							mode="boot"
-							onSubmit={gate.submit}
-							onCancel={() => navigateWithLeaveGuard('/agents', false)}
+							onSubmit={session.gate.submit}
+							onCancel={session.leave}
 						/>
 					{:else}
 						<CredentialCard
-							tool={toolItem}
-							{credential}
+							tool={session.tool}
+							credential={session.credential}
 							mode="change"
-							onSubmit={gate.saveAndRestart}
-							onCancel={gate.closeChange}
+							onSubmit={session.gate.saveAndRestart}
+							onCancel={session.gate.closeChange}
 						/>
 					{/if}
 				</div>
@@ -382,14 +313,14 @@
 								onclick={() => !item.disabled && selectTool(item.id)}
 								disabled={item.disabled}
 								class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors
-								{activeTool === item.id
+								{session.id === item.id
 									? 'bg-white/8 text-white'
 									: item.disabled
 										? 'cursor-not-allowed text-white/20'
 										: 'text-white/50 hover:bg-white/5 hover:text-white/80'}"
 							>
 								<div
-									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {activeTool ===
+									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {session.id ===
 									item.id
 										? 'bg-white/10'
 										: 'bg-white/5'}"
@@ -402,14 +333,14 @@
 											alt={item.label}
 											class="h-4.5 w-4.5 {item.disabled
 												? 'opacity-20'
-												: activeTool === item.id
+												: session.id === item.id
 													? 'opacity-90'
 													: 'opacity-40'}"
 										/>
 									{/if}
 								</div>
 								<span class="flex-1 text-[14px] font-medium">{item.label}</span>
-								{#if activeTool === item.id}
+								{#if session.id === item.id}
 									<div class="flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
 										<Icon icon="mingcute:check-line" width="12" height="12" class="text-white/80" />
 									</div>
