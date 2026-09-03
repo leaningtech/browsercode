@@ -16,6 +16,8 @@
 
 	/** Matches the sweep animation below. */
 	const SWEEP_MS = 620;
+	/** Fills the QR panel's content column exactly; `.qr-plate` supplies the quiet zone. */
+	const QR_PX = 160;
 
 	let localQrCodeCanvas = $state<HTMLCanvasElement | null>(null);
 	let frameEl = $state<HTMLIFrameElement | null>(null);
@@ -47,7 +49,7 @@
 			if (!localQrCodeCanvas) return;
 
 			await QRCode.toCanvas(localQrCodeCanvas, url, {
-				width: 150,
+				width: QR_PX,
 				margin: 0,
 				errorCorrectionLevel: 'H',
 				color: { dark: '#000000', light: '#ffffff' }
@@ -200,17 +202,41 @@
 				</div>
 				{#if portal.showInfo}
 					<div class="portal-menu qr-panel left-1">
-						<div class="mx-auto mb-2 w-fit rounded bg-white p-1.5">
-							<canvas bind:this={localQrCodeCanvas} width="150" height="150" class="block"></canvas>
+						<div class="qr-head">
+							<span class="qr-title text-[11px] text-white/55">Scan the QR code</span>
+							<button
+								onclick={portal.closeOverlays}
+								class="tool-btn -mr-1.5"
+								title="Close"
+								aria-label="Close QR code"
+							>
+								<Icon icon="mingcute:close-line" width="13" height="13" />
+							</button>
 						</div>
+
 						{#if portal.qrError}
-							<p class="text-[11px] text-bc-coral">{portal.qrError}</p>
-						{:else}
-							<p class="mb-1 text-[11px] text-white/55">Scan to open this preview on your phone.</p>
-							<p class="font-mono text-[9.5px] leading-relaxed break-all text-white/30">
-								{portal.url}
-							</p>
+							<p class="mb-2 text-center text-[11px] text-bc-coral">{portal.qrError}</p>
 						{/if}
+						<div
+							class="qr-plate"
+							class:hidden={!!portal.qrError}
+							role="img"
+							aria-label="QR code for the preview URL"
+						>
+							<canvas bind:this={localQrCodeCanvas} width={QR_PX} height={QR_PX} class="block"
+							></canvas>
+						</div>
+
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
+						<a
+							href={portal.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="qr-link font-mono text-[10px] break-all"
+						>
+							{portal.url}
+						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					</div>
 				{/if}
 			{/if}
@@ -311,9 +337,56 @@
 
 	/* Padding lives here because the scoped .portal-menu rule outranks a Tailwind utility. */
 	.qr-panel {
-		width: 186px;
+		width: 200px;
 		padding: 12px;
+	}
+
+	.qr-head {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		margin-bottom: 8px;
+	}
+
+	.qr-title {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.qr-plate {
+		margin-bottom: 8px;
+		padding: 8px;
+		border-radius: 6px;
+		background: #fff;
+		box-shadow:
+			0 0 0 1px color-mix(in srgb, var(--color-bc-azure) 30%, transparent),
+			0 6px 16px rgba(0, 0, 0, 0.4);
+	}
+
+	.qr-link {
+		display: block;
+		padding: 6px 8px;
+		border-radius: 6px;
+		background: rgba(2, 9, 20, 0.5);
+		color: rgba(255, 255, 255, 0.55);
+		line-height: 1.5;
 		text-align: center;
+		transition:
+			color 0.14s ease,
+			background 0.14s ease;
+	}
+	.qr-link:hover {
+		background: rgba(2, 9, 20, 0.72);
+		color: var(--color-bc-mist);
+	}
+	.qr-link:focus-visible {
+		outline: 1px solid color-mix(in srgb, var(--color-bc-azure) 70%, transparent);
+		outline-offset: 1px;
 	}
 
 	.menu-row {
