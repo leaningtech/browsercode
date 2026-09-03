@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
-	import { toolItems } from '$lib/config/tools';
+	import { cliConfigs, toolItems } from '$lib/config/tools';
 	import WavyGridBackground from '$lib/components/WavyGridBackground.svelte';
 
 	function openTool(id: string, disabled: boolean) {
@@ -45,6 +45,7 @@
 
 				<div class="grid grid-cols-2 gap-3">
 					{#each toolItems as item (item.id)}
+						{@const credential = cliConfigs[item.id]?.credential}
 						<button
 							onclick={() => openTool(item.id, item.disabled)}
 							disabled={item.disabled}
@@ -80,8 +81,8 @@
 										</span>
 									{/if}
 								</span>
-								{#if item.requirement && !item.disabled}
-									<span class="text-[10.5px] text-white/30">Needs an {item.requirement}</span>
+								{#if credential && !item.disabled}
+									<span class="text-[10.5px] text-white/30">Needs an {credential.label}</span>
 								{/if}
 							</span>
 						</button>

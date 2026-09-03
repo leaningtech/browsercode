@@ -7,56 +7,37 @@
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
 	import LoadingScene from '$lib/components/ide/LoadingScene.svelte';
+	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import { fade } from 'svelte/transition';
 	import type { BootStage, IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
 	import { PortalState } from '$lib/stores/portals.svelte';
-	import type { PortalUpdate } from '$lib/pod/portals';
 	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { startDrag } from '$lib/utils/drag';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
 
-	// Boot-log lines the preview loader streams, per boot mode.
-	const BOOT_LOG: Record<'framework' | 'github', string[]> = {
-		framework: [
-			'booting BrowserPod',
-			'copying project files',
-			'installing dependencies',
-			'starting dev server'
-		],
-		github: [
-			'booting BrowserPod',
-			'cloning repository',
-			'installing dependencies',
-			'starting dev server'
-		]
-	};
 	// Which boot-log line is the *active* (spinning) one for each real stage.
 	const STAGE_LINE: Record<BootStage, number> = {
 		booting: 0,
-		copying: 1,
-		cloning: 1,
+		hydrating: 1,
 		installing: 2,
 		starting: 3
 	};
 
-	// The route owns the session and decides how it boots (curated framework vs GitHub clone);
-	// the shell is mode-agnostic — it just drives `boot` once the terminals are mounted and
-	// renders from session state. Switching projects happens by navigating away (the sidebar's
-	// Ide flyout or an /ide/github URL), not from here.
-	let {
-		session,
-		boot
-	}: {
-		session: IdeSession;
-		boot: (
-			terminalEl: HTMLElement,
-			onPortalUpdate: (update: PortalUpdate) => void
-		) => Promise<void>;
-	} = $props();
+	// The route picks the project source, so the shell never learns how the project arrived.
+	let { session }: { session: IdeSession } = $props();
+
+	// Only the hydrate step differs per source.
+	let bootLines = $derived([
+		'booting BrowserPod',
+		session.source.hydrateLabel,
+		'installing dependencies',
+		'starting dev server'
+	]);
 
 	let isCompatibleBrowser = $state(true);
 	let downloading = $state(false);
@@ -76,12 +57,26 @@
 	let activePanel = $state<'files' | 'search' | null>('files');
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
 
-	// Frameworks with a declared app port keep the preview pinned to it; other
-	// ports stay reachable through the port selector.
-	const portal = new PortalState({ preferredPort: () => session.appPort });
+	// ── Mobile state ──────────────────────────────────────────────────────────
+	let isMobile = $state(false);
+	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>('editor');
+
+	// A source with a declared app port keeps the preview pinned to it; other
+	// ports stay reachable through the toolbar's port menu.
+	const portal = new PortalState({ preferredPort: () => session.source.appPort });
+
+	let isPreviewVisible = $state(true);
+	let previewCollapsed = $derived(!isPreviewVisible && !isMobile);
+
+	/** Collapses to the stub without unmounting: a remount would lose the previewed app's route. */
+	function togglePreview(): void {
+		isPreviewVisible = !isPreviewVisible;
+		// xterm only refits on a resize event.
+		setTimeout(() => fitTerminals(), 0);
+	}
 
 	// Recomputed as the preview moves ports, so a report always carries the live portal URL.
-	let bugReportHref = $derived(bugReportUrl({ repo: session.repo, previewUrl: portal.url }));
+	let bugReportHref = $derived(bugReportUrl({ repo: session.source.repo, previewUrl: portal.url }));
 
 	// Live once the framed document loaded, so the loader covers the server's start and first paint.
 	let previewLive = $derived(portal.frameStatus === 'ready');
@@ -90,12 +85,11 @@
 		if (!previewLive) loaderVisible = true;
 	});
 
-	let bootLines = $derived(BOOT_LOG[session.mode]);
 	let activeLine = $derived(STAGE_LINE[session.bootStage]);
 
-	// ── Mobile state ──────────────────────────────────────────────────────────
-	let isMobile = $state(false);
-	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>('editor');
+	/** Editor floor, so dragging the terminal up leaves a usable strip of it. */
+	const MIN_EDITOR_FRACTION = 0.1;
+	const MAX_EDITOR_FRACTION = 0.85;
 
 	// ── Resize state ──────────────────────────────────────────────────────────
 	let filePanelWidth = $state(208);
@@ -111,14 +105,8 @@
 		window.dispatchEvent(new Event('resize'));
 	}
 
-	function startDrag(which: 'file' | 'col' | 'row', e: MouseEvent) {
-		e.preventDefault();
+	function startPaneDrag(which: 'file' | 'col' | 'row', event: MouseEvent) {
 		dragging = which;
-		document.body.classList.add('dragging');
-		document.body.style.cursor = which === 'row' ? 'row-resize' : 'col-resize';
-
-		const startX = e.clientX;
-		const startY = e.clientY;
 		const startFileW = filePanelWidth;
 		const startEditorFrac = editorFraction;
 		const startLeftW = leftColEl?.clientWidth ?? 0;
@@ -126,43 +114,30 @@
 		// 40px = icon rail width
 		const startTotalW = bodyEl ? bodyEl.clientWidth - 40 - (activePanel ? filePanelWidth : 0) : 1;
 
-		function onMove(ev: MouseEvent) {
-			const dx = ev.clientX - startX;
-			const dy = ev.clientY - startY;
-
-			if (which === 'file') {
-				const requested = startFileW + dx;
-				if (requested < 100) {
-					// Dragged shut — collapse the panel instead of pinning to min width
-					activePanel = null;
-					onUp();
-					return;
+		startDrag(event, {
+			cursor: which === 'row' ? 'row-resize' : 'col-resize',
+			move: (dx, dy, stop) => {
+				if (which === 'file') {
+					const requested = startFileW + dx;
+					if (requested < 100) {
+						// Dragged shut — collapse the panel instead of pinning to min width
+						activePanel = null;
+						stop();
+						return;
+					}
+					filePanelWidth = Math.max(140, Math.min(480, requested));
+				} else if (which === 'col') {
+					leftColFraction = Math.max(0.25, Math.min(0.8, (startLeftW + dx) / startTotalW));
+				} else if (which === 'row') {
+					editorFraction = Math.max(
+						MIN_EDITOR_FRACTION,
+						Math.min(MAX_EDITOR_FRACTION, (startLeftH * startEditorFrac + dy) / startLeftH)
+					);
 				}
-				filePanelWidth = Math.max(140, Math.min(480, requested));
-			} else if (which === 'col') {
-				leftColFraction = Math.max(0.25, Math.min(0.8, (startLeftW + dx) / startTotalW));
-			} else if (which === 'row') {
-				// Cap the terminal at 600px by bumping the editor's minimum fraction
-				const maxTerminalPx = 600;
-				const minEditorFrac = startLeftH > 0 ? Math.max(0.2, 1 - maxTerminalPx / startLeftH) : 0.2;
-				editorFraction = Math.max(
-					minEditorFrac,
-					Math.min(0.85, (startLeftH * startEditorFrac + dy) / startLeftH)
-				);
-			}
-			fitTerminals();
-		}
-
-		function onUp() {
-			dragging = null;
-			document.body.classList.remove('dragging');
-			document.body.style.cursor = '';
-			window.removeEventListener('mousemove', onMove);
-			window.removeEventListener('mouseup', onUp);
-		}
-
-		window.addEventListener('mousemove', onMove);
-		window.addEventListener('mouseup', onUp);
+				fitTerminals();
+			},
+			end: () => (dragging = null)
+		});
 	}
 
 	// ── Mobile detection ──────────────────────────────────────────────────────
@@ -193,7 +168,7 @@
 		await tick();
 		if (!outputEl) throw new Error('Terminal container is not ready yet');
 		try {
-			await boot(outputEl, portal.apply);
+			await session.boot(outputEl, portal.apply);
 		} catch (error) {
 			console.error('Failed initializing BrowserPod:', error);
 			session.loading = false;
@@ -215,7 +190,7 @@
 	>
 		<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
 			<!-- Switching projects happens by navigating away (sidebar Ide flyout or an /ide/github URL). -->
-			<span class="truncate text-white/60">{session.displayLabel}</span>
+			<span class="truncate text-white/60">{session.source.label}</span>
 			{#if session.selectedFile}
 				<span class="text-white/20">/</span>
 				<span class="truncate text-white/60">{session.selectedFile}</span>
@@ -255,6 +230,11 @@
 				</button>
 			</div>
 			<div class="mt-auto flex flex-col gap-0.5 p-1 pb-2">
+				<SettingsMenu
+					baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
+					activeClass="bg-bc-azure/15 text-bc-azure"
+					idleClass="text-zinc-600 hover:bg-white/5 hover:text-zinc-300"
+				/>
 				<!-- The tracker is an external URL, so resolve() does not apply here. -->
 				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
@@ -263,7 +243,7 @@
 					rel="noopener noreferrer"
 					title="Report a bug"
 					aria-label="Report a bug"
-					onclick={() => trackEvent('Clicked Report Bug', { mode: session.mode })}
+					onclick={() => trackEvent('Clicked Report Bug', { mode: session.source.id })}
 					class="flex items-center justify-center rounded p-1.5 text-zinc-600 transition hover:bg-bc-coral/10 hover:text-bc-coral"
 				>
 					<Icon icon="mingcute:bug-line" width="18" height="18" />
@@ -357,7 +337,7 @@
 				type="button"
 				class="divider divider-col"
 				class:active={dragging === 'file'}
-				onmousedown={(e) => startDrag('file', e)}
+				onmousedown={(e) => startPaneDrag('file', e)}
 				aria-label="Resize side panel"
 			>
 				<div class="divider-line"></div>
@@ -369,14 +349,18 @@
 			<!-- Left column: editor + terminal -->
 			<div
 				class="flex h-full min-h-0 flex-col overflow-hidden"
-				class:mobile-hidden={isMobile &&
+				class:pane-hidden={isMobile &&
 					activeMobileView !== 'editor' &&
 					activeMobileView !== 'terminal'}
 				bind:this={leftColEl}
-				style={isMobile ? 'width: 100%;' : `width: ${leftColFraction * 100}%;`}
+				style={isMobile
+					? 'width: 100%;'
+					: previewCollapsed
+						? 'flex: 1 1 0; min-width: 0;'
+						: `width: ${leftColFraction * 100}%;`}
 			>
 				<div
-					class:mobile-hidden={isMobile && activeMobileView !== 'editor'}
+					class:pane-hidden={isMobile && activeMobileView !== 'editor'}
 					style={isMobile ? 'height: 100%; flex-shrink: 0;' : 'flex: 1 1 0; min-height: 0;'}
 				>
 					<EditorPane {session} />
@@ -388,7 +372,7 @@
 						type="button"
 						class="divider divider-row"
 						class:active={dragging === 'row'}
-						onmousedown={(e) => startDrag('row', e)}
+						onmousedown={(e) => startPaneDrag('row', e)}
 						aria-label="Resize terminal panel"
 					>
 						<div class="divider-line"></div>
@@ -396,22 +380,22 @@
 				{/if}
 
 				<div
-					class:mobile-hidden={isMobile && activeMobileView !== 'terminal'}
+					class:pane-hidden={isMobile && activeMobileView !== 'terminal'}
 					style={isMobile
 						? 'flex: 1 1 0; min-height: 0; height: 100%;'
-						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; max-height: 600px; min-height: 0;`}
+						: `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; min-height: 0;`}
 				>
 					<TerminalTabs {session} bind:outputEl />
 				</div>
 			</div>
 
 			<!-- Divider: editor column / preview -->
-			{#if !isMobile}
+			{#if !isMobile && isPreviewVisible}
 				<button
 					type="button"
 					class="divider divider-col"
 					class:active={dragging === 'col'}
-					onmousedown={(e) => startDrag('col', e)}
+					onmousedown={(e) => startPaneDrag('col', e)}
 					aria-label="Resize preview panel"
 				>
 					<div class="divider-line"></div>
@@ -420,63 +404,73 @@
 
 			<!-- Right column: preview -->
 			<div
-				class="relative flex min-h-0 min-w-0 flex-1 flex-col"
-				class:mobile-hidden={isMobile && activeMobileView !== 'preview'}
+				class="relative flex min-h-0 min-w-0 flex-col"
+				class:pane-hidden={isMobile && activeMobileView !== 'preview'}
 				class:pointer-events-none={dragging !== null}
-				style={isMobile ? 'width: 100%; height: 100%;' : ''}
+				style={isMobile
+					? 'width: 100%; height: 100%;'
+					: previewCollapsed
+						? 'flex: 0 0 1.75rem;'
+						: 'flex: 1 1 0;'}
 			>
-				{#if !isCompatibleBrowser}
-					<div
-						class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
+				{#if previewCollapsed}
+					<button
+						onclick={togglePreview}
+						title="Show preview"
+						aria-label="Show preview"
+						class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-mist/10 bg-bc-navy py-1.5 text-white/40 transition hover:bg-white/5 hover:text-white/80"
 					>
+						<Icon icon="mingcute:left-line" width="13" height="13" />
+						{#if portal.selectedPort !== null}
+							<span
+								class="font-mono text-[10px] tracking-wider tabular-nums [writing-mode:vertical-rl]"
+								>port {portal.selectedPort}</span
+							>
+						{/if}
+					</button>
+				{/if}
+
+				<div class="relative flex min-h-0 flex-1 flex-col" class:pane-hidden={previewCollapsed}>
+					{#if !isCompatibleBrowser}
 						<div
-							class="glass-panel max-w-85 rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
+							class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
 						>
 							<div
-								class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
+								class="glass-panel max-w-85 rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
 							>
-								<Icon icon="mingcute:alert-line" width="22" height="22" />
+								<div
+									class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
+								>
+									<Icon icon="mingcute:alert-line" width="22" height="22" />
+								</div>
+								<h3 class="mb-2 text-sm font-semibold text-zinc-50">Incompatible Browser</h3>
+								<p class="text-[12px] leading-relaxed text-zinc-400">
+									Requires <strong class="text-zinc-200">Atomics.waitAsync</strong> (Chrome, Edge, Safari
+									16.4+).
+								</p>
 							</div>
-							<h3 class="mb-2 text-sm font-semibold text-zinc-50">Incompatible Browser</h3>
-							<p class="text-[12px] leading-relaxed text-zinc-400">
-								Requires <strong class="text-zinc-200">Atomics.waitAsync</strong> (Chrome, Edge, Safari
-								16.4+).
-							</p>
 						</div>
-					</div>
-				{:else}
-					{#if portal.portals.length > 0}
-						<Portal
-							src={portal.url}
-							frameStatus={portal.frameStatus}
-							onFrameLoad={portal.reportFrameLoaded}
-							portals={portal.portals}
-							selectedPort={portal.selectedPort}
-							showMenu={portal.showMenu}
-							showInfo={portal.showInfo}
-							copied={portal.copied}
-							qrError={portal.qrError}
-							onPortChange={portal.onPortChange}
-							onToggleMenu={portal.toggleMenu}
-							onCopyLink={portal.copyUrl}
-							onOpenNewTab={portal.openInNewTab}
-							onShowQrCode={portal.showQRCode}
-							onCloseOverlays={portal.closeOverlays}
-							onQrResult={portal.reportQrResult}
-						/>
-					{/if}
-					<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
-					{#if loaderVisible}
-						<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
-							<LoadingScene
-								lines={bootLines}
-								{activeLine}
-								flash={previewLive}
-								onFlashComplete={() => (loaderVisible = false)}
+					{:else}
+						{#if portal.portals.length > 0}
+							<Portal
+								{portal}
+								onBeforeReload={() => session.saveAll()}
+								onCollapse={isMobile ? undefined : togglePreview}
 							/>
-						</div>
+						{/if}
+						<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
+						{#if loaderVisible}
+							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
+								<LoadingScene
+									lines={bootLines}
+									{activeLine}
+									flash={previewLive}
+									onFlashComplete={() => (loaderVisible = false)}
+								/>
+							</div>
+						{/if}
 					{/if}
-				{/if}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -516,14 +510,6 @@
 </div>
 
 <style>
-	:global(body.dragging) {
-		cursor: col-resize;
-		user-select: none;
-	}
-	:global(body.dragging) :global(iframe) {
-		pointer-events: none;
-	}
-
 	/* ── Dividers ──────────────────────────────────────────────────────────── */
 	.divider {
 		position: relative;
@@ -570,8 +556,8 @@
 
 	/* ── Mobile ────────────────────────────────────────────────────────────── */
 	/* Keep hidden panes mounted (terminals/iframes need persistent DOM) but
-	   take them out of layout so the active pane fills the viewport. */
-	.mobile-hidden {
+	   take them out of layout so the visible panes fill the space. */
+	.pane-hidden {
 		display: none !important;
 	}
 

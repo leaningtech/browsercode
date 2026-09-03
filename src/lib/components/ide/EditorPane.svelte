@@ -3,8 +3,10 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import Icon from '@iconify/svelte';
 	import { fileIcon } from '$lib/ide/file-icons';
+	import ImageViewer from '$lib/components/ide/ImageViewer.svelte';
 	import type * as Monaco from 'monaco-editor';
 	import type { IdeSession } from '$lib/ide/session.svelte';
+	import { activeEditorThemeId } from '$lib/stores/editor-settings.svelte';
 
 	let { session }: { session: IdeSession } = $props();
 
@@ -18,6 +20,8 @@
 	const viewStates = new SvelteMap<string, Monaco.editor.ICodeEditorViewState | null>();
 	let renderedPath = '';
 
+	let activeFile = $derived(session.openFiles.find((file) => file.path === session.selectedFile));
+
 	// Responsive font
 	const FONT_QUERY = '(min-width: 640px)';
 	const fontSizeFor = (desktop: boolean) => (desktop ? 12.8 : 11.5);
@@ -27,13 +31,15 @@
 		const onMediaChange = () => editor?.updateOptions({ fontSize: fontSizeFor(media.matches) });
 		media.addEventListener('change', onMediaChange);
 
-		// Load Monaco lazily
-		void import('./monaco').then((mod) => {
+		// Load Monaco lazily. Highlighting must be installed first: it patches `editor.create`.
+		void (async () => {
+			const mod = await import('./monaco');
+			await mod.highlightingReady;
 			if (destroyed || !container) return;
 			monacoMod = mod;
 			editor = mod.monaco.editor.create(container, {
 				model: null,
-				theme: 'browsercode-dark',
+				theme: activeEditorThemeId(),
 				automaticLayout: true,
 				fontSize: fontSizeFor(media.matches),
 				fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace",
@@ -55,17 +61,19 @@
 				entry.content = value;
 				entry.preview = false;
 			});
-		});
+		})();
 
 		return () => media.removeEventListener('change', onMediaChange);
 	});
 
-	/** Returns (creating if needed) the Monaco model that backs `path`. */
+	/**
+	 * Returns (creating if needed) the Monaco model that backs `path`. Passing no language lets
+	 * Monaco resolve it from the URI.
+	 */
 	function modelFor(mod: typeof import('./monaco'), path: string, content: string) {
 		const uri = mod.monaco.Uri.file(path);
 		return (
-			mod.monaco.editor.getModel(uri) ??
-			mod.monaco.editor.createModel(content, mod.languageFor(path), uri)
+			mod.monaco.editor.getModel(uri) ?? mod.monaco.editor.createModel(content, undefined, uri)
 		);
 	}
 
@@ -82,11 +90,12 @@
 	// Show the active tab: park the outgoing view state, attach the incoming
 	// model, restore its cursor/scroll.
 	$effect(() => {
-		const entry = session.openFiles.find((file) => file.path === session.selectedFile);
+		const entry = activeFile;
 		if (!editor || !monacoMod) return;
 		// Track the reveal request so a jump to the already-open file still re-runs this effect.
 		void session.revealRequest;
-		if (!entry) {
+		// Detaching on an image tab stops the previous file's text showing through under it.
+		if (!entry || entry.image) {
 			if (renderedPath) viewStates.set(renderedPath, editor.saveViewState());
 			editor.setModel(null);
 			renderedPath = '';
@@ -107,6 +116,12 @@
 		if (viewState) editor.restoreViewState(viewState);
 		renderedPath = entry.path;
 		consumeReveal(entry.path);
+	});
+
+	// Theme switching repaints only; no model or view state is touched.
+	$effect(() => {
+		const themeId = activeEditorThemeId();
+		monacoMod?.applyTheme(themeId);
 	});
 
 	// Dispose models and view states whose tab has been closed (or renamed away).
@@ -198,6 +213,11 @@
 	</div>
 	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-abyss">
 		<div bind:this={container} class="h-full w-full"></div>
+		{#if activeFile?.image}
+			<div class="absolute inset-0 z-10">
+				<ImageViewer path={activeFile.path} image={activeFile.image} />
+			</div>
+		{/if}
 		{#if session.openFiles.length === 0 && !session.loading && editor}
 			<div class="absolute inset-0 z-10 flex items-center justify-center bg-bc-abyss">
 				<span class="text-[11px] text-white/25">No file open</span>
