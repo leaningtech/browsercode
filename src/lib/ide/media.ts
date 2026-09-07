@@ -3,10 +3,13 @@
  * are read once and republished as an object URL, owned by the tab that holds it.
  */
 import type { BrowserPod } from '@leaningtech/browserpod';
-import { readPodBinaryFile } from '$lib/pod/fs';
+import { podFileSize, readPodBinaryFile } from '$lib/pod/fs';
 
-/** `url` stays valid until {@link releaseImage}. */
-export type ImagePayload = { url: string; bytes: number };
+/** The blob decodes to a bitmap several times its size, in a tab that also hosts the pod. */
+export const MAX_IMAGE_BYTES = 10_485_760;
+
+/** `url` stays valid until {@link releaseImage}; null past {@link MAX_IMAGE_BYTES}. */
+export type ImagePayload = { url: string | null; bytes: number };
 
 /** Extensions a browser renders in an `<img>`. SVG is absent so it stays editable as text; */
 const IMAGE_MIME: Record<string, string> = {
@@ -38,6 +41,8 @@ export function isBinaryContent(content: string): boolean {
 
 /** Reads an image out of the pod and publishes it as an object URL. */
 export async function loadPodImage(pod: BrowserPod, absPath: string): Promise<ImagePayload> {
+	const size = await podFileSize(pod, absPath);
+	if (size > MAX_IMAGE_BYTES) return { url: null, bytes: size };
 	const bytes = await readPodBinaryFile(pod, absPath);
 	const blob = new Blob([bytes], { type: IMAGE_MIME[extensionOf(absPath)] });
 	return { url: URL.createObjectURL(blob), bytes: bytes.byteLength };
@@ -45,7 +50,7 @@ export async function loadPodImage(pod: BrowserPod, absPath: string): Promise<Im
 
 /** Releases the object URL; a leaked one pins the whole image in memory. */
 export function releaseImage(image: ImagePayload | undefined): void {
-	if (image) URL.revokeObjectURL(image.url);
+	if (image?.url) URL.revokeObjectURL(image.url);
 }
 
 const BYTE_UNITS = ['B', 'KB', 'MB'];

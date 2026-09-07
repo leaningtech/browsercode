@@ -34,6 +34,16 @@ export async function readPodBinaryFile(
 	}
 }
 
+/** Byte size of a pod file, without reading its contents. */
+export async function podFileSize(pod: BrowserPod, absPath: string): Promise<number> {
+	const file = (await pod.openFile(absPath, 'binary')) as BinaryFile;
+	try {
+		return await file.getSize();
+	} finally {
+		await file.close();
+	}
+}
+
 /** Reads a text file, or returns null (without reading it) when larger than `maxBytes`. */
 export async function readPodFileWithinLimit(
 	pod: BrowserPod,

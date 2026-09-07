@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { formatBytes, type ImagePayload } from '$lib/ide/media';
+	import { formatBytes, MAX_IMAGE_BYTES, type ImagePayload } from '$lib/ide/media';
 
 	let { path, image }: { path: string; image: ImagePayload } = $props();
 
@@ -58,7 +58,16 @@
 		bind:clientWidth={frameWidth}
 		bind:clientHeight={frameHeight}
 	>
-		{#if failed}
+		{#if !image.url}
+			<div class="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-white/20" />
+				<span class="text-[11px] text-white/35">
+					Too large to preview &mdash; {formatBytes(image.bytes)}, limit {formatBytes(
+						MAX_IMAGE_BYTES
+					)}
+				</span>
+			</div>
+		{:else if failed}
 			<div class="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
 				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-white/20" />
 				<span class="text-[11px] text-white/35">This image could not be displayed</span>
