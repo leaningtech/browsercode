@@ -94,8 +94,8 @@
 		if (!editor || !monacoMod) return;
 		// Track the reveal request so a jump to the already-open file still re-runs this effect.
 		void session.revealRequest;
-		// Detaching on an image tab stops the previous file's text showing through under it.
-		if (!entry || entry.image) {
+		// Detaching on an image or binary tab stops the previous file's text showing through under it.
+		if (!entry || entry.image || entry.binary) {
 			if (renderedPath) viewStates.set(renderedPath, editor.saveViewState());
 			editor.setModel(null);
 			renderedPath = '';
@@ -216,6 +216,15 @@
 		{#if activeFile?.image}
 			<div class="absolute inset-0 z-10">
 				<ImageViewer path={activeFile.path} image={activeFile.image} />
+			</div>
+		{:else if activeFile?.binary}
+			<div
+				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-bc-abyss px-6 text-center"
+			>
+				<Icon icon="mingcute:file-warning-line" width="20" height="20" class="text-white/20" />
+				<span class="text-[11px] text-white/35">
+					This file is not shown in the editor because its contents are not text
+				</span>
 			</div>
 		{/if}
 		{#if session.openFiles.length === 0 && !session.loading && editor}

@@ -3,7 +3,13 @@ import { SvelteSet } from 'svelte/reactivity';
 import { readPodFile, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import type { PortalUpdate } from '$lib/pod/portals';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
-import { isImagePath, loadPodImage, releaseImage, type ImagePayload } from './media';
+import {
+	isBinaryContent,
+	isImagePath,
+	loadPodImage,
+	releaseImage,
+	type ImagePayload
+} from './media';
 import type { BootContext, ProjectSource } from './project-source';
 
 /** Force color: npm/vite print plain text with no TTY in the pod. */
@@ -20,6 +26,8 @@ export type OpenFile = {
 	preview: boolean;
 	/** Set on image tabs, which render as a picture and never save. */
 	image?: ImagePayload;
+	/** Set when `content` is a lossy decode of non-text bytes; the tab never saves. */
+	binary?: boolean;
 };
 
 /** Where the boot pipeline currently is; drives the loader's progress readout. */
@@ -356,7 +364,8 @@ export class IdeSession {
 				content,
 				savedContent: content,
 				preview: preview && !this.pendingPins.delete(path),
-				image
+				image,
+				binary: !image && isBinaryContent(content)
 			};
 			const previewIndex = entry.preview ? this.openFiles.findIndex((file) => file.preview) : -1;
 			if (previewIndex >= 0) {
@@ -420,8 +429,8 @@ export class IdeSession {
 	}
 
 	private async saveEntry(entry: OpenFile): Promise<void> {
-		// An image tab carries no text, so writing its content back would truncate the file.
-		if (entry.image) return;
+		// Neither carries writable text: an image tab has none, a binary tab's is a lossy decode.
+		if (entry.image || entry.binary) return;
 		// Saving only makes sense once the dev server is reachable; earlier writes
 		// would race the template hydration.
 		if (!this.pod || !this.hasPortal || this.unmounted) return;

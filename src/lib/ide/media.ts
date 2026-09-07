@@ -1,6 +1,6 @@
 /**
- * Image tabs: pod files have no URL an `<img>` can reach, so the bytes are read once and
- * republished as an object URL, owned by the tab that holds it.
+ * How a pod file opens in a tab: pod files have no URL an `<img>` can reach, so an image's bytes
+ * are read once and republished as an object URL, owned by the tab that holds it.
  */
 import type { BrowserPod } from '@leaningtech/browserpod';
 import { readPodBinaryFile } from '$lib/pod/fs';
@@ -29,6 +29,11 @@ const extensionOf = (path: string): string => path.slice(path.lastIndexOf('.') +
 /** True when `path` opens as an image tab rather than in the text editor. */
 export function isImagePath(path: string): boolean {
 	return extensionOf(path) in IMAGE_MIME;
+}
+
+/** True when the UTF-8 decode lost bytes, so writing the tab back would destroy the file. */
+export function isBinaryContent(content: string): boolean {
+	return content.includes('\u0000') || content.includes('\uFFFD');
 }
 
 /** Reads an image out of the pod and publishes it as an object URL. */
