@@ -21,6 +21,7 @@
 	} = $props();
 
 	let open = $state(false);
+	const headingId = $props.id();
 	let rootEl = $state<HTMLElement | null>(null);
 
 	let themes = $derived(editorThemesFor(appearance));
@@ -61,6 +62,7 @@
 		type="button"
 		onclick={() => (open = !open)}
 		aria-expanded={open}
+		aria-haspopup="menu"
 		class="{baseClass} {open ? activeClass : idleClass}"
 		title="Settings"
 		aria-label="Settings"
@@ -69,16 +71,24 @@
 	</button>
 
 	{#if open}
-		<div class="settings-menu">
-			<p class="settings-heading">Editor theme</p>
-			{#each themes as theme (theme.id)}
-				<button type="button" onclick={() => choose(theme.id)} class="menu-row">
-					<span class="truncate">{theme.label}</span>
-					{#if theme.id === selected}
-						<Icon icon="mingcute:check-line" width="12" height="12" class="ml-auto shrink-0" />
-					{/if}
-				</button>
-			{/each}
+		<div class="settings-menu" role="menu" aria-label="Settings">
+			<p id={headingId} class="settings-heading">Editor theme</p>
+			<div role="group" aria-labelledby={headingId}>
+				{#each themes as theme (theme.id)}
+					<button
+						type="button"
+						role="menuitemradio"
+						aria-checked={theme.id === selected}
+						onclick={() => choose(theme.id)}
+						class="menu-row"
+					>
+						<span class="truncate">{theme.label}</span>
+						{#if theme.id === selected}
+							<Icon icon="mingcute:check-line" width="12" height="12" class="ml-auto shrink-0" />
+						{/if}
+					</button>
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>

@@ -104,6 +104,7 @@
 					type="button"
 					onclick={() => (zoom = null)}
 					title="Fit to window"
+					aria-label="Fit to window"
 					class="zoom-btn w-11 justify-center tabular-nums"
 				>
 					{Math.round(scale * 100)}%
