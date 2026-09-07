@@ -313,9 +313,37 @@ export class IdeSession {
 			p === from ? to : p.startsWith(`${from}/`) ? to + p.slice(from.length) : p;
 		this.projectFiles = this.projectFiles.map(remap);
 		this.projectDirs = this.projectDirs.map(remap);
+		const moved = this.openFiles.filter((file) => remap(file.path) !== file.path);
 		for (const file of this.openFiles) file.path = remap(file.path);
 		this.selectedFile = remap(this.selectedFile);
+		// A tab renders by extension, so a rename across the image/text line has to re-read.
+		await Promise.all(
+			moved
+				.filter((file) => isImagePath(file.path) !== (file.image !== undefined))
+				.map((file) => this.reloadTab(file))
+		);
 		return null;
+	}
+
+	/** Re-reads a tab as picture or text per its new path; unsaved edits are dropped. */
+	private async reloadTab(entry: OpenFile): Promise<void> {
+		if (!this.pod || !this.podReady) return;
+		try {
+			const absPath = `${this.workdir}/${entry.path}`;
+			const image = isImagePath(entry.path) ? await loadPodImage(this.pod, absPath) : undefined;
+			const content = image ? '' : await readPodFile(this.pod, absPath);
+			if (this.unmounted || !this.openFiles.includes(entry)) {
+				releaseImage(image);
+				return;
+			}
+			releaseImage(entry.image);
+			entry.content = content;
+			entry.savedContent = content;
+			entry.image = image;
+			entry.binary = !image && isBinaryContent(content);
+		} catch (error) {
+			console.error('Failed to reload file:', error);
+		}
 	}
 
 	/** Deletes a file or folder recursively; tabs under the path close. Returns an error message or null. */
