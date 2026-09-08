@@ -4,7 +4,8 @@
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import WavyGridBackground from '$lib/components/WavyGridBackground.svelte';
-	import { IdeSession, type PortalUpdate } from '$lib/ide/session.svelte';
+	import { IdeSession } from '$lib/ide/session.svelte';
+	import { templateSource } from '$lib/ide/template-source';
 	import { defaultFrameworkId, isFrameworkId, type FrameworkId } from '$lib/config/frameworks';
 
 	// Bare /ide (no ?framework=) shows the landing instead of auto-booting a template.
@@ -12,11 +13,7 @@
 	const showLanding = !requested;
 	const framework: FrameworkId = isFrameworkId(requested) ? requested : defaultFrameworkId;
 
-	const session = new IdeSession();
-
-	function boot(terminalEl: HTMLElement, onPortalUpdate: (update: PortalUpdate) => void) {
-		return session.boot(framework, terminalEl, onPortalUpdate);
-	}
+	const session = new IdeSession(templateSource(framework));
 
 	// Landing (pre-boot) fades the glass panel in over the wavy grid, full coverage from the
 	// start. Once booted, IdeShell keeps the sheet-slide-up entrance instead (see below).
@@ -53,6 +50,6 @@
 			? '0%'
 			: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
 	>
-		<IdeShell {session} {boot} />
+		<IdeShell {session} />
 	</div>
 {/if}

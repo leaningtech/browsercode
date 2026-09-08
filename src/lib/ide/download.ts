@@ -45,7 +45,7 @@ export async function downloadProject(session: IdeSession): Promise<void> {
 		files[path] = await readPodBinaryFile(pod, `${session.workdir}/${path}`);
 	}
 
-	triggerDownload(zipSync(files), zipFilename(session.displayLabel), 'application/zip');
+	triggerDownload(zipSync(files), zipFilename(session.source.label), 'application/zip');
 }
 
 /** Downloads a single project-relative file under its own name. */

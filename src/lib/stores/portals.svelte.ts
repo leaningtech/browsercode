@@ -35,6 +35,7 @@ export class PortalState {
 	url = $state('');
 	frameStatus = $state<FrameStatus>('waiting');
 	showMenu = $state(false);
+	showPorts = $state(false);
 	showInfo = $state(false);
 	copied = $state(false);
 	qrError = $state('');
@@ -76,11 +77,8 @@ export class PortalState {
 		if (next.length === 0) this.options.onEmpty?.();
 	};
 
-	/** Change handler for Portal.svelte's port <select>. */
-	onPortChange = (event: Event): void => {
-		const value = Number((event.currentTarget as HTMLSelectElement).value);
-		if (!Number.isInteger(value)) return;
-		this.selectUrl(value, this.portals.find((item) => item.port === value)?.url ?? '');
+	selectPort = (port: number): void => {
+		this.selectUrl(port, this.portals.find((item) => item.port === port)?.url ?? '');
 		this.closeOverlays();
 	};
 
@@ -100,18 +98,39 @@ export class PortalState {
 
 	toggleMenu = (): void => {
 		this.showMenu = !this.showMenu;
-		if (this.showMenu) this.showInfo = false;
+		this.clearCopied();
+		if (this.showMenu) {
+			this.showPorts = false;
+			this.showInfo = false;
+		}
+	};
+
+	togglePorts = (): void => {
+		this.showPorts = !this.showPorts;
+		if (this.showPorts) {
+			this.showMenu = false;
+			this.showInfo = false;
+		}
 	};
 
 	closeOverlays = (): void => {
 		this.showMenu = false;
+		this.showPorts = false;
 		this.showInfo = false;
+		this.clearCopied();
 		this.qrError = '';
 	};
+
+	/** The pending timer would otherwise close a later menu. */
+	private clearCopied(): void {
+		clearTimeout(this.copiedTimeout);
+		this.copied = false;
+	}
 
 	showQRCode = (): void => {
 		if (!this.url) return;
 		this.showMenu = false;
+		this.showPorts = false;
 		this.showInfo = true;
 	};
 
@@ -128,11 +147,13 @@ export class PortalState {
 
 	copyUrl = async (): Promise<void> => {
 		if (!this.url) return;
-		this.showMenu = false;
 		await navigator.clipboard.writeText(this.url);
 		this.copied = true;
 		clearTimeout(this.copiedTimeout);
-		this.copiedTimeout = setTimeout(() => (this.copied = false), 1200);
+		this.copiedTimeout = setTimeout(() => {
+			this.copied = false;
+			this.showMenu = false;
+		}, 1200);
 	};
 
 	/** Reports that the framed document loaded. Ignored unless that frame is still the current one. */

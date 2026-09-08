@@ -1,15 +1,23 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
+	import type { CredentialSpec, ToolItem } from '$lib/config/tools';
 
 	let {
-		willAskForKey,
+		tool,
+		credential,
+		willAskForCredential,
 		onCancel
 	}: {
-		/** No stored API key yet, so the sign-in card comes right after this one. */
-		willAskForKey: boolean;
+		tool: ToolItem;
+		credential: CredentialSpec;
+		/** Nothing stored yet, so the prompt comes right after this card. */
+		willAskForCredential: boolean;
 		onCancel: () => void;
 	} = $props();
+
+	/** The bare host reads better as link text than the full URL. */
+	let consoleLabel = $derived(credential.consoleUrl.replace(/^https?:\/\//, ''));
 
 	let elapsed = $state(0);
 	onMount(() => {
@@ -23,15 +31,13 @@
 	class="glass-panel w-full max-w-[520px] overflow-hidden rounded-[14px] border border-bc-mist/15 px-8 pt-8 pb-7 shadow-2xl"
 >
 	<div class="mb-6 flex items-center gap-3.5">
-		<span
-			class="flex h-12 w-12 items-center justify-center rounded-xl bg-bc-orchid/10 text-bc-orchid"
-		>
-			<Icon icon="hugeicons:chat-gpt" width="26" height="26" />
+		<span class="flex h-12 w-12 items-center justify-center rounded-xl {tool.accentClass}">
+			<Icon icon={tool.icon ?? 'mingcute:terminal-box-line'} width="26" height="26" />
 		</span>
 		<div class="flex flex-col gap-1">
-			<span class="text-[15px] font-semibold text-zinc-50">Loading Codex CLI</span>
+			<span class="text-[15px] font-semibold text-zinc-50">Loading {tool.label}</span>
 			<span class="text-[12.5px] text-white/40">
-				Streaming Codex into your browser sandbox. Nothing installs on your machine.
+				Streaming {tool.label} into your browser sandbox. Nothing installs on your machine.
 			</span>
 		</div>
 	</div>
@@ -40,7 +46,7 @@
 		<div class="track absolute top-0 bottom-0 w-1/3 rounded-full"></div>
 	</div>
 
-	{#if willAskForKey}
+	{#if willAskForCredential}
 		<div
 			class="mt-4.5 flex gap-3 rounded-[10px] border border-bc-gold/18 bg-bc-gold/6 p-3.5 text-[12.5px] leading-relaxed text-white/60"
 		>
@@ -51,12 +57,14 @@
 			</span>
 			<div>
 				<span class="font-semibold text-zinc-50">Sign-in comes next.</span>
-				Codex needs an OpenAI API key to run in BrowserPod, so grab one from
+				{tool.label} needs an {credential.label} to run in BrowserPod, so grab one from
+				<!-- The provider's console is an external URL, so resolve() does not apply here. -->
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
-					href="https://platform.openai.com/api-keys"
+					href={credential.consoleUrl}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="text-bc-mist hover:text-bc-azure">platform.openai.com/api-keys</a
+					class="text-bc-mist hover:text-bc-azure">{consoleLabel}</a
 				> while this loads.
 			</div>
 		</div>

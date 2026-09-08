@@ -61,7 +61,8 @@
 			? 'scale(0.94)'
 			: 'scale(1)'}; filter: {panelOpen ? 'brightness(0.72)' : 'brightness(1)'};"
 	>
-		<WavyGridBackground />
+		<!-- The About panel covers the hero, so the wave is imperceptible while it is open. -->
+		<WavyGridBackground paused={panelOpen} />
 
 		<!-- vignette to keep text legible over the grid -->
 		<div

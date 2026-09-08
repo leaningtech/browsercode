@@ -3,7 +3,8 @@
 	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
-	import { IdeSession, type PortalUpdate } from '$lib/ide/session.svelte';
+	import { IdeSession } from '$lib/ide/session.svelte';
+	import { repoSource } from '$lib/ide/repo-source';
 	import { isValidRepoPath } from '$lib/github/parse';
 
 	// `[...dir]` matches the empty segment, so /…/tree/<ref> arrives here with dir = ''.
@@ -14,15 +15,11 @@
 
 	const valid = isValidRepoPath({ owner, repo, ref, dir });
 
-	const session = new IdeSession();
-
-	function boot(terminalEl: HTMLElement, onPortalUpdate: (update: PortalUpdate) => void) {
-		return session.bootFromGitHub(owner, repo, ref, dir, terminalEl, onPortalUpdate);
-	}
+	const session = new IdeSession(repoSource({ owner, repo, ref, dir }));
 </script>
 
 {#if valid}
-	<IdeShell {session} {boot} />
+	<IdeShell {session} />
 {:else}
 	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-zinc-300">
 		<div class="glass-panel max-w-md rounded-xl border border-bc-mist/15 px-6 py-8 text-center">

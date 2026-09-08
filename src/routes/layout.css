@@ -85,6 +85,16 @@ body {
 		radial-gradient(560px circle at 88% 92%, rgba(199, 61, 166, 0.12), transparent 60%);
 }
 
+/* Set by utils/drag.ts. The iframe rule is the load-bearing half: a live preview would swallow
+   the pointer as soon as a drag crossed into it. */
+body.dragging {
+	cursor: col-resize;
+	user-select: none;
+}
+body.dragging iframe {
+	pointer-events: none;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
 	width: 6px;

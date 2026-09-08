@@ -5,6 +5,31 @@ import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { shikiToMonaco, textmateThemeToMonacoTheme } from '@shikijs/monaco';
+import { createHighlighterCore } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
+import type { ThemeRegistrationResolved } from 'shiki';
+import css from '@shikijs/langs/css';
+import docker from '@shikijs/langs/docker';
+import graphql from '@shikijs/langs/graphql';
+import html from '@shikijs/langs/html';
+import ini from '@shikijs/langs/ini';
+import javascript from '@shikijs/langs/javascript';
+import json from '@shikijs/langs/json';
+import less from '@shikijs/langs/less';
+import markdown from '@shikijs/langs/markdown';
+import python from '@shikijs/langs/python';
+import scss from '@shikijs/langs/scss';
+import shellscript from '@shikijs/langs/shellscript';
+import sql from '@shikijs/langs/sql';
+import svelte from '@shikijs/langs/svelte';
+import toml from '@shikijs/langs/toml';
+import typescript from '@shikijs/langs/typescript';
+import vue from '@shikijs/langs/vue';
+import xml from '@shikijs/langs/xml';
+import yaml from '@shikijs/langs/yaml';
+import type { EditorThemeId } from '$lib/config/editor-themes';
+import { THEME_DATA } from './themes/theme-data';
 
 /**
  * Monaco bootstrap for the playground editor. This module (and EditorPane, which
@@ -26,61 +51,68 @@ self.MonacoEnvironment = {
 for (const defaults of [monacoTs.typescriptDefaults, monacoTs.javascriptDefaults])
 	defaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: false });
 
-monaco.editor.defineTheme('browsercode-dark', {
-	base: 'vs-dark',
-	inherit: true,
-	rules: [],
-	colors: {
-		'editor.background': '#09090b',
-		'editor.foreground': '#d9d9d9',
-		'editorCursor.foreground': '#10b981',
-		'editor.selectionBackground': '#10b9812e',
-		'editor.inactiveSelectionBackground': '#10b9811a',
-		'editor.lineHighlightBackground': '#ffffff05',
-		'editorLineNumber.foreground': '#ffffff40',
-		'editorLineNumber.activeForeground': '#ffffff8c',
-		'editorGutter.background': '#09090b',
-		'editorIndentGuide.background1': '#ffffff0a',
-		'editorIndentGuide.activeBackground1': '#ffffff1f',
-		'editorWidget.background': '#111111',
-		'editorWidget.border': '#ffffff14',
-		'scrollbarSlider.background': '#ffffff1f',
-		'scrollbarSlider.hoverBackground': '#ffffff38',
-		'scrollbarSlider.activeBackground': '#ffffff38',
-		'editorOverviewRuler.border': '#00000000'
-	}
+// Fallback for a failed install below: Monaco resolves an unknown theme name to vs-light, and
+// silently, so every theme has to exist even without TextMate.
+for (const [id, theme] of Object.entries(THEME_DATA))
+	monaco.editor.defineTheme(
+		id,
+		textmateThemeToMonacoTheme(
+			theme as ThemeRegistrationResolved
+		) as monaco.editor.IStandaloneThemeData
+	);
+
+/* Replaces Monarch with TextMate grammars */
+async function installHighlighting(): Promise<void> {
+	// Not Monaco languages, so shikiToMonaco would skip them and they would fall back to
+	// HTML (.svelte/.vue) or plaintext (.toml). Registering the extensions also lets Monaco
+	// infer them in `modelFor`.
+	monaco.languages.register({ id: 'svelte', extensions: ['.svelte'] });
+	monaco.languages.register({ id: 'vue', extensions: ['.vue'] });
+	monaco.languages.register({ id: 'toml', extensions: ['.toml'] });
+
+	const highlighter = await createHighlighterCore({
+		themes: Object.values(THEME_DATA),
+		langs: [
+			css,
+			docker,
+			graphql,
+			html,
+			ini,
+			javascript,
+			json,
+			less,
+			markdown,
+			python,
+			scss,
+			shellscript,
+			sql,
+			svelte,
+			toml,
+			typescript,
+			vue,
+			xml,
+			yaml
+		],
+		// Covers every grammar loaded here, and keeps the oniguruma wasm out of the bundle.
+		engine: createJavaScriptRegexEngine()
+	});
+
+	// Reads the theme list once, and re-running would wrap `setTheme` twice.
+	shikiToMonaco(highlighter, monaco);
+}
+
+/** Await before creating an editor: `shikiToMonaco` patches `create` and `setTheme`. */
+export const highlightingReady: Promise<void> = installHighlighting().catch((error) => {
+	console.error('Failed to install TextMate highlighting:', error);
 });
 
-// Svelte and Vue have no Monaco grammar, so they fall back to HTML.
-const LANGUAGE_BY_EXT: Record<string, string> = {
-	svelte: 'html',
-	vue: 'html',
-	html: 'html',
-	htm: 'html',
-	ts: 'typescript',
-	tsx: 'typescript',
-	mts: 'typescript',
-	cts: 'typescript',
-	js: 'javascript',
-	jsx: 'javascript',
-	mjs: 'javascript',
-	cjs: 'javascript',
-	css: 'css',
-	scss: 'scss',
-	less: 'less',
-	json: 'json',
-	md: 'markdown',
-	markdown: 'markdown',
-	yaml: 'yaml',
-	yml: 'yaml',
-	xml: 'xml',
-	svg: 'xml'
-};
-
-// Maps a file path to a Monaco language id by its extension; unknown types are plaintext.
-export function languageFor(file: string): string {
-	const ext = file.slice(file.lastIndexOf('.') + 1).toLowerCase();
-	return LANGUAGE_BY_EXT[ext] ?? 'plaintext';
+/** Global; no editor or model is rebuilt. */
+export function applyTheme(id: EditorThemeId): void {
+	try {
+		monaco.editor.setTheme(id);
+	} catch (error) {
+		console.error(`Failed to apply the ${id} editor theme:`, error);
+	}
 }
 
 export { monaco };

@@ -8,7 +8,7 @@
 	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
 	import IosUnsupportedModal from '$lib/components/IosUnsupportedModal.svelte';
 	import { page } from '$app/stores';
-	import { toolItems } from '$lib/config/tools';
+	import { isEnabledTool, toolItems } from '$lib/config/tools';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
 
@@ -28,10 +28,8 @@
 				($page.route.id === '/ide' && !$page.url.searchParams.has('framework')))
 	);
 
-	const validToolIds = new Set<string>(toolItems.filter((t) => !t.disabled).map((t) => t.id));
-
 	let activeTool = $derived(
-		$page.route.id === '/agents/[tool]' && $page.params.tool && validToolIds.has($page.params.tool)
+		$page.route.id === '/agents/[tool]' && isEnabledTool($page.params.tool)
 			? toolItems.find((t) => t.id === $page.params.tool)
 			: undefined
 	);
