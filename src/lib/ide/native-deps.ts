@@ -53,11 +53,13 @@ const WASM_BUNDLERS = {
 	rollup: 'npm:@rollup/wasm-node@*'
 };
 
+const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '1.2.5' };
+
 const FRAMEWORK_RULES: FrameworkRule[] = [
 	// Vite 8.2+
 	{
 		applies: (deps) => minorAtLeast(deps, 'vite', 8, 2),
-		patches: () => [fill('devDependencies', { '@rolldown/binding-wasm32-wasi': '1.2.5' })]
+		patches: () => [fill('devDependencies', ROLLDOWN_WASM)]
 	},
 	// Vite 7 and earlier
 	{
@@ -75,6 +77,7 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 	// Nuxt 4+
 	{
 		applies: (deps) => majorAtLeast(deps, 'nuxt', 4),
+		patches: () => [fill('dependencies', ROLLDOWN_WASM), force('overrides', WASM_BUNDLERS)],
 		installFlags: ['--legacy-peer-deps']
 	}
 ];
