@@ -59,7 +59,7 @@
 		class="absolute inset-0 flex flex-col items-center justify-center overflow-hidden px-6 py-16 text-center"
 		style="transform-origin: center 42%; transition: transform 0.55s cubic-bezier(0.22,1,0.36,1), filter 0.55s ease; transform: {panelOpen
 			? 'scale(0.94)'
-			: 'scale(1)'}; filter: {panelOpen ? 'brightness(0.72)' : 'brightness(1)'};"
+			: 'scale(1)'}; filter: {panelOpen ? 'brightness(0.72)' : 'none'};"
 	>
 		<!-- The About panel covers the hero, so the wave is imperceptible while it is open. -->
 		<WavyGridBackground paused={panelOpen} />

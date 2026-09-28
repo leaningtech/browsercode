@@ -22,10 +22,13 @@
 		paused = false
 	}: Props = $props();
 
-	/** Holds the alpha step under 1/255. */
-	const VIS_LEVELS = 32;
+	/** Holds the alpha step under 1/255. Kept low enough to bound per-frame draw calls. */
+	const VIS_LEVELS = 16;
 
 	const IDLE_INTERVAL_MS = 1000 / 30;
+	// Caps the cursor-chasing frame rate so a 120Hz/ProMotion display doesn't redraw twice as
+	// often as a 60Hz one for motion the eye can't tell apart anyway.
+	const ACTIVE_INTERVAL_MS = 1000 / 60;
 	const SETTLED_PX = 0.5;
 
 	const CURSOR_R = 64;
@@ -154,7 +157,7 @@
 			const dt = now - last;
 			const chasing =
 				cursorActive && (Math.abs(tx - cx) > SETTLED_PX || Math.abs(ty - cy) > SETTLED_PX);
-			const due = chasing || dt >= IDLE_INTERVAL_MS - 1;
+			const due = dt >= (chasing ? ACTIVE_INTERVAL_MS : IDLE_INTERVAL_MS) - 1;
 			if (due) last = now;
 			// Reduced motion gets one static frame, so stop only once one has been drawn.
 			if (!reduceMotion || !due || paused) raf = requestAnimationFrame(draw);
@@ -227,6 +230,7 @@
 				}
 			}
 
+			// Path2D has no in-place clear/reset, so a fresh batch is unavoidable each frame.
 			const linePaths: Path2D[] = new Array(VIS_LEVELS);
 			const dotPaths: Path2D[] = new Array(VIS_LEVELS);
 			for (let l = 0; l < VIS_LEVELS; l++) {
