@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import browserpodLogo from '$lib/assets/browserpod.svg';
 	import WavyGridBackground from '$lib/components/WavyGridBackground.svelte';
+	import GridAnimationToggle from '$lib/components/GridAnimationToggle.svelte';
 
 	function goAgents() {
 		window.location.href = '/agents';
@@ -61,8 +62,10 @@
 			? 'scale(0.94)'
 			: 'scale(1)'}; filter: {panelOpen ? 'brightness(0.72)' : 'none'};"
 	>
-		<!-- The About panel covers the hero, so the wave is imperceptible while it is open. -->
+		<!-- The About panel covers the hero, so the wave (and this toggle) is imperceptible while
+		     it is open. -->
 		<WavyGridBackground paused={panelOpen} />
+		<GridAnimationToggle />
 
 		<!-- vignette to keep text legible over the grid -->
 		<div

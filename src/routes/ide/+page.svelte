@@ -4,6 +4,7 @@
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import WavyGridBackground from '$lib/components/WavyGridBackground.svelte';
+	import GridAnimationToggle from '$lib/components/GridAnimationToggle.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { defaultFrameworkId, isFrameworkId, type FrameworkId } from '$lib/config/frameworks';
@@ -27,7 +28,9 @@
 
 {#if showLanding}
 	<div class="relative h-full w-full overflow-hidden">
-		<WavyGridBackground />
+		<!-- Idle wave only here — the cursor bulge is reserved for the landing page. -->
+		<WavyGridBackground interactive={false} />
+		<GridAnimationToggle />
 
 		<!-- vignette to keep text legible over the grid, matching the landing page's hero -->
 		<div

@@ -4,6 +4,7 @@
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import { cliConfigs, toolItems } from '$lib/config/tools';
 	import WavyGridBackground from '$lib/components/WavyGridBackground.svelte';
+	import GridAnimationToggle from '$lib/components/GridAnimationToggle.svelte';
 
 	function openTool(id: string, disabled: boolean) {
 		if (disabled) return;
@@ -21,7 +22,9 @@
 </script>
 
 <div class="relative h-full w-full overflow-hidden">
-	<WavyGridBackground />
+	<!-- Idle wave only here — the cursor bulge is reserved for the landing page. -->
+	<WavyGridBackground interactive={false} />
+	<GridAnimationToggle />
 
 	<!-- vignette to keep text legible over the grid, matching the landing page's hero -->
 	<div

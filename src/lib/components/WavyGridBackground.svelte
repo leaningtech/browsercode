@@ -1,9 +1,11 @@
 <script lang="ts">
-	// Animated grid backdrop for the landing page hero: an ambient "water" wave motion plus a
-	// cursor-reactive bulge, tinted by two radial gradients (azure top-left, orchid bottom-right)
-	// standing in for the static .bc-page-bg glow used on other pages. Sized to, and interactive
-	// within, its parent element. The parent must be `position: relative` (and typically
-	// `overflow: hidden`).
+	// Animated grid backdrop for the landing page hero: an ambient "water" wave motion plus an
+	// optional cursor-reactive bulge (see the `interactive` prop), tinted by two radial gradients
+	// (azure top-left, orchid bottom-right) standing in for the static .bc-page-bg glow used on
+	// other pages. Sized to its parent element, whose bounds also bound the cursor reactivity
+	// when enabled. The parent must be `position: relative` (and typically `overflow: hidden`).
+	import { gridAnimationState } from '$lib/stores/grid-animation.svelte';
+
 	type Props = {
 		gridSpacing?: number;
 		waveIntensity?: number;
@@ -11,6 +13,8 @@
 		patchiness?: number;
 		lineColor?: string;
 		paused?: boolean;
+		/** false drops cursor tracking entirely, leaving just the idle wave motion. */
+		interactive?: boolean;
 	};
 
 	let {
@@ -19,7 +23,8 @@
 		cursorStrength = 1,
 		patchiness = 0.45,
 		lineColor = '#c73da6',
-		paused = false
+		paused = false,
+		interactive = true
 	}: Props = $props();
 
 	/** Holds the alpha step under 1/255. Kept low enough to bound per-frame draw calls. */
@@ -119,7 +124,14 @@
 			orchidGrad = orc;
 		}
 		resize();
-		const ro = new ResizeObserver(resize);
+		// A resize clears the canvas outright (assigning to .width/.height does that), so a resize
+		// while paused/toggled-off must still force one repaint — otherwise the frozen frame the
+		// pause is supposed to leave on screen is gone until animation resumes.
+		let forceNextFrame = false;
+		const ro = new ResizeObserver(() => {
+			resize();
+			forceNextFrame = true;
+		});
 		ro.observe(parent);
 
 		function onMove(e: MouseEvent): void {
@@ -137,8 +149,12 @@
 			tx = -9999;
 			ty = -9999;
 		}
-		parent.addEventListener('mousemove', onMove);
-		parent.addEventListener('mouseleave', onLeave);
+		// Not attaching these at all (rather than just ignoring their events) means
+		// `cursorActive` can never turn true, so the bulge/glow pass below never runs.
+		if (interactive) {
+			parent.addEventListener('mousemove', onMove);
+			parent.addEventListener('mouseleave', onLeave);
+		}
 
 		const cursorPush = 30 * cursorStrength;
 
@@ -154,14 +170,22 @@
 		let raf = 0;
 
 		function draw(now: number): void {
+			// Either the host paused us (e.g. a panel covering the hero) or the person turned the
+			// background animation off via the toggle — both freeze on the last drawn frame and
+			// resume live the moment they're lifted, rather than fully tearing down the effect.
+			// `forced` (set by the resize observer) overrides that for exactly one frame, since a
+			// resize clears the canvas regardless of pause state.
+			const forced = forceNextFrame;
+			forceNextFrame = false;
+			const off = (paused || !gridAnimationState.enabled) && !forced;
 			const dt = now - last;
 			const chasing =
 				cursorActive && (Math.abs(tx - cx) > SETTLED_PX || Math.abs(ty - cy) > SETTLED_PX);
-			const due = dt >= (chasing ? ACTIVE_INTERVAL_MS : IDLE_INTERVAL_MS) - 1;
+			const due = forced || dt >= (chasing ? ACTIVE_INTERVAL_MS : IDLE_INTERVAL_MS) - 1;
 			if (due) last = now;
 			// Reduced motion gets one static frame, so stop only once one has been drawn.
-			if (!reduceMotion || !due || paused) raf = requestAnimationFrame(draw);
-			if (!due || paused) return;
+			if (!reduceMotion || !due || off) raf = requestAnimationFrame(draw);
+			if (!due || off) return;
 
 			const t = (now - start) / 1000;
 			ctx!.clearRect(0, 0, W, H);
