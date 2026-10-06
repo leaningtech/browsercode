@@ -165,9 +165,9 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
-	<div class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-mist/10 bg-bc-navy">
+	<div class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-navy">
 		{#if session.openFiles.length === 0}
-			<div class="flex items-center gap-1.5 px-3 text-[11px] text-white/35">
+			<div class="flex items-center gap-1.5 px-3 text-[11px] text-bc-text-muted">
 				<Icon icon="mingcute:code-line" width="11" height="11" />
 				<span class="font-medium tracking-wide">Editor</span>
 			</div>
@@ -178,7 +178,7 @@
 			<div
 				class="group flex h-8 shrink-0 items-center transition {active
 					? 'bg-bc-azure/10 text-bc-mist'
-					: 'text-white/30 hover:text-white/55'}"
+					: 'text-bc-icon hover:text-bc-mist'}"
 			>
 				<!-- Focus as a preview open so clicking a tab never changes its pin state. -->
 				<button
@@ -195,11 +195,12 @@
 				<button
 					onclick={() => session.closeFile(file.path)}
 					aria-label="Close {file.path}"
-					class="inline-flex h-8 items-center border-none bg-transparent px-1.5 text-white/25 transition hover:text-white/70"
+					class="inline-flex h-8 items-center border-none bg-transparent px-1.5 text-bc-icon transition hover:text-bc-mist"
 				>
 					<!-- Dirty tabs show a dot where the close button sits; hover swaps it back. -->
 					{#if dirty}
-						<span class="h-1.5 w-1.5 rounded-full bg-white/50 group-hover:hidden"></span>
+						<span class="h-1.5 w-1.5 rounded-full bg-[rgb(var(--bc-tint)/50%)] group-hover:hidden"
+						></span>
 					{/if}
 					<Icon
 						icon="mingcute:close-line"
@@ -221,15 +222,15 @@
 			<div
 				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-bc-abyss px-6 text-center"
 			>
-				<Icon icon="mingcute:file-warning-line" width="20" height="20" class="text-white/20" />
-				<span class="text-[11px] text-white/35">
+				<Icon icon="mingcute:file-warning-line" width="20" height="20" class="text-bc-icon" />
+				<span class="text-[11px] text-bc-text-muted">
 					This file is not shown in the editor because its contents are not text
 				</span>
 			</div>
 		{/if}
 		{#if session.openFiles.length === 0 && !session.loading && editor}
 			<div class="absolute inset-0 z-10 flex items-center justify-center bg-bc-abyss">
-				<span class="text-[11px] text-white/25">No file open</span>
+				<span class="text-[11px] text-bc-icon">No file open</span>
 			</div>
 		{/if}
 		{#if session.loading || !editor}
@@ -239,7 +240,7 @@
 				<span class="loader-spin text-bc-azure">
 					<Icon icon="mingcute:loading-3-line" width="18" height="18" />
 				</span>
-				<span class="text-[11px] text-white/25">Loading…</span>
+				<span class="text-[11px] text-bc-icon">Loading…</span>
 			</div>
 		{/if}
 	</div>

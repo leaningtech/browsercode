@@ -9,6 +9,10 @@
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
+	import CloneRepoDialog from '$lib/components/ide/CloneRepoDialog.svelte';
+
+	let showCloneDialog = $state(false);
 
 	let isHome = $derived($page.route.id === '/');
 	let isAgentsSection = $derived($page.route.id?.startsWith('/agents') ?? false);
@@ -67,9 +71,9 @@
 	<span
 		class="pointer-events-none absolute left-full z-50 ml-3 flex items-center opacity-0 transition-opacity duration-100 group-hover:opacity-100"
 	>
-		<span class="h-1.5 w-1.5 rotate-45 border-b border-l border-bc-mist/15 bg-bc-abyss/95"></span>
+		<span class="h-1.5 w-1.5 rotate-45 border-b border-l border-bc-border bg-bc-navy"></span>
 		<span
-			class="glass-panel -ml-px flex items-center gap-1.5 rounded-md border border-bc-mist/15 px-2.5 py-1.5 text-[11.5px] leading-none font-medium whitespace-nowrap text-bc-mist shadow-lg shadow-black/40"
+			class="-ml-px flex items-center gap-1.5 rounded-md border border-bc-border bg-bc-navy px-2.5 py-1.5 text-[11.5px] leading-none font-medium whitespace-nowrap text-bc-mist shadow-lg shadow-black/40"
 		>
 			{label}
 		</span>
@@ -77,7 +81,8 @@
 {/snippet}
 
 <aside
-	class="glass-panel relative z-30 hidden h-full w-sidebar flex-col border-r border-bc-mist/10 md:flex"
+	style="background-color: var(--color-bc-abyss)"
+	class="glass-panel relative z-30 my-2.5 ml-2.5 hidden h-[calc(100%-20px)] w-sidebar flex-col rounded-[18px] border border-[rgb(var(--bc-tint)/11%)] md:flex"
 >
 	<!-- Home: not expandable, always takes you back to the landing page -->
 	<div class="group relative flex items-center justify-center py-3.5">
@@ -86,12 +91,12 @@
 			title="BrowserCode"
 			class="rounded-md p-1 transition-opacity duration-150 {isHome ? '' : 'hover:opacity-80'}"
 		>
-			<img src={favicon} alt="BrowserCode" class="h-[31px] w-[31px]" />
+			<img src={favicon} alt="BrowserCode" class="bc-logo-mark h-[31px] w-[31px]" />
 		</button>
 		{@render tooltip('Home')}
 	</div>
 
-	<div class="mx-3 h-px bg-bc-mist/10"></div>
+	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
 		<!-- Ide: expands on hover with the curated framework list; the flyout is suppressed on the
@@ -108,7 +113,7 @@
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isIdeSection
 					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-white/35 hover:bg-white/5 hover:text-white/70'}"
+					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/12%)] hover:text-bc-text'}"
 			>
 				<Icon icon="mingcute:code-line" width="26" height="26" />
 			</button>
@@ -123,7 +128,7 @@
 						: 'invisible'}"
 				>
 					<div
-						class="solid-panel rounded-lg border border-bc-mist/15 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+						class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
 					>
 						<div
 							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
@@ -134,16 +139,40 @@
 							<button
 								type="button"
 								onclick={() => navigate(`/ide?framework=${fw.id}`)}
-								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-mist/10 hover:text-zinc-100"
+								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
 							>
 								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/5"
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[rgb(var(--bc-tint)/5%)]"
 								>
 									<Icon icon={fw.icon} width="14" height="14" />
 								</span>
 								<span class="flex-1 truncate">{fw.label}</span>
 							</button>
 						{/each}
+						<div class="my-1 h-px bg-bc-border"></div>
+						<button
+							type="button"
+							onclick={() => {
+								showCloneDialog = true;
+								openFlyout = null;
+							}}
+							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
+						>
+							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
+								<Icon icon="simple-icons:github" width="14" height="14" />
+							</span>
+							<span class="flex-1 truncate">Clone from GitHub</span>
+						</button>
+						<button
+							type="button"
+							onclick={() => navigate('/ide')}
+							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
+						>
+							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
+								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
+							</span>
+							<span class="flex-1 truncate">See all frameworks</span>
+						</button>
 					</div>
 				</div>
 			{/if}
@@ -163,7 +192,7 @@
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isAgentsSection
 					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-white/35 hover:bg-white/5 hover:text-white/70'}"
+					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/12%)] hover:text-bc-text'}"
 			>
 				<Icon icon="mingcute:robot-line" width="26" height="26" />
 			</button>
@@ -178,7 +207,7 @@
 						: 'invisible'}"
 				>
 					<div
-						class="solid-panel rounded-lg border border-bc-mist/15 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+						class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
 					>
 						<div
 							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
@@ -193,14 +222,14 @@
 								disabled={item.disabled}
 								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] transition
 									{item.disabled
-									? 'cursor-not-allowed text-white/20'
+									? 'cursor-not-allowed text-bc-icon'
 									: isRunning
-										? 'bg-bc-azure/10 text-zinc-100'
-										: 'text-zinc-300 hover:bg-bc-azure/10 hover:text-zinc-100'}"
+										? 'bg-bc-azure/10 text-bc-text'
+										: 'text-bc-mist hover:bg-bc-border hover:text-bc-text'}"
 							>
 								<span
 									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md {item.disabled
-										? 'bg-white/5 text-white/20'
+										? 'bg-[rgb(var(--bc-tint)/5%)] text-bc-icon'
 										: item.accentClass}"
 								>
 									{#if item.icon}
@@ -217,15 +246,15 @@
 								{#if isRunning}
 									<span class="h-1.5 w-1.5 shrink-0 rounded-full {item.dotClass}"></span>
 								{:else if item.disabled}
-									<span class="text-[10px] text-white/25">Soon</span>
+									<span class="text-[10px] text-bc-icon">Soon</span>
 								{/if}
 							</button>
 						{/each}
-						<div class="my-1 h-px bg-bc-mist/10"></div>
+						<div class="my-1 h-px bg-bc-border"></div>
 						<button
 							type="button"
 							onclick={() => navigate('/agents')}
-							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-400 transition hover:bg-bc-azure/10 hover:text-zinc-100"
+							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
 						>
 							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
 								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
@@ -238,16 +267,31 @@
 		</div>
 	</nav>
 
-	<div class="mx-3 h-px bg-bc-mist/10"></div>
+	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
+		<div class="group relative flex items-center justify-center">
+			<button
+				type="button"
+				onclick={toggleTheme}
+				aria-label={themeState.current === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+			>
+				<Icon
+					icon={themeState.current === 'dark' ? 'mingcute:sun-line' : 'mingcute:moon-line'}
+					width="26"
+					height="26"
+				/>
+			</button>
+			{@render tooltip(themeState.current === 'dark' ? 'Light mode' : 'Dark mode')}
+		</div>
 		<div class="group relative flex items-center justify-center">
 			<a
 				href="https://github.com/leaningtech/browsercode"
 				target="_blank"
 				rel="noopener noreferrer"
 				data-tour-target="github"
-				class="relative flex items-center justify-center rounded-md p-2.5 text-white/30 transition-all duration-150 hover:bg-bc-azure/10 hover:text-bc-mist"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
 			>
 				<Icon icon="simple-icons:github" width="26" height="26" />
 			</a>
@@ -258,7 +302,7 @@
 				href="https://discord.leaningtech.com"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="relative flex items-center justify-center rounded-md p-2.5 text-white/30 transition-all duration-150 hover:bg-bc-azure/10 hover:text-bc-mist"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
 			>
 				<Icon icon="simple-icons:discord" width="26" height="26" />
 			</a>
@@ -276,7 +320,7 @@
 					trackEvent('Clicked Help', { action: 'tour-direct' });
 				}}
 				data-tour-target="help"
-				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-white/30 transition-all duration-150 hover:bg-bc-azure/10 hover:text-bc-mist"
+				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
 			>
 				<Icon icon="mingcute:question-line" width="26" height="26" />
 			</button>
@@ -290,7 +334,7 @@
 					: 'invisible'}"
 			>
 				<div
-					class="solid-panel rounded-lg border border-bc-mist/15 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+					class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
 				>
 					<button
 						type="button"
@@ -298,7 +342,7 @@
 							openTour();
 							trackEvent('Clicked Help', { action: 'tour' });
 						}}
-						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-azure/10 hover:text-zinc-100"
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
 					>
 						<span
 							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-azure/10 text-bc-azure"
@@ -314,7 +358,7 @@
 						target="_blank"
 						rel="noopener noreferrer"
 						onclick={() => trackEvent('Clicked Help', { action: 'report-bug' })}
-						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 transition hover:bg-bc-coral/10 hover:text-zinc-100"
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-coral/10 hover:text-bc-text"
 					>
 						<span
 							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-coral/10 text-bc-coral"
@@ -329,3 +373,7 @@
 		</div>
 	</div>
 </aside>
+
+{#if showCloneDialog}
+	<CloneRepoDialog onClose={() => (showCloneDialog = false)} />
+{/if}

@@ -24,14 +24,36 @@
 		class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 		style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 	>
-		<div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-zinc-300">
+		<div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
 			<div class="w-full max-w-lg text-center">
-				<h1 class="mb-1 text-lg font-semibold text-zinc-100">Agents</h1>
-				<p class="mb-8 text-[13px] text-white/40">
+				<h1 class="mb-1 text-lg font-semibold text-bc-text">Agents</h1>
+				<p class="mb-4 text-[13px] text-bc-text-muted">
 					Use your favorite CLI agents without any installations, <span class="text-bc-mist"
 						>sandboxed</span
 					>.
 				</p>
+
+				<!-- Info callout: lilac is the palette's "info" accent (also used for badges and Codex
+				     CLI), same treatment as the IDE playground's BrowserPod callout. Only "BrowserPod"
+				     itself links out. -->
+				<div
+					class="mb-6 flex items-start gap-2.5 rounded-lg border border-bc-orchid/18 bg-bc-orchid/6 px-3 py-2.5 text-left"
+				>
+					<span
+						class="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-bc-orchid/12 text-bc-orchid"
+					>
+						<Icon icon="mingcute:cube-3d-line" width="14" height="14" />
+					</span>
+					<span class="text-[12px] leading-relaxed text-bc-text-muted">
+						Each agent runs entirely in a <a
+							href="https://browserpod.io"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+							>BrowserPod</a
+						> sandbox, with a real filesystem and networking. Nothing touches your local machine.
+					</span>
+				</div>
 
 				<div class="grid grid-cols-2 gap-3">
 					{#each toolItems as item (item.id)}
@@ -41,12 +63,12 @@
 							disabled={item.disabled}
 							class="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-left transition
 						{item.disabled
-								? 'cursor-not-allowed border-white/5 bg-white/[0.02]'
-								: 'glass-panel border-bc-mist/12 hover:border-bc-mist/30'}"
+								? 'cursor-not-allowed border-[rgb(var(--bc-tint)/5%)] bg-[rgb(var(--bc-tint)/2%)]'
+								: 'glass-panel border-bc-border hover:border-[rgb(var(--bc-tint)/30%)]'}"
 						>
 							<span
 								class="flex h-11 w-11 items-center justify-center rounded-lg {item.disabled
-									? 'bg-white/5 text-white/20'
+									? 'bg-[rgb(var(--bc-tint)/5%)] text-bc-icon'
 									: item.accentClass}"
 							>
 								{#if item.icon}
@@ -61,18 +83,17 @@
 							</span>
 							<span class="flex flex-col items-center gap-1">
 								<span class="flex items-center gap-1.5 text-[13px] font-medium">
-									<span class={item.disabled ? 'text-white/30' : 'text-zinc-200'}>{item.label}</span
-									>
+									<span class={item.disabled ? 'text-bc-icon' : 'text-bc-text'}>{item.label}</span>
 									{#if item.disabled}
 										<span
-											class="rounded bg-bc-gold/10 px-1.5 py-0.5 text-[10px] font-medium text-bc-gold/80"
+											class="rounded bg-[rgb(var(--bc-tint)/14%)] px-1.5 py-0.5 text-[10px] font-medium text-bc-mist"
 										>
 											Soon
 										</span>
 									{/if}
 								</span>
 								{#if credential && !item.disabled}
-									<span class="text-[10.5px] text-white/30">Needs an {credential.label}</span>
+									<span class="text-[10.5px] text-bc-icon">Needs an {credential.label}</span>
 								{/if}
 							</span>
 						</button>

@@ -35,7 +35,9 @@
 {:else if options && ideSession}
 	<IdeShell session={ideSession} shell={options.shell} />
 {:else}
-	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-zinc-300">
+	<div
+		class="bc-page-bg bc-dark-scope flex h-full w-full items-center justify-center p-4 text-zinc-300"
+	>
 		<div
 			class="glass-panel w-full max-w-md rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
 		>

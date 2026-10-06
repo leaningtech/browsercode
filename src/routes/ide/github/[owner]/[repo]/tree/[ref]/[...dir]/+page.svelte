@@ -21,23 +21,23 @@
 {#if valid}
 	<IdeShell {session} />
 {:else}
-	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-zinc-300">
-		<div class="glass-panel max-w-md rounded-xl border border-bc-mist/15 px-6 py-8 text-center">
+	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-bc-mist">
+		<div class="glass-panel max-w-md rounded-xl border border-bc-border px-6 py-8 text-center">
 			<div
 				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"
 			>
 				<Icon icon="mingcute:alert-line" width="22" height="22" />
 			</div>
-			<h3 class="mb-2 text-sm font-semibold text-zinc-50">Invalid repository URL</h3>
-			<p class="text-[12px] leading-relaxed text-zinc-400">
+			<h3 class="mb-2 text-sm font-semibold text-bc-text">Invalid repository URL</h3>
+			<p class="text-[12px] leading-relaxed text-bc-text-muted">
 				Expected
-				<code class="text-zinc-200"
+				<code class="text-bc-text"
 					>/ide/github/&lt;owner&gt;/&lt;repo&gt;/tree/&lt;ref&gt;/&lt;dir&gt;</code
 				>.
 			</p>
 			<a
 				href={resolve('/ide')}
-				class="mt-4 inline-block rounded-md bg-bc-azure/90 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-bc-azure"
+				class="mt-4 inline-block rounded-md bg-bc-azure/90 px-3 py-1.5 text-[12px] font-medium text-bc-abyss transition hover:bg-bc-azure"
 			>
 				Back to playground
 			</a>

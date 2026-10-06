@@ -60,8 +60,8 @@
 	>
 		{#if !image.url}
 			<div class="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-white/20" />
-				<span class="text-[11px] text-white/35">
+				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-bc-icon" />
+				<span class="text-[11px] text-bc-text-muted">
 					Too large to preview &mdash; {formatBytes(image.bytes)}, limit {formatBytes(
 						MAX_IMAGE_BYTES
 					)}
@@ -69,8 +69,8 @@
 			</div>
 		{:else if failed}
 			<div class="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-white/20" />
-				<span class="text-[11px] text-white/35">This image could not be displayed</span>
+				<Icon icon="mingcute:pic-line" width="20" height="20" class="text-bc-icon" />
+				<span class="text-[11px] text-bc-text-muted">This image could not be displayed</span>
 			</div>
 		{:else}
 			<!-- `w-max` keeps the far padding inside the scroll area; auto margins centre the image
@@ -91,7 +91,7 @@
 		{/if}
 	</div>
 	<footer
-		class="flex h-7 shrink-0 items-center gap-3 border-t border-bc-mist/10 bg-bc-navy px-3 text-[10px] text-white/40"
+		class="flex h-7 shrink-0 items-center gap-3 border-t border-bc-border bg-bc-navy px-3 text-[10px] text-bc-text-muted"
 	>
 		{#if natural}
 			<span class="tabular-nums">{natural.width} &times; {natural.height}</span>
@@ -137,10 +137,10 @@
 	/* So alpha reads as transparent rather than as black. */
 	.checkerboard {
 		background-image:
-			linear-gradient(45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
-			linear-gradient(-45deg, rgba(255, 255, 255, 0.03) 25%, transparent 25%),
-			linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%),
-			linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.03) 75%);
+			linear-gradient(45deg, rgb(var(--bc-tint) / 3%) 25%, transparent 25%),
+			linear-gradient(-45deg, rgb(var(--bc-tint) / 3%) 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, rgb(var(--bc-tint) / 3%) 75%),
+			linear-gradient(-45deg, transparent 75%, rgb(var(--bc-tint) / 3%) 75%);
 		background-size: 16px 16px;
 		background-position:
 			0 0,
@@ -164,8 +164,8 @@
 			background 0.15s ease;
 	}
 	.zoom-btn:hover:not(:disabled) {
-		background: rgba(255, 255, 255, 0.05);
-		color: rgba(255, 255, 255, 0.7);
+		background: rgb(var(--bc-tint) / 5%);
+		color: var(--color-bc-text);
 	}
 	.zoom-btn:disabled {
 		opacity: 0.35;

@@ -15,18 +15,90 @@
 
 	--color-bc-terminal: #0d0d0f;
 	--color-bc-statusbar: #0a0a0b;
+	/* Elevated panel level (file tree rows, dropdown cards, tab strips) — one step lighter than
+	   --color-bc-abyss in both themes, the same way the IDE/agents surfaces used zinc-800 over
+	   zinc-900 before this token existed. */
+	--color-bc-surface: #12161f;
 	--width-sidebar: 4rem;
 
-	/* Brand accent palette — deep navy base, plus five highlight colors used sparingly
-	   across menus, the agents picker, and the ide playground picker. */
-	--color-bc-abyss: #020914;
-	/* Opaque chrome surface: IDE header/rails/tab strips and flyout menus. */
-	--color-bc-navy: #050c1a;
-	--color-bc-azure: #4a7dff;
-	--color-bc-mist: #b7cdff;
-	--color-bc-orchid: #c73da6;
-	--color-bc-gold: #ffd633;
-	--color-bc-coral: #ff6161;
+	/* Brand palette — near-black neutrals plus a small set of accents used sparingly across
+	   menus, the agents picker, and the ide playground picker. Kept as the original token
+	   names (abyss/navy/azure/mist/orchid/gold/coral) so every existing Tailwind class site
+	   re-themes from this one place; new roles (borders, text tiers) get their own tokens
+	   below for spots that were hand-matched to the new design.
+
+	   Cyan/lilac/green each have a "light pair" in the source palette — e.g. cyan #06b6d4
+	   with cyan-light #b8eef4. Per-theme, these tokens hold the *light pair* on dark (it
+	   pops against the near-black ground) and the *regular* accent on light (re-themed
+	   below) — not a custom contrast-adjusted shade of either. */
+	--color-bc-abyss: #07090e;
+	/* Opaque chrome surface: tooltips, popups, flyout menus. */
+	--color-bc-navy: #090e1a;
+	/* Cyan light — primary accent: hero buttons, active/hover nav, focus, loading bar. */
+	--color-bc-azure: #b8eef4;
+	/* Secondary text and soft hairline borders. */
+	--color-bc-mist: #aeb6c2;
+	/* Lilac light — badges (Beta/Soon/Template), Codex CLI, info. */
+	--color-bc-orchid: #ddd0f7;
+	/* Green light — the third accent (hero headline, success states). */
+	--color-bc-green: #bcebcb;
+	/* Warning — "already open" and leave-session warnings. */
+	--color-bc-gold: #f2c14e;
+	/* Error — failures, invalid input, report-a-bug. */
+	--color-bc-coral: #f27474;
+
+	/* Precise neutrals for the spots hand-matched to the new design (menus, hero): a solid
+	   hairline/border color, an idle-icon/disabled/placeholder gray, and the primary/muted text
+	   tiers — --color-bc-mist above serves as the secondary tier between them. */
+	--color-bc-border: #273249;
+	--color-bc-icon: #5c687a;
+	--color-bc-text: #f2f4f7;
+	--color-bc-text-muted: #848e9c;
+
+	/* Inline text-link hover: the light pair on dark (pops against the near-black ground), the
+	   base accent on light (see the override below) — the opposite pairing from most tokens
+	   above, which go the other way for AA text contrast. */
+	--color-bc-link-hover: #ddd0f7;
+	/* "Star on GitHub" pill hover: a softer brightening than --color-bc-text, so the border/text
+	   don't jump all the way to near-white on dark. */
+	--color-bc-ribbon-hover: #d4d9e0;
+}
+
+/* Light theme — same token names, re-themed with the cyan/lilac/green accent family on a light
+   neutral ground. Toggled by Sidebar.svelte's theme switch (src/lib/stores/theme.svelte.ts),
+   which sets `data-theme` on <html>. `--bc-tint` is the RGB triplet behind every translucent
+   "glass" surface and literal white/X utility below (rgb(var(--bc-tint) / X%)) — white highlights
+   on dark in dark mode, soft near-black shading on light in light mode — so those surfaces flip
+   with the rest of the palette instead of staying stuck at a fixed white opacity. */
+:root {
+	--bc-tint: 255 255 255;
+}
+:root[data-theme='light'] {
+	--bc-tint: 15 23 42;
+
+	--color-bc-abyss: #f6f8fb;
+	--color-bc-navy: #ffffff;
+	--color-bc-surface: #ffffff;
+	--color-bc-terminal: #ffffff;
+	--color-bc-statusbar: #eef1f5;
+	/* Regular cyan — the light-theme half of the light-pair/regular split described above. */
+	--color-bc-azure: #06b6d4;
+	--color-bc-mist: #475569;
+	/* Regular lilac. */
+	--color-bc-orchid: #a78bfa;
+	/* Regular green. */
+	--color-bc-green: #87d68d;
+	--color-bc-gold: #b45309;
+	--color-bc-coral: #dc2626;
+
+	--color-bc-border: #e2e8f0;
+	--color-bc-icon: #64748b;
+	--color-bc-text: #0f172a;
+	--color-bc-text-muted: #64748b;
+
+	--color-bc-link-hover: #a78bfa;
+	/* Not complained about on light — the ribbon hover stays as bright as --color-bc-text there. */
+	--color-bc-ribbon-hover: #0f172a;
 }
 
 @media (width <= 850px) {
@@ -38,51 +110,239 @@
 html,
 body {
 	background-color: var(--color-bc-abyss);
-	background-image:
-		radial-gradient(680px circle at 12% 8%, rgba(74, 125, 255, 0.16), transparent 60%),
-		radial-gradient(560px circle at 88% 92%, rgba(199, 61, 166, 0.12), transparent 60%);
-	background-attachment: fixed;
-	color: #d4d4d8;
+	color: var(--color-bc-mist);
 	overflow: hidden;
 	height: 100dvh;
 }
 
-/* Liquid-glass surface: a translucent, blurred card that lets the ambient background glow
-   bleed through — used for the sidebar and picker cards. */
+/* Frosted-glass surface: a neutral translucent card (no color tint) — used for the sidebar,
+   flyout buttons and picker cards. */
 .glass-panel {
-	background: linear-gradient(155deg, rgba(74, 125, 255, 0.1), rgba(2, 9, 20, 0.62));
-	backdrop-filter: blur(20px) saturate(140%);
-	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	background: linear-gradient(
+		180deg,
+		rgb(var(--bc-tint) / 7.5%) 0%,
+		rgb(var(--bc-tint) / 3%) 38%,
+		rgb(var(--bc-tint) / 2%) 100%
+	);
+	box-shadow:
+		inset 0 1px 0 rgb(var(--bc-tint) / 14%),
+		inset 0 -1px 0 rgb(var(--bc-tint) / 4%),
+		0 16px 44px rgba(4, 5, 6, 0.6),
+		0 2px 8px rgba(4, 5, 6, 0.4);
+	backdrop-filter: blur(24px) saturate(160%);
+	-webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+:root[data-theme='light'] .glass-panel {
+	box-shadow:
+		inset 0 1px 0 rgb(var(--bc-tint) / 6%),
+		inset 0 -1px 0 rgb(var(--bc-tint) / 2%),
+		0 16px 44px rgba(15, 23, 42, 0.1),
+		0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
-/* Same tint as .glass-panel but fully opaque, no blur — used for flyout/dropdown menus, where
-   see-through content underneath would hurt legibility of the menu items sitting on top. The
-   solid background-color is the base layer; the gradient is a decorative tint painted over it,
-   so every pixel stays opaque even where the gradient itself is semi-transparent. */
+/* Flat, fully opaque — used for flyout/dropdown menus, where see-through content underneath
+   would hurt legibility of the menu items sitting on top. */
 .solid-panel {
-	background-color: var(--color-bc-navy);
-	background-image: linear-gradient(155deg, rgba(74, 125, 255, 0.16), transparent 65%);
+	background-color: var(--color-bc-abyss);
 }
 
-/* Bottom-sheet "pop up" surface: a glass panel sliding up over whatever's behind it. Used for the
+/* Bottom-sheet "pop up" surface: a flat panel sliding up over whatever's behind it. Used for the
    landing page's About section and, with the same look, as the entrance reveal for the agents and
    IDE pages. Only the static surface lives here — each usage supplies its own `transform`/
    `transition` inline since that depends on component state (open/closed, entered/not). */
 .panel-sheet {
-	background-color: rgba(7, 12, 24, 0.92);
-	background-image: linear-gradient(155deg, rgba(74, 125, 255, 0.09), rgba(7, 12, 24, 0) 70%);
-	backdrop-filter: blur(28px) saturate(140%);
-	-webkit-backdrop-filter: blur(28px) saturate(140%);
-	box-shadow: 0 -26px 80px rgba(0, 0, 0, 0.55);
+	background-color: var(--color-bc-abyss);
+	box-shadow: 0 -26px 80px rgba(4, 5, 6, 0.6);
+}
+:root[data-theme='light'] .panel-sheet {
+	box-shadow: 0 -26px 80px rgba(15, 23, 42, 0.12);
 }
 
-/* Same ambient glow as the body, reapplied per-page — each route's root container paints over
-   the body, so without this the glow behind glass panels would never actually be visible. */
+/* Reapplied per-page over the body — kept as a class so each route's root container can opt in
+   without every page needing to repeat the background declaration. */
 .bc-page-bg {
 	background-color: var(--color-bc-abyss);
-	background-image:
-		radial-gradient(680px circle at 12% 8%, rgba(74, 125, 255, 0.16), transparent 60%),
-		radial-gradient(560px circle at 88% 92%, rgba(199, 61, 166, 0.12), transparent 60%);
+}
+
+/* ── Brand logo: three stacked mask layers (bottom/middle/top) plus three accent dots, rendered
+   by BrowserCodeLogo.svelte. Kept global (that component has no <style> block of its own) so the
+   `ra`/`rb` landing-animation variants below live next to the other brand-wide, non-component
+   styles in this file. ── */
+.bclogo {
+	position: relative;
+	display: block;
+}
+.bclogo .ly {
+	position: absolute;
+	inset: 0;
+	background: var(--color-bc-text);
+	-webkit-mask-size: 100% 100%;
+	mask-size: 100% 100%;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+	mask-position: center;
+}
+.bclogo .dot {
+	position: absolute;
+	width: 6.45%;
+	height: 5.988%;
+	border-radius: 50%;
+	background: var(--color-bc-text);
+}
+.bclogo .d0 {
+	left: 24.805%;
+	top: 26.236%;
+}
+.bclogo .d1 {
+	left: 33.385%;
+	top: 21.326%;
+}
+.bclogo .d2 {
+	left: 41.955%;
+	top: 17.096%;
+}
+
+/* Landing-in sequence: each layer drops into place, then the three dots pop in after. Two
+   identically-defined variants (ra/rb) so "Replay" can alternate between them — swapping to a
+   class the element didn't already have is what makes the CSS animation restart. */
+@keyframes bclogo-land {
+	0% {
+		opacity: 0;
+		transform: translateY(var(--from));
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes bclogo-pop {
+	0% {
+		opacity: 0;
+		transform: translateY(-750%);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.ra .ly-b,
+.rb .ly-b {
+	--from: 14%;
+	animation: bclogo-land 0.6s cubic-bezier(0.22, 1.2, 0.36, 1) 0s both;
+}
+.ra .ly-m,
+.rb .ly-m {
+	--from: -34%;
+	animation: bclogo-land 0.6s cubic-bezier(0.22, 1.2, 0.36, 1) 0.35s both;
+}
+.ra .ly-t,
+.rb .ly-t {
+	--from: -48%;
+	animation: bclogo-land 0.6s cubic-bezier(0.22, 1.2, 0.36, 1) 0.7s both;
+}
+.ra .d0,
+.rb .d0 {
+	animation: bclogo-pop 0.5s cubic-bezier(0.22, 1.2, 0.36, 1) 1.3s both;
+}
+.ra .d1,
+.rb .d1 {
+	animation: bclogo-pop 0.5s cubic-bezier(0.22, 1.2, 0.36, 1) 1.42s both;
+}
+.ra .d2,
+.rb .d2 {
+	animation: bclogo-pop 0.5s cubic-bezier(0.22, 1.2, 0.36, 1) 1.54s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bclogo .ly,
+	.bclogo .dot {
+		animation: none !important;
+	}
+}
+
+/* Hero grain texture: a faint decorative backdrop behind the landing headline, with a second
+   copy masked to a soft circle that follows the pointer for a subtle spotlight highlight. The
+   background-image itself is set inline (it's a hashed Vite asset import, not a static path). */
+.bc-hero-dust {
+	position: absolute;
+	left: 8%;
+	top: 12%;
+	width: 84%;
+	height: 84%;
+	z-index: -1;
+	pointer-events: none;
+	opacity: 0.28;
+	background-size: contain;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+/* The graphic itself is cyan/lilac/green on a transparent ground, so it carries over to light
+   mode as-is — only the opacity needs a bump, since those same pastel tones sit much lower-
+   contrast against white than they do against near-black. */
+:root[data-theme='light'] .bc-hero-dust {
+	opacity: 0.55;
+}
+.bc-hero-dust-spot {
+	filter: brightness(1.3) saturate(1.08);
+	transition: opacity 0.6s ease;
+	-webkit-mask-image: radial-gradient(
+		circle 240px at var(--lx) var(--ly),
+		rgba(0, 0, 0, 0.8) 0%,
+		rgba(0, 0, 0, 0.35) 45%,
+		transparent 100%
+	);
+	mask-image: radial-gradient(
+		circle 240px at var(--lx) var(--ly),
+		rgba(0, 0, 0, 0.8) 0%,
+		rgba(0, 0, 0, 0.35) 45%,
+		transparent 100%
+	);
+}
+/* On a light ground, brightening the spotlight area washes it toward white instead of
+   highlighting it — saturating it instead makes the colors pop without losing contrast. */
+:root[data-theme='light'] .bc-hero-dust-spot {
+	filter: saturate(1.6) brightness(0.95);
+}
+
+/* Pins everything inside to the dark palette regardless of the `data-theme` toggle above it.
+   Used for the embed surface (a host page decides its own look, not ours) and for the always-on
+   overlays in +layout.svelte (IosUnsupportedModal, Stepper, LeaveWarningModal) that haven't been
+   re-themed for light mode. The Home, IDE and Agents routes are not scoped by this — they support
+   both themes directly. */
+.bc-dark-scope {
+	--bc-tint: 255 255 255;
+	--color-bc-abyss: #07090e;
+	--color-bc-navy: #090e1a;
+	--color-bc-surface: #12161f;
+	--color-bc-terminal: #0d0d0f;
+	--color-bc-statusbar: #0a0a0b;
+	--color-bc-azure: #b8eef4;
+	--color-bc-mist: #aeb6c2;
+	--color-bc-orchid: #ddd0f7;
+	--color-bc-green: #bcebcb;
+	--color-bc-gold: #f2c14e;
+	--color-bc-coral: #f27474;
+	--color-bc-border: #273249;
+	--color-bc-icon: #5c687a;
+	--color-bc-text: #f2f4f7;
+	--color-bc-text-muted: #848e9c;
+	--color-bc-link-hover: #ddd0f7;
+	--color-bc-ribbon-hover: #d4d9e0;
+	color-scheme: dark;
+}
+
+/* The flat brand mark (favicon.svg) is a white glyph baked into a raster image, so it can't pick
+   up `--color-bc-text` the way the animated .bclogo layers do above — inverting it is the cheap
+   equivalent (white-on-transparent → black-on-transparent) everywhere it's used as `<img>`. */
+:root[data-theme='light'] .bc-logo-mark {
+	filter: invert(1);
+}
+
+/* Third-party mark (BrowserPod) already desaturated via `grayscale` — on a light ground that
+   reads as a washed-out light gray, so light mode also inverts it dark. */
+:root[data-theme='light'] .bc-mono-icon {
+	filter: grayscale(1) invert(1);
 }
 
 /* Set by utils/drag.ts. The iframe rule is the load-bearing half: a live preview would swallow
@@ -106,17 +366,20 @@ body.dragging iframe {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.1);
+	background: rgb(var(--bc-tint) / 10%);
 	border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.2);
+	background: rgb(var(--bc-tint) / 20%);
 }
 
 /* Selection styling */
 ::selection {
-	background-color: rgba(74, 125, 255, 0.35);
+	background-color: rgba(6, 182, 212, 0.35);
+}
+:root[data-theme='light'] ::selection {
+	background-color: rgba(14, 116, 144, 0.25);
 }
 
 /* Terminal (xterm); The shell / alt-screen app manages its own scrolling */

@@ -102,15 +102,14 @@
 		width: 176px;
 		padding: 4px;
 		border-radius: 8px;
-		border: 1px solid color-mix(in srgb, var(--color-bc-mist) 15%, transparent);
+		border: 1px solid var(--color-bc-border);
 		background-color: var(--color-bc-navy);
-		background-image: linear-gradient(155deg, rgba(74, 125, 255, 0.16), transparent 65%);
 		box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
 	}
 
 	.settings-heading {
 		padding: 4px 8px 5px;
-		color: rgba(255, 255, 255, 0.35);
+		color: var(--color-bc-icon);
 		font-size: 10px;
 		font-weight: 500;
 		letter-spacing: 0.1em;
@@ -126,7 +125,7 @@
 		border: none;
 		border-radius: 4px;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--color-bc-mist);
 		font: inherit;
 		font-size: 12px;
 		text-align: left;
@@ -135,6 +134,6 @@
 	}
 	.menu-row:hover {
 		background: color-mix(in srgb, var(--color-bc-azure) 10%, transparent);
-		color: #fff;
+		color: var(--color-bc-text);
 	}
 </style>

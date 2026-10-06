@@ -104,7 +104,10 @@
 	{/if}
 
 	<!-- Hidden, never unmounted: the pod attaches its terminal to this div for the session's life. -->
-	<div class="absolute inset-0 bg-black" class:hidden={isMobile && activeMobileView !== 'terminal'}>
+	<div
+		class="absolute inset-0 bg-bc-terminal"
+		class:hidden={isMobile && activeMobileView !== 'terminal'}
+	>
 		<Terminal bind:consoleEl />
 	</div>
 
@@ -157,13 +160,13 @@
 		>
 			<div
 				class="absolute top-0 bottom-0 left-0.5 w-px rounded-full transition-[background] duration-150 {isDragging
-					? 'bg-white/25'
-					: 'bg-white/[0.07] group-hover:bg-white/25'}"
+					? 'bg-[rgb(var(--bc-tint)/25%)]'
+					: 'bg-[rgb(var(--bc-tint)/7%)] group-hover:bg-[rgb(var(--bc-tint)/25%)]'}"
 			></div>
 		</button>
 
 		<div
-			class="absolute top-0 right-0 bottom-0 min-w-0 overflow-hidden border-l border-white/6"
+			class="absolute top-0 right-0 bottom-0 min-w-0 overflow-hidden border-l border-bc-border"
 			class:pointer-events-none={isDragging}
 			style="width: {portalFraction * 100}%;"
 		>
@@ -186,15 +189,15 @@
 	{/if}
 
 	<nav
-		class="flex shrink-0 items-stretch border-t border-white/8 bg-[#0e0e0e]"
+		class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-surface"
 		style="height: calc(52px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 	>
 		{#if shell.tools}
 			<button
 				onclick={() => (showToolMenu = !showToolMenu)}
 				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none transition-colors {showToolMenu
-					? 'text-white'
-					: 'text-white/35 hover:text-white/60'}"
+					? 'text-bc-text'
+					: 'text-bc-icon hover:text-bc-mist'}"
 			>
 				<Icon icon="mingcute:menu-line" width="20" height="20" />
 				<span class="text-[10px] font-medium tracking-wide">Tools</span>
@@ -204,8 +207,8 @@
 			onclick={() => (activeMobileView = 'terminal')}
 			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none transition-colors {activeMobileView ===
 			'terminal'
-				? 'text-white'
-				: 'text-white/35 hover:text-white/60'}"
+				? 'text-bc-text'
+				: 'text-bc-icon hover:text-bc-mist'}"
 		>
 			<Icon icon="mingcute:terminal-line" width="20" height="20" />
 			<span class="text-[10px] font-medium tracking-wide">Terminal</span>
@@ -215,8 +218,8 @@
 				onclick={() => (activeMobileView = 'preview')}
 				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none transition-colors {activeMobileView ===
 				'preview'
-					? 'text-white'
-					: 'text-white/35 hover:text-white/60'}"
+					? 'text-bc-text'
+					: 'text-bc-icon hover:text-bc-mist'}"
 			>
 				<Icon icon="mingcute:eye-2-line" width="20" height="20" />
 				<span class="text-[10px] font-medium tracking-wide">Preview</span>
@@ -225,7 +228,7 @@
 		{#if shell.tools}
 			<button
 				onclick={openTour}
-				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none text-white/35 transition-colors hover:text-white/60"
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-none text-bc-icon transition-colors hover:text-bc-mist"
 			>
 				<Icon icon="mingcute:question-line" width="20" height="20" />
 				<span class="text-[10px] font-medium tracking-wide">Help</span>

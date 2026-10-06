@@ -45,7 +45,7 @@
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
 	<div
-		class="flex h-9 shrink-0 items-center overflow-x-auto border-b border-white/6 bg-bc-statusbar"
+		class="flex h-9 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-statusbar"
 	>
 		<button
 			onclick={() => selectTab(MAIN)}
@@ -106,7 +106,7 @@
 		font-family: monospace;
 		font-size: 11px;
 		font-weight: 500;
-		color: rgba(255, 255, 255, 0.3);
+		color: rgb(var(--bc-tint) / 30%);
 		background: transparent;
 		border: none;
 		border-bottom: 2px solid transparent;
@@ -117,11 +117,11 @@
 			border-color 0.15s ease;
 	}
 	.vrh-tab:hover {
-		color: rgba(255, 255, 255, 0.6);
+		color: rgb(var(--bc-tint) / 60%);
 	}
 	.vrh-tab-active {
-		color: rgba(255, 255, 255, 0.8);
-		border-bottom-color: rgba(255, 255, 255, 0.5);
+		color: rgb(var(--bc-tint) / 80%);
+		border-bottom-color: rgb(var(--bc-tint) / 50%);
 	}
 
 	/* Closeable tabs wrap two buttons; the group carries the tab color/underline, children inherit it. */
@@ -151,7 +151,7 @@
 	}
 
 	.vrh-tab--add:disabled {
-		color: rgba(255, 255, 255, 0.1);
+		color: rgb(var(--bc-tint) / 10%);
 		cursor: not-allowed;
 	}
 </style>

@@ -24,7 +24,7 @@
 	{/if}
 
 	<div
-		class="panel-sheet flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[20px] border-t border-bc-mist/15"
+		class="panel-sheet flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-[20px] border-t border-bc-border"
 		style="transform: translateY({entered
 			? '0%'
 			: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
