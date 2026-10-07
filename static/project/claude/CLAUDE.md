@@ -14,8 +14,9 @@ Practical implications you must internalize:
 - The filesystem is a virtualized POSIX filesystem scoped to the Pod. Files persist within the browser, backed by the OPFS API or IndexedDB.
 - Boot is near-instant; you do not need to wait on cloud provisioning.
 - Concurrency is not metered — you can spawn additional processes freely, but you are still bound by the user's device resources.
-- You have `bash`, `git`, `node`, `npm`, and standard coreutils. Use them.
-- BrowserPod runs Node.js, Rust, and Python (preview); Go and Ruby are on the roadmap. This environment is set up for Node.js — assume that unless the user explicitly asks for another runtime.
+- You have `bash`, `git`, `node` (v22.15), `npm`, `pnpm`, `rg`, `fd`, `curl`, `wget`, `tar`, `unzip`, and standard coreutils. Use them.
+- `timeout` does not work here: it never runs its command, and kills it once the delay expires. Use a tool's own time limit instead (for example `curl --max-time`).
+- This environment is set up for Node.js — assume that unless the user explicitly asks for another runtime. `python3` (3.12) runs, but only with its standard library: there is no `pip`, and PyPI is unreachable. Do not assume a Rust toolchain: check with `command -v cargo` first, since Rust programs are normally cross-compiled outside the Pod. Go and Ruby are on BrowserPod's roadmap.
 
 ---
 
@@ -40,6 +41,14 @@ For every project you scaffold or modify, check whether any direct or transitive
 | `@oxc-transform/*` (native) | `@oxc-transform/binding-wasm32-wasi` |
 
 These cover the build-tool layer that virtually every modern JS framework (Vite, Svelte, Nuxt, Next, Astro, SvelteKit, SolidStart, Remix) depends on. **Add the esbuild, rollup, and `@parcel/watcher` overrides preemptively** for any Vite, Rollup, or Next.js-based project — do not wait to see an error. For Next.js, also add `@next/swc-wasm-nodejs` as a direct dependency at the matching version.
+
+### Newer framework versions
+
+The references below use Vite 6, Nuxt 3 and Next.js 13. Scaffolding tools now default to newer majors, which need different fixes:
+
+- **Vite 8.2+** bundles with Rolldown instead of esbuild and Rollup. Add `@rolldown/binding-wasm32-wasi` to `devDependencies`, at the same version as the `rolldown` package Vite installs (`npm ls rolldown`). The esbuild and rollup overrides are only for Vite 7 and earlier.
+- **Nuxt 4** needs `@rolldown/binding-wasm32-wasi` in `dependencies` as well as the esbuild and rollup overrides, and installs with `npm install --legacy-peer-deps`.
+- **Next.js** must not use Turbopack, which is native-only. Drop any `--turbo` / `--turbopack` flag from the dev script; from Next.js 16, where Turbopack is the default, run `next dev --webpack`.
 
 ### Reference: Vite + Svelte `package.json`
 
@@ -142,9 +151,26 @@ You **do not** have an arbitrary egress network. What you do have is the inverse
 - **Multiple ports → multiple Portals.** If a project opens an API server on 3000 and a frontend dev server on 5173, expect two Portal previews. Pick port numbers deliberately and avoid collisions.
 - **Do not hardcode absolute URLs** like `http://localhost:3000/api` in client code. Use relative paths (`/api/...`) or read the host from `window.location` so that requests from the Portal-served frontend correctly reach the Portal-served backend (or, more typically, the same origin via a proxy).
 - **Configure dev servers to bind to all interfaces if they default to loopback-only.** For example, Vite users may need `vite --host 0.0.0.0` or `server: { host: true }` in `vite.config.js` so BrowserPod's Portal layer can reach the listener.
-- **Outbound network access is allowlisted, not open.** By default a Pod can reach the npm and yarn registries, GitHub, and the major AI provider APIs; requests are proxied through BrowserPod infrastructure. Anything else is blocked, so do not assume a running server inside the Pod can call arbitrary third-party endpoints. The default list is expanding over time, and paid plans can add custom outbound domains.
-- **`curl` is not supported.** Do not run `curl` commands — the binary is not available in this environment. Use `npm install` or `git clone` for fetching packages and repositories.
-- **No localhost interface access at this time.** Don't try to access a dev server port via `localhost` directly. The loopback interface is currently not supported. This limitation will also be lifted soon.
+- **Outbound network access is allowlisted, not open, and HTTPS-only.** Requests are proxied through BrowserPod infrastructure, only to port 443, and only to allowlisted hosts. Plain `http://` URLs, SSH and every other port are refused. The list is expanding over time, and paid plans can add custom outbound domains. Today it includes:
+  - the npm registry (`registry.npmjs.org`) and Yarn 2+ (`repo.yarnpkg.com`; classic Yarn's `registry.yarnpkg.com` is blocked)
+  - `github.com` and `raw.githubusercontent.com`, but **not** `api.github.com`, `codeload.github.com` or GitHub release downloads
+  - the major AI provider APIs
+- **What that means in practice:** clone over HTTPS (`git clone https://github.com/...`), never SSH (`git@github.com:...`). Avoid npm dependencies that point at a GitHub repository (`"pkg": "user/repo"`), since those download from `codeload.github.com`. Do not try to install Python packages or Rust crates. A blocked host fails with `ENOTFOUND`; a refused port with `ECONNREFUSED`.
+- **`curl` works** for allowlisted HTTPS hosts (`wget` is also installed). Prefer `npm install` or `git clone` for fetching packages and repositories.
+- **No localhost interface access.** The loopback interface is not supported: requests to `localhost` or `127.0.0.1` from inside the Pod fail with `ECONNREFUSED`, even when a server is listening. Check that a server started from its log, not by requesting it.
+
+### Long-running servers: always start them in the background
+
+Your shell tool waits for each command to exit. A dev server like `npm run dev` never exits, so running it in the foreground will hang your turn until the command times out — and killing it tears down the Portal preview the user is watching.
+
+Instead, always launch servers detached and confirm they started from the log:
+
+```bash
+nohup npm run dev > /tmp/dev.log 2>&1 &
+sleep 5 && tail -20 /tmp/dev.log
+```
+
+The server keeps running between your turns, the Portal preview stays up, and you can check `/tmp/dev.log` again at any time. To stop or restart it, find the process with `ps` and `kill` it before relaunching.
 
 ---
 
@@ -160,7 +186,7 @@ You **do not** have an arbitrary egress network. What you do have is the inverse
 ## 5. How to behave as a coding agent in this environment
 
 1. **Always read `package.json` (or create one with `overrides` already in place) before `npm install`.** Preempting the native-binary problem saves a failed install round-trip.
-2. **Prefer frameworks with first-class Wasm-tooling support**: Vite, Nuxt, SvelteKit, Astro all work well once `esbuild` and `rollup` are overridden. **Next.js works** — but only after replacing its native SWC compiler with `@next/swc-wasm-nodejs` (pinned to the same version as `next`) and overriding `@parcel/watcher` (see the Next.js reference `package.json` above). Do this preemptively; do not wait for the install or `next dev` to fail.
+2. **Prefer frameworks with first-class Wasm-tooling support**: Vite, Nuxt, SvelteKit, Astro all work well once `esbuild` and `rollup` are overridden (or, on Vite 8.2+ and Nuxt 4, once the Rolldown Wasm binding is added). **Next.js works** — but only after replacing its native SWC compiler with `@next/swc-wasm-nodejs` (pinned to the same version as `next`) and overriding `@parcel/watcher` (see the Next.js reference `package.json` above). Do this preemptively; do not wait for the install or `next dev` to fail.
 3. **Default to popular, pure-JS or Wasm-friendly libraries.** When two libraries do the same thing, pick the one without native bindings.
 4. **When something fails, read the error.** Errors mentioning `.node` files, `node-gyp`, `Cannot find module '@.../linux-x64-gnu'`, or `prebuild-install` are native-binary errors. Fix them with `overrides`, not by adding `--ignore-scripts` or other workarounds that just hide the problem.
 5. **When you start a server, tell the user to look at the Portal preview**, not at a `localhost` URL. Briefly mention which port opened so they can correlate it with the preview pane.
@@ -177,10 +203,14 @@ You **do not** have an arbitrary egress network. What you do have is the inverse
 | `Cannot find module '@rollup/rollup-linux-x64-gnu'` | Native rollup binary | Add `"rollup": "npm:@rollup/wasm-node@*"` to `overrides` |
 | `Cannot find module '@parcel/watcher-linux-x64-glibc'` (often via Next.js) | Native parcel watcher | Add `"@parcel/watcher": "npm:@parcel/watcher-wasm@*"` to `overrides` |
 | Next.js: `Failed to load SWC binary` / `next-swc.linux-x64-gnu.node` | Native SWC compiler | Add `@next/swc-wasm-nodejs` to `dependencies` at the same version as `next` |
+| `Cannot find module '@rolldown/binding-linux-x64-gnu'` | Native Rolldown binary (Vite 8.2+, Nuxt 4) | Add `@rolldown/binding-wasm32-wasi`, matching the installed `rolldown` version |
+| Next.js dev server fails loading Turbopack | Turbopack is native-only | Drop `--turbo`/`--turbopack`; on Next.js 16+ run `next dev --webpack` |
 | `node-gyp` build failures during install | Package compiling native code | Find a Wasm or pure-JS alternative |
 | Dev server starts but no preview appears | Server bound to loopback only, or wrong port | Bind to `0.0.0.0` / `host: true`; confirm port is the one being opened |
 | Frontend can't reach backend | Hardcoded `http://localhost:PORT` | Use relative URLs or `window.location.origin` |
-| App needs to call external API | Host is not on the Pod's outbound allowlist | Make the call from the browser side, mind CORS |
+| `ENOTFOUND` for an external host | Host is not on the Pod's outbound allowlist | Make the call from the browser side, mind CORS |
+| `ECONNREFUSED` on `localhost` or a non-443 port | Loopback, SSH and non-HTTPS ports are not supported | Check servers via their logs; use HTTPS remotes and URLs |
+| A command wrapped in `timeout` prints nothing | `timeout` is broken in the Pod | Use the tool's own time limit |
 
 ---
 
