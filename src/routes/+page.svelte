@@ -179,7 +179,7 @@
 					<div>
 						<div class="text-[14px] font-medium text-bc-text">Run coding agents</div>
 						<div class="mt-0.5 text-[12.5px] leading-relaxed text-bc-mist">
-							Claude Code and Codex CLI, sandboxed in your browser
+							Claude Code, Codex CLI and Pi, sandboxed in your browser
 						</div>
 					</div>
 				</button>
@@ -237,7 +237,7 @@
 					editor, file tree, terminals, and live preview for popular frameworks, and a set of
 					<span class="text-bc-text">AI coding CLIs</span>
 					that you can run unmodified, with real file access and networking, without touching your local
-					machine, including Claude Code and Codex CLI today, with more on the way.
+					machine, including Claude Code, Codex CLI and Pi today, with more on the way.
 				</p>
 
 				<p class="mb-10 text-[14.5px] leading-relaxed text-bc-mist">

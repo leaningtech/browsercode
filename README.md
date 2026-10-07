@@ -43,7 +43,7 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 
 BrowserCode started out as a way to run AI coding CLIs entirely client-side. It's since grown into a full IDE: alongside the CLIs, it can boot and preview web frameworks directly in the browser, so you can prototype an agent's output without ever leaving the tab.
 
-BrowserCode 1.1.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code and Codex CLI, completely client-side.
+BrowserCode 1.1.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code, Codex CLI and Pi, completely client-side.
 
 <h2 id="quickstart">Quickstart</h2>
 
@@ -52,7 +52,7 @@ Want to try BrowserCode without installing anything? Use the hosted app.
 1. Go to [browsercode.io](https://browsercode.io)
 2. BrowserCode will boot instantly, opening with a quick modal tutorial to guide you
 3. Pick an agent from the sidebar, or open the IDE playground to boot a framework template
-4. Claude Code signs in by copying a code from a separate tab; Codex CLI asks for an OpenAI API key, stored in your browser
+4. Claude Code signs in by copying a code from a separate tab; Codex CLI asks for an OpenAI API key, stored in your browser; Pi signs in to the provider of your choice with its own `/login`
 
 <h2 id="make-it-your-own">Make it your own</h2>
 
@@ -109,7 +109,8 @@ Parameters, panes and further detail are in [`docs/embedding.md`](docs/embedding
 
 This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out what breaks. Here are a few walls you might hit:
 
-- At launch, each agent is given an instructions file (`CLAUDE.md` for Claude Code, `AGENTS.md` for Codex CLI) so it understands it is running in a custom environment. However, it may first attempt its default behavior before referencing the file
+- At launch, each agent is given an instructions file (`CLAUDE.md` for Claude Code, `AGENTS.md` for Codex CLI and Pi) so it understands it is running in a custom environment. However, it may first attempt its default behavior before referencing the file
+- Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
 - BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
 - Networking over TCP isn't available
 - For maximum compatibility, please use a Chromium browser. Safari currently isn't supported
@@ -120,6 +121,7 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 | :------------------------------------------------------------------------------------: | --------------- | ---------------- |
 |   <img src="./static/readme/claude.webp" alt="Claude Code" width="32" height="32" />   | **Claude Code** | ✅ Beta open now |
 |    <img src="./static/readme/codex.webp" alt="Codex CLI" width="32" height="32" />     | **Codex CLI**   | ✅ Beta open now |
+|          <img src="./static/readme/pi.svg" alt="Pi" width="32" height="32" />          | **Pi**          | ✅ Beta open now |
 | <img src="./static/readme/antigravity.svg" alt="Antigravity" width="32" height="32" /> | **Antigravity** | 🚧 Coming soon   |
 |   <img src="./static/readme/opencode.webp" alt="OpenCode" width="32" height="32" />    | **OpenCode**    | 🚧 Coming soon   |
 
