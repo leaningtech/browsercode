@@ -6,8 +6,9 @@ import {
 	setCodexApiKey,
 	CODEX_BIN_PATH
 } from '$lib/agents/codex';
+import { openPiUrl, piEnv, preparePiPod, PI_CLI_PATH } from '$lib/agents/pi';
 
-export type ToolId = 'claude' | 'antigravity' | 'codex' | 'opencode';
+export type ToolId = 'claude' | 'antigravity' | 'codex' | 'pi' | 'opencode';
 
 export type ToolItem = {
 	id: ToolId;
@@ -37,6 +38,14 @@ export const toolItems: ToolItem[] = [
 		disabled: false,
 		accentClass: 'bg-bc-orchid/10 text-bc-orchid',
 		dotClass: 'bg-bc-orchid'
+	},
+	{
+		id: 'pi',
+		icon: 'tabler:math-pi',
+		label: 'Pi',
+		disabled: false,
+		accentClass: 'bg-bc-green/10 text-bc-green',
+		dotClass: 'bg-bc-green'
 	},
 	{
 		id: 'antigravity',
@@ -145,5 +154,16 @@ export const cliConfigs: Record<string, CLIConfig> = {
 			get: getCodexApiKey,
 			set: setCodexApiKey
 		}
+	},
+	pi: {
+		// No disk image of its own: the package is installed into the default one's /home on first
+		// launch, which this key keeps, along with anything `/login` stores in ~/.pi.
+		storageKey: 'pi',
+		command: 'node',
+		args: [PI_CLI_PATH],
+		projectFile: '/project/pi/AGENTS.md',
+		openCallback: openPiUrl,
+		prepare: preparePiPod,
+		env: piEnv
 	}
 };
