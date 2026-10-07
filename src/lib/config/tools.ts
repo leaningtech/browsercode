@@ -1,4 +1,4 @@
-import type { BrowserPod } from '@leaningtech/browserpod';
+import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import {
 	codexEnv,
 	getCodexApiKey,
@@ -97,8 +97,8 @@ export type CLIConfig = {
 	args: string[];
 	projectFile?: string;
 	openCallback?: (urlOrPath: string) => void;
-	/** Runs after the pod boots, before the CLI launches. */
-	prepare?: (pod: BrowserPod) => Promise<void>;
+	/** Runs after the pod boots, before the CLI launches; `terminal` is the one the CLI gets. */
+	prepare?: (pod: BrowserPod, terminal: Terminal) => Promise<void>;
 	/** Extra env for the CLI process, resolved at launch. */
 	env?: () => string[];
 	credential?: CredentialSpec;
