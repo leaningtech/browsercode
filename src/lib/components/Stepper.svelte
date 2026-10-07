@@ -9,7 +9,7 @@
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
-	const totalSteps = 7;
+	const totalSteps = 6;
 
 	// Derived from the registry rather than spelled out, so shipping a CLI can't leave the tour
 	// still announcing it as "coming soon".
@@ -24,15 +24,19 @@
 	// stepperState.open here couldn't do that: legacy `$:` blocks in a non-runes component only
 	// re-run off their own component's `let` dependencies, not off external $state proxy reads.
 
-	// Measured from the real sidebar buttons (via data-tour-target) rather than hand-computed
-	// pixel math, so the pointers stay accurate if the sidebar's layout ever changes again.
-	// These are just sane fallbacks in case a target isn't found for some reason.
+	// Measured from the real sidebar/ribbon elements (via data-tour-target) rather than hand-
+	// computed pixel math, so the pointers stay accurate if the layout ever changes again. These
+	// are just sane fallbacks in case a target isn't found for some reason.
 	let ideTop = 113;
 	let agentsTop = 155;
-	let helpBottom = 28;
+	let githubTop = 31;
+	let githubRight = 160;
 
+	// `display: none` (the ribbon on mobile, via its `hidden md:flex`) still returns a rect, just
+	// an all-zero one — treat that the same as "not found" rather than snapping the tooltip there.
 	function centerOf(selector: string): DOMRect | null {
-		return document.querySelector(selector)?.getBoundingClientRect() ?? null;
+		const rect = document.querySelector(selector)?.getBoundingClientRect();
+		return rect && (rect.width || rect.height) ? rect : null;
 	}
 
 	function measureTourTargets() {
@@ -42,14 +46,19 @@
 		const ideRect = centerOf('[data-tour-target="ide"]');
 		if (ideRect) ideTop = ideRect.top + ideRect.height / 2;
 
-		const helpRect = centerOf('[data-tour-target="help"]');
-		if (helpRect) helpBottom = window.innerHeight - (helpRect.top + helpRect.height / 2);
+		const githubRect = centerOf('[data-tour-target="github-ribbon"]');
+		if (githubRect) {
+			githubTop = githubRect.top + githubRect.height / 2;
+			githubRight = window.innerWidth - githubRect.left;
+		}
 	}
 
-	// Re-measure every time the tour is actually opened — it can be triggered long after this
-	// component first mounted (from Help, or the Home page), by which point the initial-mount
-	// measurement may be stale if the viewport was resized in between. The backdrop below only
-	// exists while the modal is open, so this action re-fires on every fresh open.
+	// Re-measures whenever the element it's attached to mounts — used on the backdrop (which only
+	// exists while the modal is open, so this re-fires on every fresh open; the tour can be
+	// triggered long after this component first mounted, by which point the initial-mount
+	// measurement may be stale if the viewport was resized in between) and on the step 5 tooltip
+	// (whose target, the GitHub ribbon, only renders for that one step — see ribbonAboveTour in
+	// +layout.svelte).
 	function measureOnMount(node: HTMLElement) {
 		void node;
 		measureTourTargets();
@@ -109,18 +118,23 @@
 		navigateWithLeaveGuard('/ide', $page.route.id === '/agents/[tool]');
 	}
 
-	// Steps 3-5 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
-	const sidebarSteps = new Set([3, 4, 5]);
+	// Steps 3-4 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
+	const sidebarSteps = new Set([3, 4]);
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 {#if stepperState.open}
 	<!-- Backdrop. Escape-to-close is handled by the window listener above. The GitHub ribbon
-	     (step 6) is raised above this via z-index in +layout.svelte, so it stays sharp there. -->
+	     (step 5) is raised above this via z-index in +layout.svelte, so it stays sharp there. The
+	     +0.625rem matches the sidebar's own `ml-2.5` left margin (Sidebar.svelte) — the floating
+	     card sits that far past --width-sidebar, so the backdrop needs the same offset or it dims
+	     a sliver of the card's right edge. -->
 	<div
 		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-[left] duration-500 ease-out"
-		style="left: {sidebarSteps.has(stepperState.step) ? 'var(--width-sidebar)' : '0'};"
+		style="left: {sidebarSteps.has(stepperState.step)
+			? 'calc(var(--width-sidebar) + 0.625rem)'
+			: '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
 		use:measureOnMount
@@ -143,7 +157,7 @@
 			<div class="p-8">
 				{#if stepperState.step === 1}
 					<div class="mb-5 flex justify-center">
-						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
+						<img src={favicon} alt="BrowserCode" class="bc-logo-mark h-14 w-14" />
 					</div>
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Welcome to BrowserCode
@@ -241,14 +255,6 @@
 					</div>
 				{:else if stepperState.step === 5}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
-						This is our first beta
-					</h1>
-					<p class="text-sm leading-relaxed text-bc-text-muted">
-						Please bend, stretch, and break it. If something's off, let us know from Help in the
-						sidebar, also where the getting-started basics and this tour live.
-					</p>
-				{:else if stepperState.step === 6}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Give us a star on GitHub
 					</h1>
 					<p class="text-sm leading-relaxed text-bc-text-muted">
@@ -283,7 +289,7 @@
 						<Icon icon="simple-icons:github" width="16" height="16" />
 						Star us on GitHub
 					</a>
-				{:else if stepperState.step === 7}
+				{:else if stepperState.step === 6}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Ready when you are
 					</h1>
@@ -383,26 +389,14 @@
 		</div>
 	{/if}
 
-	<!-- Step 5: helper tooltip pointing at the Help sidebar button. -->
+	<!-- Step 5: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. The
+	     ribbon itself only mounts for this step (see ribbonAboveTour in +layout.svelte), so
+	     `use:measureOnMount` re-measures it right as it appears, same as the backdrop does on open. -->
 	{#if stepperState.step === 5}
 		<div
-			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
-			style="left: var(--width-sidebar); bottom: {helpBottom}px; transform: translateY(50%);"
-		>
-			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
-			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
-			>
-				Found a bug? Start here
-			</span>
-		</div>
-	{/if}
-
-	<!-- Step 6: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
-	{#if stepperState.step === 6}
-		<div
 			class="pointer-events-none fixed z-[60] flex items-center"
-			style="top: 24px; right: 160px; transform: translateY(-50%);"
+			style="top: {githubTop}px; right: {githubRight}px; transform: translateY(-50%);"
+			use:measureOnMount
 		>
 			<span
 				class="flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"

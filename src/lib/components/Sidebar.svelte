@@ -319,7 +319,6 @@
 					openTour();
 					trackEvent('Clicked Help', { action: 'tour-direct' });
 				}}
-				data-tour-target="help"
 				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
 			>
 				<Icon icon="mingcute:question-line" width="26" height="26" />

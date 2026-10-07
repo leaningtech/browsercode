@@ -15,10 +15,10 @@
 
 	let { children } = $props();
 
-	// The tour's "star us" slide (step 6) points at this ribbon, so it needs to sit above the
+	// The tour's "star us" slide (step 5) points at this ribbon, so it needs to sit above the
 	// tour's backdrop for that one step only — back below it (its normal spot, under the sidebar
 	// flyouts) the rest of the time.
-	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 6);
+	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 5);
 
 	// Embeds render inside a host page, where none of the app chrome belongs.
 	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
@@ -106,6 +106,7 @@
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label="Star this project on GitHub"
+			data-tour-target="github-ribbon"
 			class="fixed top-4 right-5 hidden items-center gap-2 rounded-full border border-bc-border bg-bc-navy px-3.5 py-1.5 text-xs font-medium text-bc-mist no-underline shadow-lg shadow-black/20 transition-colors duration-150 hover:border-bc-ribbon-hover hover:text-bc-ribbon-hover md:flex {ribbonAboveTour
 				? 'z-[60]'
 				: 'z-40'}"
