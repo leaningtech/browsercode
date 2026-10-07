@@ -1,27 +1,28 @@
 import type { ThemeRegistration } from 'shiki';
 
 /**
- * The house dark theme, in TextMate form so Shiki loads it alongside the bundled ones: blue,
- * violet, cyan and green, plus white for plain text. See browsercode-light.ts for the light
- * counterpart — same roles, darker/more saturated shades of the same four hues plus black.
+ * BrowserPod's own brand palette (browserpod.io's hero code editor), not the bc-* app palette —
+ * blue/periwinkle/magenta/gold/coral, offered as a distinct theme choice rather than folded into
+ * the house browsercode-dark/-light pair. See browserpod-light.ts for the light counterpart: same
+ * accents, with the plain-text/background polarity flipped for a white ground.
  */
-export const browsercodeDark: ThemeRegistration = {
-	name: 'browsercode-dark',
+export const browserpodDark: ThemeRegistration = {
+	name: 'browserpod-dark',
 	type: 'dark',
 	colors: {
-		'editor.background': '#0d0d0f',
-		'editor.foreground': '#ffffff',
-		'editorCursor.foreground': '#87d68d',
-		'editor.selectionBackground': '#4a7dff2e',
-		'editor.inactiveSelectionBackground': '#4a7dff1a',
+		'editor.background': '#09090b',
+		'editor.foreground': '#d9d9d9',
+		'editorCursor.foreground': '#10b981',
+		'editor.selectionBackground': '#10b9812e',
+		'editor.inactiveSelectionBackground': '#10b9811a',
 		'editor.lineHighlightBackground': '#ffffff05',
 		'editorLineNumber.foreground': '#ffffff40',
 		'editorLineNumber.activeForeground': '#ffffff8c',
-		'editorGutter.background': '#0d0d0f',
+		'editorGutter.background': '#09090b',
 		'editorIndentGuide.background1': '#ffffff0a',
 		'editorIndentGuide.activeBackground1': '#ffffff1f',
-		'editorWidget.background': '#12161f',
-		'editorWidget.border': '#273249',
+		'editorWidget.background': '#111111',
+		'editorWidget.border': '#ffffff14',
 		'scrollbarSlider.background': '#ffffff1f',
 		'scrollbarSlider.hoverBackground': '#ffffff38',
 		'scrollbarSlider.activeBackground': '#ffffff38',
@@ -30,19 +31,19 @@ export const browsercodeDark: ThemeRegistration = {
 	tokenColors: [
 		{
 			scope: ['comment', 'punctuation.definition.comment'],
-			settings: { foreground: '#5c687a', fontStyle: 'italic' }
+			settings: { foreground: '#5c6473', fontStyle: 'italic' }
 		},
 		{
 			scope: ['string', 'string.quoted', 'string.template'],
-			settings: { foreground: '#87d68d' }
+			settings: { foreground: '#b7cdff' }
 		},
 		{
 			scope: ['constant.character.escape', 'string.regexp'],
-			settings: { foreground: '#06b6d4' }
+			settings: { foreground: '#ffd633' }
 		},
 		{
 			scope: ['constant.numeric', 'constant.language', 'support.constant'],
-			settings: { foreground: '#a78bfa' }
+			settings: { foreground: '#c73da6' }
 		},
 		{
 			scope: ['keyword', 'keyword.control', 'storage', 'storage.type', 'storage.modifier'],
@@ -50,11 +51,11 @@ export const browsercodeDark: ThemeRegistration = {
 		},
 		{
 			scope: ['keyword.operator', 'punctuation', 'meta.brace'],
-			settings: { foreground: '#848e9c' }
+			settings: { foreground: '#7d8595' }
 		},
 		{
 			scope: ['entity.name.function', 'support.function', 'meta.function-call'],
-			settings: { foreground: '#06b6d4' }
+			settings: { foreground: '#ffd633' }
 		},
 		{
 			scope: [
@@ -64,31 +65,31 @@ export const browsercodeDark: ThemeRegistration = {
 				'support.type',
 				'support.class'
 			],
-			settings: { foreground: '#a78bfa' }
+			settings: { foreground: '#8fb0ff' }
 		},
 		{
 			scope: ['variable', 'variable.other', 'meta.definition.variable'],
-			settings: { foreground: '#ffffff' }
+			settings: { foreground: '#d9d9d9' }
 		},
 		{
 			scope: ['variable.parameter', 'meta.object-literal.key', 'support.variable.property'],
-			settings: { foreground: '#aeb6c2' }
+			settings: { foreground: '#a9b4c8' }
 		},
 		{
 			scope: ['entity.name.tag', 'punctuation.definition.tag'],
-			settings: { foreground: '#4a7dff' }
+			settings: { foreground: '#ff6161' }
 		},
 		{
 			scope: ['entity.other.attribute-name'],
-			settings: { foreground: '#06b6d4' }
+			settings: { foreground: '#ffd633' }
 		},
 		{
 			scope: ['markup.heading', 'markup.bold'],
-			settings: { foreground: '#4a7dff', fontStyle: 'bold' }
+			settings: { foreground: '#b7cdff', fontStyle: 'bold' }
 		},
 		{
 			scope: ['invalid', 'invalid.illegal'],
-			settings: { foreground: '#a78bfa' }
+			settings: { foreground: '#ff6161' }
 		}
 	]
 };

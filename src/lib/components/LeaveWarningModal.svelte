@@ -33,6 +33,7 @@
 		onclick={(e) => e.target === e.currentTarget && cancel()}
 	>
 		<div
+			style="background-color: var(--color-bc-navy)"
 			class="glass-panel max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 			role="alertdialog"
 			aria-modal="true"
@@ -43,22 +44,22 @@
 			>
 				<Icon icon="mingcute:alert-line" width="22" height="22" />
 			</div>
-			<h3 id="leave-warning-title" class="mb-2 text-sm font-semibold text-zinc-50">
+			<h3 id="leave-warning-title" class="mb-2 text-sm font-semibold text-bc-text">
 				Leave this session?
 			</h3>
-			<p class="mb-5 text-[12.5px] leading-relaxed text-zinc-400">
+			<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
 				Are you sure you want to leave? Your work will be lost.
 			</p>
 			<div class="flex justify-center gap-2">
 				<button
 					onclick={cancel}
-					class="rounded-md bg-white/5 px-4 py-2 text-[13px] font-medium text-zinc-300 transition hover:bg-white/10"
+					class="rounded-md bg-[rgb(var(--bc-tint)/5%)] px-4 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-[rgb(var(--bc-tint)/10%)]"
 				>
 					Cancel
 				</button>
 				<button
 					onclick={confirmLeave}
-					class="rounded-md bg-bc-coral/90 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-bc-coral"
+					class="rounded-md bg-bc-coral/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-coral"
 				>
 					Leave
 				</button>

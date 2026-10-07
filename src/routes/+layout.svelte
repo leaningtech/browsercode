@@ -85,20 +85,14 @@
 	}}
 />
 
-<!-- `contents`: scopes these always-dark overlays' CSS variables without adding a layout box —
-     they aren't part of this pass's light-mode re-theme (see layout.css's .bc-dark-scope). -->
-<div class="bc-dark-scope contents">
-	<IosUnsupportedModal />
-</div>
+<IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden bg-bc-abyss">
 	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but the sidebar's
 	     Help flyout and the Home page both need to trigger it from anywhere via stepperState. -->
 	{#if !isEmbed}
-		<div class="bc-dark-scope contents">
-			<Stepper />
-			<LeaveWarningModal />
-		</div>
+		<Stepper />
+		<LeaveWarningModal />
 	{/if}
 	{#if !zenState.on && !isEmbed}
 		<Sidebar />

@@ -126,6 +126,7 @@
 		use:measureOnMount
 	>
 		<div
+			style="background-color: var(--color-bc-navy)"
 			class="glass-panel relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
 			role="dialog"
 			aria-modal="true"
@@ -133,10 +134,10 @@
 		>
 			<!-- Header strip, mirroring the IDE panel chrome -->
 			<div
-				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-zinc-500"
+				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-bc-icon"
 			>
-				<span class="font-medium tracking-wide text-zinc-400 uppercase">BrowserCode</span>
-				<span class="font-mono text-zinc-600">{stepperState.step} / {totalSteps}</span>
+				<span class="font-medium tracking-wide text-bc-text-muted uppercase">BrowserCode</span>
+				<span class="font-mono text-bc-icon">{stepperState.step} / {totalSteps}</span>
 			</div>
 
 			<div class="p-8">
@@ -144,24 +145,24 @@
 					<div class="mb-5 flex justify-center">
 						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
 					</div>
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Welcome to BrowserCode
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Run AI coding agents like Claude Code, or spin up a full IDE playground for popular
 						frameworks, with everything sandboxed right in this browser tab.
 					</p>
 				{:else if stepperState.step === 2}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Powered by BrowserPod
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is built on
 						<a
 							href="https://browserpod.io"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
+							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 							>BrowserPod</a
 						>, a browser-based sandbox that runs AI agents, code and development tools in the
 						browser, without cloud compute.
@@ -174,22 +175,17 @@
 						class="glass-panel mt-6 flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
 					>
 						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-bc-mist" />
-						<div class="flex-1 text-sm text-zinc-300">
+						<div class="flex-1 text-sm text-bc-mist">
 							<span class="font-medium">BrowserPod</span>
-							<span class="ml-2 text-zinc-500">Learn more</span>
+							<span class="ml-2 text-bc-icon">Learn more</span>
 						</div>
-						<Icon
-							icon="mingcute:arrow-right-up-line"
-							width="16"
-							height="16"
-							class="text-zinc-500"
-						/>
+						<Icon icon="mingcute:arrow-right-up-line" width="16" height="16" class="text-bc-icon" />
 					</a>
 				{:else if stepperState.step === 3}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Build in the IDE playground
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Boot a curated framework template straight into a full editor with terminal and live
 						previews. You can find them in the sidebar.
 					</p>
@@ -197,7 +193,7 @@
 					<div class="mt-6 flex flex-wrap gap-2">
 						{#each frameworkRailItems as fw (fw.id)}
 							<span
-								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-zinc-400"
+								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-bc-text-muted"
 							>
 								<Icon icon={fw.icon} width="14" height="14" />
 								{fw.label}
@@ -205,10 +201,10 @@
 						{/each}
 					</div>
 				{:else if stepperState.step === 4}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Or run AI agents from the sidebar
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						{liveToolNames} are available now. {soonToolNames} are coming soon.
 					</p>
 
@@ -219,7 +215,7 @@
 							>
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {item.disabled
-										? 'bg-white/5 text-white/20'
+										? 'bg-[rgb(var(--bc-tint)/5%)] text-[rgb(var(--bc-tint)/20%)]'
 										: item.accentClass}"
 								>
 									{#if item.icon}
@@ -233,9 +229,7 @@
 									{/if}
 								</span>
 								<span
-									class="flex-1 truncate text-xs {item.disabled
-										? 'text-zinc-500'
-										: 'text-zinc-300'}"
+									class="flex-1 truncate text-xs {item.disabled ? 'text-bc-icon' : 'text-bc-mist'}"
 								>
 									{item.label}
 								</span>
@@ -246,21 +240,21 @@
 						{/each}
 					</div>
 				{:else if stepperState.step === 5}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						This is our first beta
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Please bend, stretch, and break it. If something's off, let us know from Help in the
 						sidebar, also where the getting-started basics and this tour live.
 					</p>
 				{:else if stepperState.step === 6}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Give us a star on GitHub
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is free and open source software. Do anything you like with it:
 					</p>
-					<ul class="mb-5 flex flex-col gap-2 text-sm leading-relaxed text-zinc-400">
+					<ul class="mb-5 flex flex-col gap-2 text-sm leading-relaxed text-bc-text-muted">
 						<li class="flex items-start gap-2.5">
 							<Icon
 								icon="mingcute:check-circle-line"
@@ -284,28 +278,28 @@
 						href="https://github.com/leaningtech/browsercode"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="glass-panel inline-flex items-center gap-2 rounded-lg border border-bc-mist/10 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-colors duration-150 hover:border-bc-mist/25 hover:text-white"
+						class="glass-panel inline-flex items-center gap-2 rounded-lg border border-bc-mist/10 px-4 py-2.5 text-sm font-medium text-bc-text transition-colors duration-150 hover:border-bc-mist/25"
 					>
 						<Icon icon="simple-icons:github" width="16" height="16" />
 						Star us on GitHub
 					</a>
 				{:else if stepperState.step === 7}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Ready when you are
 					</h1>
-					<p class="mb-6 text-sm leading-relaxed text-zinc-400">Pick a path to get started.</p>
+					<p class="mb-6 text-sm leading-relaxed text-bc-text-muted">Pick a path to get started.</p>
 
 					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
 							on:click={goIde}
-							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-bc-abyss transition hover:bg-bc-azure"
 						>
 							<Icon icon="mingcute:code-line" width="18" height="18" />
 							Start with IDE
 						</button>
 						<button
 							on:click={goAgents}
-							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
+							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-bc-text transition hover:border-bc-mist/30"
 						>
 							<Icon icon="mingcute:robot-line" width="18" height="18" />
 							Start with agents
@@ -316,12 +310,12 @@
 
 			<!-- Footer with nav + step pips -->
 			<div
-				class="flex items-center justify-between border-t border-bc-mist/10 bg-black/20 px-5 py-3"
+				class="flex items-center justify-between border-t border-bc-mist/10 bg-bc-statusbar px-5 py-3"
 			>
 				<button
 					on:click={prevStep}
 					disabled={stepperState.step === 1}
-					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-bc-text-muted transition-colors hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 				>
 					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
 					Back
@@ -330,9 +324,10 @@
 				<div class="flex items-center gap-1.5">
 					{#each { length: totalSteps }, i (i)}
 						<span
-							class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-							class:bg-bc-azure={i + 1 === stepperState.step}
-							class:bg-zinc-700={i + 1 !== stepperState.step}
+							class="h-1.5 w-1.5 rounded-full transition-colors duration-300 {i + 1 ===
+							stepperState.step
+								? 'bg-bc-azure'
+								: 'bg-[rgb(var(--bc-tint)/15%)]'}"
 						></span>
 					{/each}
 				</div>
@@ -340,14 +335,14 @@
 				<div class="flex items-center gap-2">
 					<button
 						on:click={finish}
-						class="rounded-md px-3 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
+						class="rounded-md px-3 py-1.5 text-xs font-medium text-bc-icon transition-colors hover:text-bc-mist"
 					>
 						Skip
 					</button>
 					{#if stepperState.step < totalSteps}
 						<button
 							on:click={nextStep}
-							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-bc-azure/85"
+							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-bc-abyss transition-colors hover:bg-bc-azure/85"
 						>
 							Next
 							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />

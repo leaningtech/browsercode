@@ -305,33 +305,6 @@ body {
 	filter: saturate(1.6) brightness(0.95);
 }
 
-/* Pins everything inside to the dark palette regardless of the `data-theme` toggle above it.
-   Used for the embed surface (a host page decides its own look, not ours) and for the always-on
-   overlays in +layout.svelte (IosUnsupportedModal, Stepper, LeaveWarningModal) that haven't been
-   re-themed for light mode. The Home, IDE and Agents routes are not scoped by this — they support
-   both themes directly. */
-.bc-dark-scope {
-	--bc-tint: 255 255 255;
-	--color-bc-abyss: #07090e;
-	--color-bc-navy: #090e1a;
-	--color-bc-surface: #12161f;
-	--color-bc-terminal: #0d0d0f;
-	--color-bc-statusbar: #0a0a0b;
-	--color-bc-azure: #b8eef4;
-	--color-bc-mist: #aeb6c2;
-	--color-bc-orchid: #ddd0f7;
-	--color-bc-green: #bcebcb;
-	--color-bc-gold: #f2c14e;
-	--color-bc-coral: #f27474;
-	--color-bc-border: #273249;
-	--color-bc-icon: #5c687a;
-	--color-bc-text: #f2f4f7;
-	--color-bc-text-muted: #848e9c;
-	--color-bc-link-hover: #ddd0f7;
-	--color-bc-ribbon-hover: #d4d9e0;
-	color-scheme: dark;
-}
-
 /* The flat brand mark (favicon.svg) is a white glyph baked into a raster image, so it can't pick
    up `--color-bc-text` the way the animated .bclogo layers do above — inverting it is the cheap
    equivalent (white-on-transparent → black-on-transparent) everywhere it's used as `<img>`. */
@@ -402,4 +375,73 @@ body.dragging iframe {
 .xterm .xterm-rows,
 .xterm .xterm-rows span {
 	font-size: 12px !important;
+}
+
+/* BrowserPod's bundled xterm injects its own per-instance stylesheet for text/ANSI colors,
+   scoped to a `.xterm-dom-renderer-owner-N` class assigned per terminal — the overrides above
+   can't reach it, so text color is rerouted to the bc-* accents here instead. Most of its rules
+   carry no !important, so a plain !important override beats them regardless of load order; the
+   non-blinking block cursor is the one exception (its rule does use !important), so that one
+   selector adds `.terminal` — xterm's own wrapper class — purely to out-specify it. */
+[class*='xterm-dom-renderer-owner-'] .xterm-rows {
+	color: var(--color-bc-text) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-rows .xterm-dim {
+	color: var(--color-bc-text-muted) !important;
+}
+
+/* ANSI 0–15: normal/bright pairs share a color, reusing the same accent family as the Monaco
+   theme (browsercode-dark.ts / browsercode-light.ts) so code and shell output read as one
+   palette. There's no dedicated "blue" token, so ANSI blue and cyan both resolve to azure. */
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-0,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-8 {
+	color: var(--color-bc-icon) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-1,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-9 {
+	color: var(--color-bc-coral) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-2,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-10 {
+	color: var(--color-bc-green) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-3,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-11 {
+	color: var(--color-bc-gold) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-4,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-6,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-12,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-14 {
+	color: var(--color-bc-azure) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-5,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-13 {
+	color: var(--color-bc-orchid) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-7,
+[class*='xterm-dom-renderer-owner-'] .xterm-fg-15 {
+	color: var(--color-bc-text) !important;
+}
+
+/* The block cursor draws as inverse video: fill = text color, glyph on top = the terminal's own
+   background, so it stays a legible solid block on light or dark ground. */
+[class*='xterm-dom-renderer-owner-'] .xterm-cursor.xterm-cursor-block {
+	background-color: var(--color-bc-text) !important;
+	color: var(--color-bc-terminal) !important;
+}
+.terminal[class*='xterm-dom-renderer-owner-']
+	.xterm-rows
+	.xterm-cursor.xterm-cursor-block:not(.xterm-cursor-blink) {
+	background-color: var(--color-bc-text) !important;
+	color: var(--color-bc-terminal) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-cursor.xterm-cursor-outline {
+	outline-color: var(--color-bc-text) !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-cursor.xterm-cursor-bar {
+	box-shadow: var(--color-bc-text) 1px 0 0 inset !important;
+}
+[class*='xterm-dom-renderer-owner-'] .xterm-cursor.xterm-cursor-underline {
+	border-bottom-color: var(--color-bc-text) !important;
 }

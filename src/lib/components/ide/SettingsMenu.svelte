@@ -24,7 +24,7 @@
 	const headingId = $props.id();
 	let rootEl = $state<HTMLElement | null>(null);
 
-	let themes = $derived(editorThemesFor(appearance));
+	let themes = $derived(editorThemesFor(appearance()));
 	let selected = $derived(activeEditorThemeId());
 
 	function choose(id: EditorThemeId): void {

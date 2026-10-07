@@ -7,7 +7,11 @@ import oneDarkPro from '@shikijs/themes/one-dark-pro';
 import tokyoNight from '@shikijs/themes/tokyo-night';
 import type { EditorThemeId } from '$lib/config/editor-themes';
 import { browsercodeDark } from './browsercode-dark';
+import { browsercodeLight } from './browsercode-light';
+import { browserpodDark } from './browserpod-dark';
+import { browserpodLight } from './browserpod-light';
 import { colorblindSafe } from './colorblind-safe';
+import { colorblindSafeLight } from './colorblind-safe-light';
 
 /**
  * Colors for every id in `config/editor-themes.ts`, which holds the metadata the menu and store
@@ -15,7 +19,11 @@ import { colorblindSafe } from './colorblind-safe';
  */
 export const THEME_DATA: Record<EditorThemeId, ThemeRegistration> = {
 	'browsercode-dark': browsercodeDark,
+	'browsercode-light': browsercodeLight,
+	'browserpod-dark': browserpodDark,
+	'browserpod-light': browserpodLight,
 	'colorblind-safe': colorblindSafe,
+	'colorblind-safe-light': colorblindSafeLight,
 	dracula,
 	'tokyo-night': tokyoNight,
 	'night-owl': nightOwl,

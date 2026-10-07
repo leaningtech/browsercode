@@ -20,6 +20,7 @@
 		style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);"
 	>
 		<div
+			style="background-color: var(--color-bc-navy)"
 			class="glass-panel flex w-full max-w-lg flex-col items-center rounded-2xl border border-bc-mist/15 p-10 text-center shadow-2xl"
 		>
 			<div
@@ -28,17 +29,17 @@
 				<Icon icon="mingcute:warning-line" width="32" height="32" />
 			</div>
 
-			<h2 id="ios-modal-title" class="mb-3 text-2xl font-semibold text-white">
+			<h2 id="ios-modal-title" class="mb-3 text-2xl font-semibold text-bc-text">
 				iOS is not supported
 			</h2>
-			<p class="mb-10 text-base leading-relaxed text-zinc-400">
+			<p class="mb-10 text-base leading-relaxed text-bc-text-muted">
 				BrowserCode relies on WebAssembly features that have known issues on iOS. Please open this
 				page on a desktop browser for the best experience.
 			</p>
 
 			<button
 				onclick={() => (dismissed = true)}
-				class="w-full rounded-lg bg-bc-azure/90 py-3 text-sm font-medium text-white transition-colors hover:bg-bc-azure"
+				class="w-full rounded-lg bg-bc-azure/90 py-3 text-sm font-medium text-bc-abyss transition-colors hover:bg-bc-azure"
 			>
 				Dismiss
 			</button>
