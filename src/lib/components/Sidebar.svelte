@@ -374,5 +374,5 @@
 </aside>
 
 {#if showCloneDialog}
-	<CloneRepoDialog onClose={() => (showCloneDialog = false)} />
+	<CloneRepoDialog onClose={() => (showCloneDialog = false)} onNavigate={navigate} />
 {/if}

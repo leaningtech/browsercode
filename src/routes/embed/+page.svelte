@@ -37,8 +37,7 @@
 {:else}
 	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-bc-mist">
 		<div
-			style="background-color: var(--color-bc-navy)"
-			class="glass-panel w-full max-w-md rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
+			class="glass-panel glass-panel-solid w-full max-w-md rounded-xl border border-bc-mist/15 px-6 py-8 text-center"
 		>
 			<div
 				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"

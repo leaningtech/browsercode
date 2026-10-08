@@ -32,8 +32,7 @@
 
 <form
 	onsubmit={submit}
-	style="background-color: var(--color-bc-navy)"
-	class="glass-panel w-full max-w-[520px] rounded-[14px] border border-bc-border p-8 shadow-2xl"
+	class="glass-panel glass-panel-solid w-full max-w-[520px] rounded-[14px] border border-bc-border p-8 shadow-2xl"
 >
 	<div class="mb-5 flex items-center gap-3.5">
 		<span class="flex h-12 w-12 items-center justify-center rounded-xl {tool.accentClass}">

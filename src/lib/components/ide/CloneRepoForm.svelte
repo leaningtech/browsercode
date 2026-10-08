@@ -2,7 +2,10 @@
 	import Icon from '@iconify/svelte';
 	import { parseGitHubUrl } from '$lib/github/parse';
 
-	let { autofocus = false }: { autofocus?: boolean } = $props();
+	let {
+		autofocus = false,
+		onNavigate
+	}: { autofocus?: boolean; onNavigate?: (path: string) => void } = $props();
 
 	let url = $state('');
 	let error = $state('');
@@ -23,8 +26,12 @@
 			return;
 		}
 		const { owner, repo, ref, dir } = target;
-		// Full reload so any prior pod is torn down cleanly.
-		window.location.href = `/ide/github/${owner}/${repo}/tree/${ref}${dir ? `/${dir}` : ''}`;
+		const path = `/ide/github/${owner}/${repo}/tree/${ref}${dir ? `/${dir}` : ''}`;
+		// Callers with a live session to protect (the Sidebar's dialog) pass their own
+		// navigateWithLeaveGuard-backed navigate; the plain /ide landing page has no session yet,
+		// so it's fine to fall back to a full reload here — still the pod-teardown mechanism.
+		if (onNavigate) onNavigate(path);
+		else window.location.href = path;
 	}
 
 	function focusInput(el: HTMLInputElement) {

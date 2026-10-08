@@ -15,8 +15,7 @@
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
 	<div
-		style="background-color: var(--color-bc-navy)"
-		class="glass-panel max-w-sm rounded-xl border border-bc-border px-6 py-7 text-center shadow-2xl"
+		class="glass-panel glass-panel-solid max-w-sm rounded-xl border border-bc-border px-6 py-7 text-center shadow-2xl"
 	>
 		<div
 			class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-gold/10 text-bc-gold"

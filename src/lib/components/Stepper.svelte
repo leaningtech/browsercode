@@ -146,8 +146,7 @@
 		use:measureOnMount
 	>
 		<div
-			style="background-color: var(--color-bc-navy)"
-			class="glass-panel relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
+			class="glass-panel glass-panel-solid relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"

@@ -11,8 +11,7 @@
 	class="absolute inset-0 z-50 flex items-center justify-center bg-bc-abyss/80 p-4 backdrop-blur-md"
 >
 	<div
-		style="background-color: var(--color-bc-navy)"
-		class="glass-panel w-full max-w-85 rounded-xl border border-bc-border px-6 py-8 text-center"
+		class="glass-panel glass-panel-solid w-full max-w-85 rounded-xl border border-bc-border px-6 py-8 text-center"
 	>
 		<div
 			class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-coral/10 text-bc-coral"

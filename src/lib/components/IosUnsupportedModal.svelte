@@ -20,8 +20,7 @@
 		style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);"
 	>
 		<div
-			style="background-color: var(--color-bc-navy)"
-			class="glass-panel flex w-full max-w-lg flex-col items-center rounded-2xl border border-bc-mist/15 p-10 text-center shadow-2xl"
+			class="glass-panel glass-panel-solid flex w-full max-w-lg flex-col items-center rounded-2xl border border-bc-mist/15 p-10 text-center shadow-2xl"
 		>
 			<div
 				class="mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-bc-coral/10 text-bc-coral"

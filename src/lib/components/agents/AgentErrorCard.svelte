@@ -17,8 +17,7 @@
 </script>
 
 <div
-	style="background-color: var(--color-bc-navy)"
-	class="glass-panel w-full max-w-[520px] overflow-hidden rounded-[14px] border border-bc-border px-8 pt-8 pb-7 shadow-2xl"
+	class="glass-panel glass-panel-solid w-full max-w-[520px] overflow-hidden rounded-[14px] border border-bc-border px-8 pt-8 pb-7 shadow-2xl"
 >
 	<div class="mb-5 flex items-center gap-3.5">
 		<span

@@ -27,14 +27,17 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if leaveWarningState.open}
+	<!-- z-[80]: strictly above the z-70 tier other dialogs use (CloneRepoDialog, FileTreePanel's
+	     delete confirm) — navigateWithLeaveGuard can now fire while one of those is still open
+	     (e.g. the Sidebar's Clone dialog mid-session), and this confirmation has to win the
+	     stack, not render invisibly behind whatever triggered it. -->
 	<div
-		class="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+		class="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
 		role="presentation"
 		onclick={(e) => e.target === e.currentTarget && cancel()}
 	>
 		<div
-			style="background-color: var(--color-bc-navy)"
-			class="glass-panel max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
+			class="glass-panel glass-panel-solid max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 			role="alertdialog"
 			aria-modal="true"
 			aria-labelledby="leave-warning-title"

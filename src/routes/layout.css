@@ -156,6 +156,14 @@ body {
 		0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
+/* Opaque backing for a .glass-panel that must not reveal whatever sits behind it (most dialogs
+   and cards) — combine as `class="glass-panel glass-panel-solid ..."`. Needs to win over
+   .glass-panel's own `background` shorthand above (which resets background-color to transparent
+   as part of its gradient), so this has to stay declared after it here. */
+.glass-panel-solid {
+	background-color: var(--color-bc-navy);
+}
+
 /* Flat, fully opaque — used for flyout/dropdown menus, where see-through content underneath
    would hurt legibility of the menu items sitting on top. */
 .solid-panel {
