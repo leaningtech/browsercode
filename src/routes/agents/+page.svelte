@@ -63,12 +63,12 @@
 							disabled={item.disabled}
 							class="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-left transition
 						{item.disabled
-								? 'cursor-not-allowed border-[rgb(var(--bc-tint)/5%)] bg-[rgb(var(--bc-tint)/2%)]'
-								: 'glass-panel border-bc-border hover:border-[rgb(var(--bc-tint)/30%)]'}"
+								? 'cursor-not-allowed border-bc-tint/5 bg-bc-tint/2'
+								: 'glass-panel border-bc-border hover:border-bc-tint/30'}"
 						>
 							<span
 								class="flex h-11 w-11 items-center justify-center rounded-lg {item.disabled
-									? 'bg-[rgb(var(--bc-tint)/5%)] text-bc-icon'
+									? 'bg-bc-tint/5 text-bc-icon'
 									: item.accentClass}"
 							>
 								{#if item.icon}
@@ -86,7 +86,7 @@
 									<span class={item.disabled ? 'text-bc-icon' : 'text-bc-text'}>{item.label}</span>
 									{#if item.disabled}
 										<span
-											class="rounded bg-[rgb(var(--bc-tint)/14%)] px-1.5 py-0.5 text-[10px] font-medium text-bc-mist"
+											class="rounded bg-bc-tint/14 px-1.5 py-0.5 text-[10px] font-medium text-bc-mist"
 										>
 											Soon
 										</span>

@@ -56,7 +56,7 @@
 			<div class="flex justify-center gap-2">
 				<button
 					onclick={cancel}
-					class="rounded-md bg-[rgb(var(--bc-tint)/5%)] px-4 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-[rgb(var(--bc-tint)/10%)]"
+					class="rounded-md bg-bc-tint/5 px-4 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
 				>
 					Cancel
 				</button>

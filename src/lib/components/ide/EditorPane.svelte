@@ -199,8 +199,7 @@
 				>
 					<!-- Dirty tabs show a dot where the close button sits; hover swaps it back. -->
 					{#if dirty}
-						<span class="h-1.5 w-1.5 rounded-full bg-[rgb(var(--bc-tint)/50%)] group-hover:hidden"
-						></span>
+						<span class="h-1.5 w-1.5 rounded-full bg-bc-tint/50 group-hover:hidden"></span>
 					{/if}
 					<Icon
 						icon="mingcute:close-line"

@@ -69,7 +69,7 @@
 		onclick={openRepo}
 		class="flex shrink-0 cursor-pointer items-center gap-1.5 self-center rounded-md px-3 py-1 text-[13px] leading-5 font-medium transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-bc-mist/60 focus-visible:outline-none {target
 			? 'bg-bc-azure text-bc-abyss hover:bg-bc-azure/85'
-			: 'bg-[rgb(var(--bc-tint)/10%)] text-bc-mist hover:bg-[rgb(var(--bc-tint)/16%)] hover:text-bc-text'}"
+			: 'bg-bc-tint/10 text-bc-mist hover:bg-bc-tint/16 hover:text-bc-text'}"
 	>
 		<Icon icon="simple-icons:github" width="14" height="14" />
 		Clone

@@ -136,11 +136,11 @@
 				<button
 					onclick={goIde}
 					style="background: rgb(var(--bc-tint) / 4%)"
-					class="glass-panel group flex flex-col gap-3 rounded-xl border border-[rgb(var(--bc-tint)/30%)] p-4 text-left transition hover:border-[rgb(var(--bc-tint)/45%)]"
+					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/30 p-4 text-left transition hover:border-bc-tint/45"
 				>
 					<div class="flex items-center justify-between">
 						<span
-							class="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgb(var(--bc-tint)/8%)] text-bc-text"
+							class="flex h-9 w-9 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
 						>
 							<Icon icon="mingcute:code-line" width="20" height="20" />
 						</span>
@@ -161,11 +161,11 @@
 				<button
 					onclick={goAgents}
 					style="background: rgb(var(--bc-tint) / 4%)"
-					class="glass-panel group flex flex-col gap-3 rounded-xl border border-[rgb(var(--bc-tint)/20%)] p-4 text-left transition hover:border-[rgb(var(--bc-tint)/35%)]"
+					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/20 p-4 text-left transition hover:border-bc-tint/35"
 				>
 					<div class="flex items-center justify-between">
 						<span
-							class="flex h-9 w-9 items-center justify-center rounded-lg bg-[rgb(var(--bc-tint)/8%)] text-bc-text"
+							class="flex h-9 w-9 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
 						>
 							<Icon icon="mingcute:robot-line" width="20" height="20" />
 						</span>
@@ -246,7 +246,7 @@
 						href="https://browserpod.io"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="font-medium text-bc-text underline decoration-[rgb(var(--bc-tint)/20%)] underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+						class="font-medium text-bc-text underline decoration-bc-tint/20 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 					>
 						BrowserPod
 					</a>, a sandboxed multi-language runtime compiled to WebAssembly with a persistent
@@ -262,7 +262,7 @@
 						href="https://github.com/leaningtech/browsercode"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-[rgb(var(--bc-tint)/24%)]"
+						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24"
 					>
 						<div class="flex items-center justify-between">
 							<Icon icon="simple-icons:github" width="20" height="20" class="text-bc-text" />
@@ -284,7 +284,7 @@
 						href="https://discord.leaningtech.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-[rgb(var(--bc-tint)/24%)]"
+						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24"
 					>
 						<div class="flex items-center justify-between">
 							<Icon icon="simple-icons:discord" width="20" height="20" class="text-bc-text" />
@@ -306,7 +306,7 @@
 						href="https://browserpod.io"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-[rgb(var(--bc-tint)/24%)]"
+						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24"
 					>
 						<div class="flex items-center justify-between">
 							<img src={browserpodLogo} alt="" class="bc-mono-icon h-5 w-5 opacity-70 grayscale" />

@@ -26,8 +26,7 @@
 	<span class="flex items-center gap-2 text-[11.5px]">
 		<img src={favicon} alt="BrowserCode logo" class="bc-logo-mark h-4 w-4" />
 		<span class="text-bc-text-muted">BrowserCode</span>
-		<span
-			class="rounded bg-[rgb(var(--bc-tint)/12%)] px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist"
+		<span class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist"
 			>v{appPkg.version}</span
 		>
 	</span>
@@ -45,7 +44,7 @@
 		/>
 		<span>Powered by BrowserPod</span>
 		<span
-			class="rounded bg-[rgb(var(--bc-tint)/12%)] px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist transition-colors duration-150 group-hover:text-bc-link-hover"
+			class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist transition-colors duration-150 group-hover:text-bc-link-hover"
 			>v{pkg.version}</span
 		>
 	</a>

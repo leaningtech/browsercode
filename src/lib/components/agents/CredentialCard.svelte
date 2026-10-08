@@ -50,9 +50,7 @@
 		</div>
 	</div>
 
-	<div
-		class="flex flex-col gap-3 rounded-[11px] border border-bc-border bg-[rgb(var(--bc-tint)/2%)] px-4 py-4"
-	>
+	<div class="flex flex-col gap-3 rounded-[11px] border border-bc-border bg-bc-tint/2 px-4 py-4">
 		<label for="agent-credential" class="text-[11px] tracking-widest text-bc-mist/55 uppercase">
 			{credential.label}
 		</label>
@@ -72,7 +70,7 @@
 				type="button"
 				onclick={() => (revealed = !revealed)}
 				aria-label={revealed ? 'Hide value' : 'Show value'}
-				class="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/8%)] hover:text-bc-mist"
+				class="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 text-bc-icon transition hover:bg-bc-tint/8 hover:text-bc-mist"
 			>
 				<Icon
 					icon={revealed ? 'mingcute:eye-close-line' : 'mingcute:eye-line'}
@@ -101,7 +99,7 @@
 			<button
 				type="button"
 				onclick={onCancel}
-				class="rounded-md bg-[rgb(var(--bc-tint)/5%)] px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-[rgb(var(--bc-tint)/10%)]"
+				class="rounded-md bg-bc-tint/5 px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
 			>
 				Cancel
 			</button>

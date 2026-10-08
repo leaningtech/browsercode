@@ -20,7 +20,7 @@
 		<button
 			onclick={onDismiss}
 			aria-label="Dismiss"
-			class="shrink-0 rounded-md p-1 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+			class="shrink-0 rounded-md p-1 text-bc-icon transition hover:bg-bc-tint/10 hover:text-bc-mist"
 		>
 			<Icon icon="mingcute:close-line" width="14" height="14" />
 		</button>

@@ -160,8 +160,8 @@
 		>
 			<div
 				class="absolute top-0 bottom-0 left-0.5 w-px rounded-full transition-[background] duration-150 {isDragging
-					? 'bg-[rgb(var(--bc-tint)/25%)]'
-					: 'bg-[rgb(var(--bc-tint)/7%)] group-hover:bg-[rgb(var(--bc-tint)/25%)]'}"
+					? 'bg-bc-tint/25'
+					: 'bg-bc-tint/7 group-hover:bg-bc-tint/25'}"
 			></div>
 		</button>
 

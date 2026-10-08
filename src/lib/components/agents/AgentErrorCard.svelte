@@ -48,7 +48,7 @@
 		{#if onCancel}
 			<button
 				onclick={onCancel}
-				class="rounded-md bg-[rgb(var(--bc-tint)/5%)] px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-[rgb(var(--bc-tint)/10%)]"
+				class="rounded-md bg-bc-tint/5 px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
 			>
 				Back to agents
 			</button>

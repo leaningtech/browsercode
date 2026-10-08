@@ -68,19 +68,30 @@
 	/* "Star on GitHub" pill hover: a softer brightening than --color-bc-text, so the border/text
 	   don't jump all the way to near-white on dark. */
 	--color-bc-ribbon-hover: #d4d9e0;
+
+	/* Tailwind-facing counterpart to --bc-tint below: same value, registered as a normal theme
+	   color so Tailwind's own color-mix()-based opacity support kicks in — `bg-bc-tint/8`,
+	   `border-bc-tint/30` etc. work instead of writing out `bg-[rgb(var(--bc-tint)/8%)]` every
+	   time (no <alpha-value> placeholder needed; that's a v3 theme.js idiom, not a v4 @theme
+	   one). --bc-tint itself stays a bare triplet — plain CSS (Portal.svelte, TerminalTabs.svelte,
+	   ImageViewer.svelte's <style> blocks, and a few spots right in this file) interpolates it
+	   directly inside its own rgb(...), which only works with the bare triplet form. */
+	--color-bc-tint: rgb(255 255 255);
 }
 
 /* Light theme — same token names, re-themed with the cyan/lilac/green accent family on a light
    neutral ground. Toggled by Sidebar.svelte's theme switch (src/lib/stores/theme.svelte.ts),
-   which sets `data-theme` on <html>. `--bc-tint` is the RGB triplet behind every translucent
-   "glass" surface and literal white/X utility below (rgb(var(--bc-tint) / X%)) — white highlights
-   on dark in dark mode, soft near-black shading on light in light mode — so those surfaces flip
-   with the rest of the palette instead of staying stuck at a fixed white opacity. */
+   which sets `data-theme` on <html>. `--bc-tint` (and its Tailwind-facing twin --color-bc-tint
+   above) is behind every translucent "glass" surface, hover tint and hairline border in the
+   app — white highlights on dark in dark mode, soft near-black shading on light in light mode —
+   so those surfaces flip with the rest of the palette instead of staying stuck at a fixed white
+   opacity. */
 :root {
 	--bc-tint: 255 255 255;
 }
 :root[data-theme='light'] {
 	--bc-tint: 15 23 42;
+	--color-bc-tint: rgb(15 23 42);
 
 	--color-bc-abyss: #f6f8fb;
 	--color-bc-navy: #ffffff;

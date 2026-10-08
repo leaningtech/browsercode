@@ -24,7 +24,7 @@
 >
 	<!-- Decorative: the sheet closes by its button or backdrop, there is no drag gesture. -->
 	<div class="flex justify-center pt-3 pb-1">
-		<div class="h-1 w-10 rounded-full bg-[rgb(var(--bc-tint)/15%)]"></div>
+		<div class="h-1 w-10 rounded-full bg-bc-tint/15"></div>
 	</div>
 	<div class="flex items-center justify-between px-4 py-2">
 		<span class="text-[12px] font-semibold tracking-wide text-bc-text-muted uppercase"
@@ -32,7 +32,7 @@
 		>
 		<button
 			onclick={onClose}
-			class="rounded-md p-1.5 text-bc-icon transition-colors hover:bg-[rgb(var(--bc-tint)/6%)] hover:text-bc-mist"
+			class="rounded-md p-1.5 text-bc-icon transition-colors hover:bg-bc-tint/6 hover:text-bc-mist"
 		>
 			<Icon icon="mingcute:close-line" width="15" height="15" />
 		</button>
@@ -44,15 +44,15 @@
 				disabled={item.disabled}
 				class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors
 				{activeId === item.id
-					? 'bg-[rgb(var(--bc-tint)/8%)] text-bc-text'
+					? 'bg-bc-tint/8 text-bc-text'
 					: item.disabled
 						? 'cursor-not-allowed text-bc-icon'
-						: 'text-bc-text-muted hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text'}"
+						: 'text-bc-text-muted hover:bg-bc-tint/5 hover:text-bc-text'}"
 			>
 				<div
 					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {activeId === item.id
-						? 'bg-[rgb(var(--bc-tint)/10%)]'
-						: 'bg-[rgb(var(--bc-tint)/5%)]'}"
+						? 'bg-bc-tint/10'
+						: 'bg-bc-tint/5'}"
 				>
 					{#if item.icon}
 						<Icon icon={item.icon} width="18" height="18" />
@@ -70,27 +70,22 @@
 				</div>
 				<span class="flex-1 text-[14px] font-medium">{item.label}</span>
 				{#if activeId === item.id}
-					<div
-						class="flex h-5 w-5 items-center justify-center rounded-full bg-[rgb(var(--bc-tint)/15%)]"
-					>
+					<div class="flex h-5 w-5 items-center justify-center rounded-full bg-bc-tint/15">
 						<Icon icon="mingcute:check-line" width="12" height="12" class="text-bc-text" />
 					</div>
 				{:else if item.disabled}
-					<span
-						class="rounded-md bg-[rgb(var(--bc-tint)/6%)] px-2 py-0.5 text-[10px] font-medium text-bc-icon"
+					<span class="rounded-md bg-bc-tint/6 px-2 py-0.5 text-[10px] font-medium text-bc-icon"
 						>Soon</span
 					>
 				{/if}
 			</button>
 		{/each}
-		<div class="my-2 h-px bg-[rgb(var(--bc-tint)/6%)]"></div>
+		<div class="my-2 h-px bg-bc-tint/6"></div>
 		<button
 			onclick={() => navigateWithLeaveGuard('/ide', true)}
-			class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-bc-text-muted transition-colors hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text"
+			class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-bc-text-muted transition-colors hover:bg-bc-tint/5 hover:text-bc-text"
 		>
-			<div
-				class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--bc-tint)/5%)]"
-			>
+			<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-bc-tint/5">
 				<Icon icon="mingcute:code-line" width="18" height="18" />
 			</div>
 			<span class="flex-1 text-[14px] font-medium">Open Playground IDE</span>

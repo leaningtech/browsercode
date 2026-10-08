@@ -234,7 +234,7 @@
 							>
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {item.disabled
-										? 'bg-[rgb(var(--bc-tint)/5%)] text-[rgb(var(--bc-tint)/20%)]'
+										? 'bg-bc-tint/5 text-bc-tint/20'
 										: item.accentClass}"
 								>
 									{#if item.icon}
@@ -326,7 +326,7 @@
 				<button
 					on:click={prevStep}
 					disabled={stepperState.step === 1}
-					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-bc-text-muted transition-colors hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-bc-text-muted transition-colors hover:bg-bc-tint/5 hover:text-bc-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 				>
 					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
 					Back
@@ -338,7 +338,7 @@
 							class="h-1.5 w-1.5 rounded-full transition-colors duration-300 {i + 1 ===
 							stepperState.step
 								? 'bg-bc-azure'
-								: 'bg-[rgb(var(--bc-tint)/15%)]'}"
+								: 'bg-bc-tint/15'}"
 						></span>
 					{/each}
 				</div>

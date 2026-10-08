@@ -82,7 +82,7 @@
 
 <aside
 	style="background-color: var(--color-bc-abyss)"
-	class="glass-panel relative z-30 my-2.5 ml-2.5 hidden h-[calc(100%-20px)] w-sidebar flex-col rounded-[18px] border border-[rgb(var(--bc-tint)/11%)] md:flex"
+	class="glass-panel relative z-30 my-2.5 ml-2.5 hidden h-[calc(100%-20px)] w-sidebar flex-col rounded-[18px] border border-bc-tint/11 md:flex"
 >
 	<!-- Home: not expandable, always takes you back to the landing page -->
 	<div class="group relative flex items-center justify-center py-3.5">
@@ -113,7 +113,7 @@
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isIdeSection
 					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/12%)] hover:text-bc-text'}"
+					: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
 			>
 				<Icon icon="mingcute:code-line" width="26" height="26" />
 			</button>
@@ -142,7 +142,7 @@
 								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
 							>
 								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[rgb(var(--bc-tint)/5%)]"
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
 								>
 									<Icon icon={fw.icon} width="14" height="14" />
 								</span>
@@ -192,7 +192,7 @@
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isAgentsSection
 					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/12%)] hover:text-bc-text'}"
+					: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
 			>
 				<Icon icon="mingcute:robot-line" width="26" height="26" />
 			</button>
@@ -229,7 +229,7 @@
 							>
 								<span
 									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md {item.disabled
-										? 'bg-[rgb(var(--bc-tint)/5%)] text-bc-icon'
+										? 'bg-bc-tint/5 text-bc-icon'
 										: item.accentClass}"
 								>
 									{#if item.icon}
@@ -275,7 +275,7 @@
 				type="button"
 				onclick={toggleTheme}
 				aria-label={themeState.current === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
 			>
 				<Icon
 					icon={themeState.current === 'dark' ? 'mingcute:sun-line' : 'mingcute:moon-line'}
@@ -291,7 +291,7 @@
 				target="_blank"
 				rel="noopener noreferrer"
 				data-tour-target="github"
-				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
 			>
 				<Icon icon="simple-icons:github" width="26" height="26" />
 			</a>
@@ -302,7 +302,7 @@
 				href="https://discord.leaningtech.com"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
 			>
 				<Icon icon="simple-icons:discord" width="26" height="26" />
 			</a>
@@ -319,7 +319,7 @@
 					openTour();
 					trackEvent('Clicked Help', { action: 'tour-direct' });
 				}}
-				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+				class="relative flex w-full cursor-pointer items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
 			>
 				<Icon icon="mingcute:question-line" width="26" height="26" />
 			</button>

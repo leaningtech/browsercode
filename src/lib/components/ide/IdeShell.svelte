@@ -250,7 +250,7 @@
 							class="flex items-center justify-center rounded p-1.5 transition {activePanel ===
 							'files'
 								? 'bg-bc-azure/15 text-bc-azure'
-								: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text'}"
+								: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text'}"
 							title="Files"
 						>
 							<Icon icon="mingcute:file-line" width="18" height="18" />
@@ -262,7 +262,7 @@
 							class="flex items-center justify-center rounded p-1.5 transition {activePanel ===
 							'search'
 								? 'bg-bc-azure/15 text-bc-azure'
-								: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text'}"
+								: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text'}"
 							title="Search"
 						>
 							<Icon icon="mingcute:search-line" width="18" height="18" />
@@ -274,7 +274,7 @@
 						<SettingsMenu
 							baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
 							activeClass="bg-bc-azure/15 text-bc-azure"
-							idleClass="text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text"
+							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
 						/>
 						<!-- The tracker is an external URL, so resolve() does not apply here. -->
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -293,7 +293,7 @@
 						<ZenToggle
 							baseClass="flex items-center justify-center rounded p-1.5 transition"
 							activeClass="bg-bc-azure/15 text-bc-azure"
-							idleClass="text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text"
+							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
 						/>
 					</div>
 				{/if}
@@ -327,7 +327,7 @@
 								title="New file"
 								disabled={!session.podReady}
 								onclick={() => fileTree?.startCreate('file')}
-								class="rounded p-1 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon icon="mingcute:file-new-line" width="13" height="13" />
 							</button>
@@ -336,7 +336,7 @@
 								title="New folder"
 								disabled={!session.podReady}
 								onclick={() => fileTree?.startCreate('folder')}
-								class="rounded p-1 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon icon="mingcute:new-folder-line" width="13" height="13" />
 							</button>
@@ -345,7 +345,7 @@
 								title={downloading ? 'Zipping project…' : 'Download this project as a zip'}
 								disabled={!session.podReady || downloading}
 								onclick={handleDownload}
-								class="rounded p-1 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon
 									icon={downloading ? 'mingcute:loading-line' : 'mingcute:download-line'}
@@ -464,7 +464,7 @@
 							onclick={togglePreview}
 							title="Show preview"
 							aria-label="Show preview"
-							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-navy py-1.5 text-bc-text-muted transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text"
+							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-navy py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
 						>
 							<Icon icon="mingcute:left-line" width="13" height="13" />
 							{#if portal.selectedPort !== null}

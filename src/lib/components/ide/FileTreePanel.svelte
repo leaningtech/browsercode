@@ -268,7 +268,7 @@
 		onclick={onSelect}
 		class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition {danger
 			? 'text-bc-coral/80 hover:bg-bc-coral/10 hover:text-bc-coral'
-			: 'text-bc-text-muted hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text'}"
+			: 'text-bc-text-muted hover:bg-bc-tint/5 hover:text-bc-text'}"
 	>
 		<Icon {icon} width="13" height="13" class="shrink-0" />
 		<span class="truncate">{label}</span>
@@ -291,7 +291,7 @@
 				<button
 					onclick={() => toggleFolder(node.path)}
 					oncontextmenu={(e) => openMenu(e, node.path, true)}
-					class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-mist"
+					class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-mist"
 					style="padding-left: {0.5 + depth * 0.75}rem"
 				>
 					<Icon
@@ -321,8 +321,8 @@
 				oncontextmenu={(e) => openMenu(e, node.path, false)}
 				class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] transition {session.selectedFile ===
 				node.path
-					? 'bg-[rgb(var(--bc-tint)/8%)] text-bc-text'
-					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-mist'}"
+					? 'bg-bc-tint/8 text-bc-text'
+					: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-mist'}"
 				style="padding-left: {0.75 + depth * 0.75}rem"
 			>
 				<Icon icon={fileIcon(node.name)} width="12" height="12" class="bc-file-icon shrink-0" />
@@ -358,7 +358,7 @@
 			{@render menuItem('mingcute:new-folder-line', 'New folder…', () =>
 				startCreate('folder', target.path)
 			)}
-			<div class="my-1 h-px bg-[rgb(var(--bc-tint)/6%)]"></div>
+			<div class="my-1 h-px bg-bc-tint/6"></div>
 		{/if}
 		{@render menuItem('mingcute:edit-2-line', 'Rename…', () =>
 			startRename(target.path, target.isDir)
@@ -402,7 +402,7 @@
 					type="button"
 					disabled={deleteBusy}
 					onclick={() => (confirmDelete = null)}
-					class="rounded-md px-3 py-1.5 text-[11.5px] text-bc-text-muted transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-text disabled:opacity-50"
+					class="rounded-md px-3 py-1.5 text-[11.5px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:opacity-50"
 				>
 					Cancel
 				</button>
