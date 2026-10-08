@@ -7,7 +7,9 @@ import type { ThemeRegistration } from 'shiki';
  * The periwinkle, light-blue and gold accents are pastel precisely so they pop on near-black —
  * on white they're close to unreadable, so those three are darkened/more saturated here to the
  * same hue family (richer blue, indigo, amber); magenta and coral already have enough contrast on
- * white and are untouched, same as every other non-color value.
+ * white and are untouched, same as every other non-color value. editorWidget.border is the one
+ * chrome exception: a solid --color-bc-border instead of a translucent black, matching
+ * browsercode-light.ts rather than the (barely visible here, but still stray) dark-theme pattern.
  */
 export const browserpodLight: ThemeRegistration = {
 	name: 'browserpod-light',
@@ -25,7 +27,7 @@ export const browserpodLight: ThemeRegistration = {
 		'editorIndentGuide.background1': '#0000000a',
 		'editorIndentGuide.activeBackground1': '#0000001f',
 		'editorWidget.background': '#ffffff',
-		'editorWidget.border': '#00000014',
+		'editorWidget.border': '#e2e8f0',
 		'scrollbarSlider.background': '#0000001f',
 		'scrollbarSlider.hoverBackground': '#00000038',
 		'scrollbarSlider.activeBackground': '#00000038',
