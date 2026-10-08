@@ -4,7 +4,11 @@ import type { ThemeRegistration } from 'shiki';
  * Light counterpart to browsercode-dark.ts — the same four roles (keyword/tag/heading blue,
  * constant/type/invalid violet, escape/function/attribute cyan, string green), each a darker,
  * more saturated shade than its dark-mode counterpart so it holds up on a white ground, plus
- * black in place of white for plain text.
+ * black in place of white for plain text. Cyan/violet/green reuse the exact values of
+ * --color-bc-azure/orchid/green's light-mode override in layout.css, so the same three hues read
+ * identically in the app's own UI accents and in code here — those were darkened off the source
+ * palette to clear WCAG AA as text on light (see the comment there); blue has no bc-* counterpart
+ * and already cleared AA at this shade, so it's unchanged.
  */
 export const browsercodeLight: ThemeRegistration = {
 	name: 'browsercode-light',
@@ -12,7 +16,7 @@ export const browsercodeLight: ThemeRegistration = {
 	colors: {
 		'editor.background': '#ffffff',
 		'editor.foreground': '#000000',
-		'editorCursor.foreground': '#2d8534',
+		'editorCursor.foreground': '#2c8132',
 		'editor.selectionBackground': '#2e69ff25',
 		'editor.inactiveSelectionBackground': '#2e69ff15',
 		'editor.lineHighlightBackground': '#00000006',
@@ -35,15 +39,15 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['string', 'string.quoted', 'string.template'],
-			settings: { foreground: '#2d8534' }
+			settings: { foreground: '#2c8132' }
 		},
 		{
 			scope: ['constant.character.escape', 'string.regexp'],
-			settings: { foreground: '#048095' }
+			settings: { foreground: '#047c90' }
 		},
 		{
 			scope: ['constant.numeric', 'constant.language', 'support.constant'],
-			settings: { foreground: '#7d54f8' }
+			settings: { foreground: '#7a4ff7' }
 		},
 		{
 			scope: ['keyword', 'keyword.control', 'storage', 'storage.type', 'storage.modifier'],
@@ -55,7 +59,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['entity.name.function', 'support.function', 'meta.function-call'],
-			settings: { foreground: '#048095' }
+			settings: { foreground: '#047c90' }
 		},
 		{
 			scope: [
@@ -65,7 +69,7 @@ export const browsercodeLight: ThemeRegistration = {
 				'support.type',
 				'support.class'
 			],
-			settings: { foreground: '#7d54f8' }
+			settings: { foreground: '#7a4ff7' }
 		},
 		{
 			scope: ['variable', 'variable.other', 'meta.definition.variable'],
@@ -81,7 +85,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['entity.other.attribute-name'],
-			settings: { foreground: '#048095' }
+			settings: { foreground: '#047c90' }
 		},
 		{
 			scope: ['markup.heading', 'markup.bold'],
@@ -89,7 +93,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['invalid', 'invalid.illegal'],
-			settings: { foreground: '#7d54f8' }
+			settings: { foreground: '#7a4ff7' }
 		}
 	]
 };

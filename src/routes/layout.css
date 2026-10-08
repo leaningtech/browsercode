@@ -30,7 +30,10 @@
 	   Cyan/lilac/green each have a "light pair" in the source palette — e.g. cyan #06b6d4
 	   with cyan-light #b8eef4. Per-theme, these tokens hold the *light pair* on dark (it
 	   pops against the near-black ground) and the *regular* accent on light (re-themed
-	   below) — not a custom contrast-adjusted shade of either. */
+	   below) — not a custom contrast-adjusted shade of either, with one exception: the
+	   literal "regular" cyan/lilac/green all fail WCAG AA (4.5:1) as text on the light
+	   background (2.3:1 / 2.6:1 / 1.6:1), so the light override below darkens each to the
+	   same hue at ~4.6:1 instead of using the source palette's value verbatim. */
 	--color-bc-abyss: #07090e;
 	/* Opaque chrome surface: tooltips, popups, flyout menus. */
 	--color-bc-navy: #090e1a;
@@ -81,22 +84,26 @@
 	--color-bc-surface: #ffffff;
 	--color-bc-terminal: #ffffff;
 	--color-bc-statusbar: #eef1f5;
-	/* Regular cyan — the light-theme half of the light-pair/regular split described above. */
-	--color-bc-azure: #06b6d4;
+	/* Regular cyan, darkened off the source palette's #06b6d4 to clear WCAG AA (4.5:1) as text on
+	   this background — see the note on the dark-mode block above. */
+	--color-bc-azure: #047c90;
 	--color-bc-mist: #475569;
-	/* Regular lilac. */
-	--color-bc-orchid: #a78bfa;
-	/* Regular green. */
-	--color-bc-green: #87d68d;
+	/* Regular lilac, darkened off #a78bfa for the same reason. */
+	--color-bc-orchid: #7a4ff7;
+	/* Regular green, darkened off #87d68d for the same reason. */
+	--color-bc-green: #2c8132;
 	--color-bc-gold: #b45309;
 	--color-bc-coral: #dc2626;
 
 	--color-bc-border: #e2e8f0;
-	--color-bc-icon: #64748b;
+	/* Darkened off #64748b (this pair's original light-mode value), which reads fine as an idle
+	   icon but fails WCAG AA for the actual body text it doubles as here (descriptions, footer
+	   links): 4.47:1 against this background, 4.2:1 against --color-bc-statusbar. */
+	--color-bc-icon: #5f6e83;
 	--color-bc-text: #0f172a;
-	--color-bc-text-muted: #64748b;
+	--color-bc-text-muted: #5f6e83;
 
-	--color-bc-link-hover: #a78bfa;
+	--color-bc-link-hover: #7a4ff7;
 	/* Not complained about on light — the ribbon hover stays as bright as --color-bc-text there. */
 	--color-bc-ribbon-hover: #0f172a;
 }
