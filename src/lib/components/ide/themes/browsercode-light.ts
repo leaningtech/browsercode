@@ -43,7 +43,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['constant.character.escape', 'string.regexp'],
-			settings: { foreground: '#047c90' }
+			settings: { foreground: '#036c7e' }
 		},
 		{
 			scope: ['constant.numeric', 'constant.language', 'support.constant'],
@@ -59,7 +59,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['entity.name.function', 'support.function', 'meta.function-call'],
-			settings: { foreground: '#047c90' }
+			settings: { foreground: '#036c7e' }
 		},
 		{
 			scope: [
@@ -85,7 +85,7 @@ export const browsercodeLight: ThemeRegistration = {
 		},
 		{
 			scope: ['entity.other.attribute-name'],
-			settings: { foreground: '#047c90' }
+			settings: { foreground: '#036c7e' }
 		},
 		{
 			scope: ['markup.heading', 'markup.bold'],

@@ -87,7 +87,12 @@
 						title={match.path}
 						class="flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-left text-[11px] text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-mist"
 					>
-						<Icon icon={fileIcon(match.path)} width="12" height="12" class="shrink-0" />
+						<Icon
+							icon={fileIcon(match.path)}
+							width="12"
+							height="12"
+							class="bc-file-icon shrink-0"
+						/>
 						<span class="truncate">{match.path}</span>
 					</button>
 				{/each}
@@ -105,7 +110,7 @@
 							class="flex items-center gap-1.5 px-1.5 py-0.5 text-[11px] text-bc-text-muted"
 							title={path}
 						>
-							<Icon icon={fileIcon(path)} width="12" height="12" class="shrink-0" />
+							<Icon icon={fileIcon(path)} width="12" height="12" class="bc-file-icon shrink-0" />
 							<span class="truncate">{path}</span>
 							<span class="ml-auto shrink-0 text-[10px] text-bc-icon">{matches.length}</span>
 						</div>

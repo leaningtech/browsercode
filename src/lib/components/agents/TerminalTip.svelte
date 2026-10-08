@@ -6,6 +6,7 @@
 
 <div class="pointer-events-none absolute inset-x-0 top-4 z-30 flex justify-center px-4">
 	<div
+		style="background-color: var(--color-bc-navy)"
 		class="glass-panel pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-bc-border px-4 py-3 shadow-2xl"
 	>
 		<span

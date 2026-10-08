@@ -237,7 +237,7 @@
 {#snippet nameInput(pad: number, icon: string, onCommit: () => void)}
 	<div class="flex flex-col gap-1 py-0.5 pr-2" style="padding-left: {pad}rem">
 		<div class="flex items-center gap-1">
-			<Icon {icon} width="12" height="12" class="shrink-0 text-bc-icon" />
+			<Icon {icon} width="12" height="12" class="bc-file-icon shrink-0 text-bc-icon" />
 			<input
 				use:focusInput
 				bind:value={actionName}
@@ -304,7 +304,7 @@
 						icon={folderIcon(node.name, expandedFolders.has(node.path))}
 						width="12"
 						height="12"
-						class="shrink-0"
+						class="bc-file-icon shrink-0"
 					/>
 					<span class="truncate">{node.name}</span>
 				</button>
@@ -325,7 +325,7 @@
 					: 'text-bc-icon hover:bg-[rgb(var(--bc-tint)/5%)] hover:text-bc-mist'}"
 				style="padding-left: {0.75 + depth * 0.75}rem"
 			>
-				<Icon icon={fileIcon(node.name)} width="12" height="12" class="shrink-0" />
+				<Icon icon={fileIcon(node.name)} width="12" height="12" class="bc-file-icon shrink-0" />
 				<span class="truncate">{node.name}</span>
 			</button>
 		{/if}

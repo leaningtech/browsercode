@@ -187,7 +187,7 @@
 					title={file.path}
 					class="inline-flex h-8 items-center gap-1.5 border-none bg-transparent pl-3 text-[11px] font-medium"
 				>
-					<Icon icon={fileIcon(file.path)} width="11" height="11" class="shrink-0" />
+					<Icon icon={fileIcon(file.path)} width="11" height="11" class="bc-file-icon shrink-0" />
 					<span class="max-w-40 truncate" class:italic={file.preview}>
 						{file.path.split('/').pop()}
 					</span>
