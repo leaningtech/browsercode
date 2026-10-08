@@ -68,11 +68,17 @@
 		measureTourTargets();
 
 		// The tour only auto-opens the first time someone lands on Home — deep-linking straight
-		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal.
-		const isFirstTime = !localStorage.getItem('hasVisited');
-		if (isFirstTime && $page.route.id === '/') {
-			openTour();
-			localStorage.setItem('hasVisited', 'true');
+		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal. Storage
+		// is best-effort: if it's blocked (privacy modes, sandboxed iframes), skip auto-opening
+		// rather than let the throw fail this component's mount.
+		try {
+			const isFirstTime = !localStorage.getItem('hasVisited');
+			if (isFirstTime && $page.route.id === '/') {
+				openTour();
+				localStorage.setItem('hasVisited', 'true');
+			}
+		} catch (error) {
+			console.warn('Could not read/persist the first-visit flag:', error);
 		}
 	});
 
