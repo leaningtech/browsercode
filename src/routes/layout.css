@@ -54,7 +54,10 @@
 	   hairline/border color, an idle-icon/disabled/placeholder gray, and the primary/muted text
 	   tiers — --color-bc-mist above serves as the secondary tier between them. */
 	--color-bc-border: #273249;
-	--color-bc-icon: #5c687a;
+	/* Lightened off #5c687a, which clears 3:1 (fine for bare icons) but not the 4.5:1 normal-text
+	   bar this doubles as text for in plenty of spots — Stepper's Skip button, "Learn more"/"No
+	   file open"/"Loading…" labels, search placeholder copy — where it only hit ~3.2-3.5:1. */
+	--color-bc-icon: #748196;
 	--color-bc-text: #f2f4f7;
 	--color-bc-text-muted: #848e9c;
 
