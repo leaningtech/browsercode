@@ -1,4 +1,4 @@
-import type { BrowserPod } from '@leaningtech/browserpod';
+import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import {
 	codexEnv,
 	getCodexApiKey,
@@ -6,19 +6,30 @@ import {
 	setCodexApiKey,
 	CODEX_BIN_PATH
 } from '$lib/agents/codex';
+import { openPiUrl, piEnv, preparePiPod, PI_CLI_PATH } from '$lib/agents/pi';
+import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
+import piLogoSrc from '$lib/assets/pi-logo.svg';
 
-export type ToolId = 'claude' | 'antigravity' | 'codex' | 'opencode';
+export type ToolId = 'claude' | 'antigravity' | 'codex' | 'pi' | 'opencode';
+
+/**
+ * Exactly one of the two, never both: `icon` is an Iconify name (tinted by `accentClass`);
+ * `logoSrc` is a fixed-color brand SVG for a mark Iconify doesn't have (ignores `accentClass`'s
+ * tint). The `?: never` on each branch's other field is what makes the union exclusive.
+ */
+type ToolIcon = { icon: string; logoSrc?: never } | { icon?: never; logoSrc: string };
 
 export type ToolItem = {
 	id: ToolId;
-	icon: string | null;
 	label: string;
 	disabled: boolean;
 	/** Tailwind classes for the icon badge when the tool is available (ignored while disabled). */
 	accentClass: string;
 	/** Solid Tailwind background class for the small "this one is running" status dot. */
 	dotClass: string;
-};
+	/** Short caveat shown under the label on the picker card, e.g. a sign-in limitation. */
+	note?: string;
+} & ToolIcon;
 
 export const toolItems: ToolItem[] = [
 	{
@@ -28,7 +39,8 @@ export const toolItems: ToolItem[] = [
 		disabled: false,
 		// Original brand colors, not the app's accent palette — kept recognizable at a glance.
 		accentClass: 'bg-orange-500/10 text-orange-400',
-		dotClass: 'bg-orange-400'
+		dotClass: 'bg-orange-400',
+		note: 'Account authentication or API key required'
 	},
 	{
 		id: 'codex',
@@ -37,6 +49,15 @@ export const toolItems: ToolItem[] = [
 		disabled: false,
 		accentClass: 'bg-bc-orchid/10 text-bc-orchid',
 		dotClass: 'bg-bc-orchid'
+	},
+	{
+		id: 'pi',
+		logoSrc: piLogoSrc,
+		label: 'Pi',
+		disabled: false,
+		accentClass: 'bg-bc-green/10 text-bc-green',
+		dotClass: 'bg-bc-green',
+		note: 'Anthropic, OpenAI, Gemini and OpenRouter supported today'
 	},
 	{
 		id: 'antigravity',
@@ -48,7 +69,7 @@ export const toolItems: ToolItem[] = [
 	},
 	{
 		id: 'opencode',
-		icon: null,
+		logoSrc: opencodeLogoSrc,
 		label: 'OpenCode',
 		disabled: true,
 		accentClass: 'bg-bc-coral/10 text-bc-coral',
@@ -97,8 +118,8 @@ export type CLIConfig = {
 	args: string[];
 	projectFile?: string;
 	openCallback?: (urlOrPath: string) => void;
-	/** Runs after the pod boots, before the CLI launches. */
-	prepare?: (pod: BrowserPod) => Promise<void>;
+	/** Runs after the pod boots, before the CLI launches; `terminal` is the one the CLI gets. */
+	prepare?: (pod: BrowserPod, terminal: Terminal) => Promise<void>;
 	/** Extra env for the CLI process, resolved at launch. */
 	env?: () => string[];
 	credential?: CredentialSpec;
@@ -145,5 +166,16 @@ export const cliConfigs: Record<string, CLIConfig> = {
 			get: getCodexApiKey,
 			set: setCodexApiKey
 		}
+	},
+	pi: {
+		// No disk image of its own: the package is installed into the default one's /home on first
+		// launch, which this key keeps, along with anything `/login` stores in ~/.pi.
+		storageKey: 'pi',
+		command: 'node',
+		args: [PI_CLI_PATH],
+		projectFile: '/project/pi/AGENTS.md',
+		openCallback: openPiUrl,
+		prepare: preparePiPod,
+		env: piEnv
 	}
 };

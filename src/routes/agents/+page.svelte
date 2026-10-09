@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
-	import { cliConfigs, toolItems } from '$lib/config/tools';
+	import ToolIcon from '$lib/components/ToolIcon.svelte';
+	import { cliConfigs, toolItems, type ToolItem } from '$lib/config/tools';
 
 	function openTool(id: string, disabled: boolean) {
 		if (disabled) return;
 		window.location.href = `/agents/${id}`;
 	}
+
+	// Split so available agents line up on their own row, separate from the "coming soon" ones.
+	const availableTools = toolItems.filter((item) => !item.disabled);
+	const soonTools = toolItems.filter((item) => item.disabled);
 
 	// Fades the glass panel in on arrival — full coverage from the start (not a sheet sliding
 	// partway up), so it starts invisible and crossfades to opaque.
@@ -55,49 +59,76 @@
 					</span>
 				</div>
 
-				<div class="grid grid-cols-2 gap-3">
-					{#each toolItems as item (item.id)}
-						{@const credential = cliConfigs[item.id]?.credential}
-						<button
-							onclick={() => openTool(item.id, item.disabled)}
-							disabled={item.disabled}
-							class="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-left transition
-						{item.disabled
-								? 'cursor-not-allowed border-bc-tint/5 bg-bc-tint/2'
-								: 'glass-panel border-bc-border hover:border-bc-tint/30'}"
+				{#snippet toolButton(item: ToolItem)}
+					{@const credential = cliConfigs[item.id]?.credential}
+					<button
+						onclick={() => openTool(item.id, item.disabled)}
+						disabled={item.disabled}
+						class="flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-left transition
+					{item.disabled
+							? 'cursor-not-allowed border-bc-tint/5 bg-bc-tint/2'
+							: 'glass-panel border-bc-border hover:border-bc-tint/30'}"
+					>
+						<span
+							class="flex h-11 w-11 items-center justify-center rounded-lg {item.disabled
+								? 'bg-bc-tint/5 text-bc-icon'
+								: item.accentClass}"
 						>
-							<span
-								class="flex h-11 w-11 items-center justify-center rounded-lg {item.disabled
-									? 'bg-bc-tint/5 text-bc-icon'
-									: item.accentClass}"
-							>
-								{#if item.icon}
-									<Icon icon={item.icon} width="22" height="22" />
-								{:else}
-									<img
-										src={opencodeLogoSrc}
-										alt=""
-										class="h-5 w-5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
-									/>
+							<ToolIcon
+								{item}
+								iconSize={22}
+								imgClass="h-5 w-5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
+							/>
+						</span>
+						<span class="flex flex-col items-center gap-1">
+							<span class="flex items-center gap-1.5 text-[13px] font-medium">
+								<span class={item.disabled ? 'text-bc-icon' : 'text-bc-text'}>{item.label}</span>
+								{#if item.disabled}
+									<span
+										class="rounded bg-bc-tint/14 px-1.5 py-0.5 text-[10px] font-medium text-bc-mist"
+									>
+										Soon
+									</span>
+								{:else if item.id === 'pi'}
+									<span
+										class="rounded bg-bc-green/15 px-1.5 py-0.5 text-[10px] font-medium text-bc-green"
+									>
+										New
+									</span>
 								{/if}
 							</span>
-							<span class="flex flex-col items-center gap-1">
-								<span class="flex items-center gap-1.5 text-[13px] font-medium">
-									<span class={item.disabled ? 'text-bc-icon' : 'text-bc-text'}>{item.label}</span>
-									{#if item.disabled}
-										<span
-											class="rounded bg-bc-tint/14 px-1.5 py-0.5 text-[10px] font-medium text-bc-mist"
-										>
-											Soon
-										</span>
-									{/if}
-								</span>
-								{#if credential && !item.disabled}
-									<span class="text-[10.5px] text-bc-icon">Needs an {credential.label}</span>
-								{/if}
-							</span>
-						</button>
-					{/each}
+							{#if item.note && !item.disabled}
+								<span class="text-center text-[10.5px] text-bc-icon">{item.note}</span>
+							{:else if credential && !item.disabled}
+								<span class="text-center text-[10.5px] text-bc-icon"
+									>Needs an {credential.label}</span
+								>
+							{/if}
+						</span>
+					</button>
+				{/snippet}
+
+				<div class="flex flex-col gap-3">
+					{#if availableTools.length > 0}
+						<div
+							class="grid gap-3"
+							style="grid-template-columns: repeat({availableTools.length}, minmax(0, 1fr))"
+						>
+							{#each availableTools as item (item.id)}
+								{@render toolButton(item)}
+							{/each}
+						</div>
+					{/if}
+					{#if soonTools.length > 0}
+						<div
+							class="grid gap-3"
+							style="grid-template-columns: repeat({soonTools.length}, minmax(0, 1fr))"
+						>
+							{#each soonTools as item (item.id)}
+								{@render toolButton(item)}
+							{/each}
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -12,7 +12,7 @@ export type CLIBootHooks = {
 
 /**
  * Boots an agent tool's disk image into a pod and runs its CLI against `terminalEl`.
- * Portal events (and Claude's OAuth open events) stream through the callbacks
+ * Portal events (and the CLIs' sign-in open events) stream through the callbacks
  * configured in `cliConfigs`.
  *
  * Rejects if any stage of the boot fails. Callers that cover the terminal with a loading
@@ -77,7 +77,7 @@ export async function bootCLI(
 			await copyStaticFile(pod, config.projectFile, `${homePath}/${filename}`);
 		}
 
-		await config.prepare?.(pod);
+		await config.prepare?.(pod, terminal);
 		await hooks?.beforeLaunch?.();
 
 		writeToTerminal(terminal, `Starting ${toolLabel}...\n`);
