@@ -7,12 +7,17 @@ import {
 	CODEX_BIN_PATH
 } from '$lib/agents/codex';
 import { openPiUrl, piEnv, preparePiPod, PI_CLI_PATH } from '$lib/agents/pi';
+import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
+import piLogoSrc from '$lib/assets/pi-logo.svg';
 
 export type ToolId = 'claude' | 'antigravity' | 'codex' | 'pi' | 'opencode';
 
 export type ToolItem = {
 	id: ToolId;
+	/** Iconify name. Leave null and set `logoSrc` for a brand mark Iconify doesn't have. */
 	icon: string | null;
+	/** Fixed-color brand SVG, used instead of `icon`; doesn't take the accentClass tint. */
+	logoSrc?: string;
 	label: string;
 	disabled: boolean;
 	/** Tailwind classes for the icon badge when the tool is available (ignored while disabled). */
@@ -44,7 +49,8 @@ export const toolItems: ToolItem[] = [
 	},
 	{
 		id: 'pi',
-		icon: 'tabler:math-pi',
+		icon: null,
+		logoSrc: piLogoSrc,
 		label: 'Pi',
 		disabled: false,
 		accentClass: 'bg-bc-green/10 text-bc-green',
@@ -62,6 +68,7 @@ export const toolItems: ToolItem[] = [
 	{
 		id: 'opencode',
 		icon: null,
+		logoSrc: opencodeLogoSrc,
 		label: 'OpenCode',
 		disabled: true,
 		accentClass: 'bg-bc-coral/10 text-bc-coral',

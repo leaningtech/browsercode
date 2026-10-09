@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import { cliConfigs, toolItems, type ToolItem } from '$lib/config/tools';
 
 	function openTool(id: string, disabled: boolean) {
@@ -76,9 +75,9 @@
 						>
 							{#if item.icon}
 								<Icon icon={item.icon} width="22" height="22" />
-							{:else}
+							{:else if item.logoSrc}
 								<img
-									src={opencodeLogoSrc}
+									src={item.logoSrc}
 									alt=""
 									class="h-5 w-5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
 								/>
