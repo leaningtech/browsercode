@@ -19,6 +19,8 @@ export type ToolItem = {
 	accentClass: string;
 	/** Solid Tailwind background class for the small "this one is running" status dot. */
 	dotClass: string;
+	/** Short caveat shown under the label on the picker card, e.g. a sign-in limitation. */
+	note?: string;
 };
 
 export const toolItems: ToolItem[] = [
@@ -29,7 +31,8 @@ export const toolItems: ToolItem[] = [
 		disabled: false,
 		// Original brand colors, not the app's accent palette — kept recognizable at a glance.
 		accentClass: 'bg-orange-500/10 text-orange-400',
-		dotClass: 'bg-orange-400'
+		dotClass: 'bg-orange-400',
+		note: 'Account authentication or API key required'
 	},
 	{
 		id: 'codex',
@@ -45,7 +48,8 @@ export const toolItems: ToolItem[] = [
 		label: 'Pi',
 		disabled: false,
 		accentClass: 'bg-bc-green/10 text-bc-green',
-		dotClass: 'bg-bc-green'
+		dotClass: 'bg-bc-green',
+		note: 'Anthropic, OpenAI, Gemini and OpenRouter supported today'
 	},
 	{
 		id: 'antigravity',

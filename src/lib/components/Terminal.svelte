@@ -3,6 +3,6 @@
 	let { consoleEl = $bindable(null) }: { consoleEl?: HTMLElement | null } = $props();
 </script>
 
-<div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-[#0d0d0e]">
-	<div bind:this={consoleEl} class="min-h-0 flex-1 bg-black p-4"></div>
+<div class="flex h-full min-h-0 w-full min-w-0 flex-col bg-bc-terminal">
+	<div bind:this={consoleEl} class="min-h-0 flex-1 bg-bc-terminal p-4"></div>
 </div>
