@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
+	import ToolIcon from '$lib/components/ToolIcon.svelte';
 	import { cliConfigs, toolItems, type ToolItem } from '$lib/config/tools';
 
 	function openTool(id: string, disabled: boolean) {
@@ -73,15 +74,11 @@
 								? 'bg-bc-tint/5 text-bc-icon'
 								: item.accentClass}"
 						>
-							{#if item.icon}
-								<Icon icon={item.icon} width="22" height="22" />
-							{:else if item.logoSrc}
-								<img
-									src={item.logoSrc}
-									alt=""
-									class="h-5 w-5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
-								/>
-							{/if}
+							<ToolIcon
+								{item}
+								iconSize={22}
+								imgClass="h-5 w-5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
+							/>
 						</span>
 						<span class="flex flex-col items-center gap-1">
 							<span class="flex items-center gap-1.5 text-[13px] font-medium">

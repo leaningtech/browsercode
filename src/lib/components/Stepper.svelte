@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import favicon from '$lib/assets/favicon.svg';
-	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
+	import ToolIcon from '$lib/components/ToolIcon.svelte';
 	import { page } from '$app/stores';
 	import { stepperState, openTour } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
@@ -237,15 +237,11 @@
 										? 'bg-bc-tint/5 text-bc-tint/20'
 										: item.accentClass}"
 								>
-									{#if item.icon}
-										<Icon icon={item.icon} width="16" height="16" />
-									{:else}
-										<img
-											src={opencodeLogoSrc}
-											alt=""
-											class="h-3.5 w-3.5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
-										/>
-									{/if}
+									<ToolIcon
+										{item}
+										iconSize={16}
+										imgClass="h-3.5 w-3.5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
+									/>
 								</span>
 								<span
 									class="flex-1 truncate text-xs {item.disabled ? 'text-bc-icon' : 'text-bc-mist'}"
