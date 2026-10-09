@@ -109,16 +109,26 @@
 				{/snippet}
 
 				<div class="flex flex-col gap-3">
-					<div class="grid grid-cols-3 gap-3">
-						{#each availableTools as item (item.id)}
-							{@render toolButton(item)}
-						{/each}
-					</div>
-					<div class="grid grid-cols-2 gap-3">
-						{#each soonTools as item (item.id)}
-							{@render toolButton(item)}
-						{/each}
-					</div>
+					{#if availableTools.length > 0}
+						<div
+							class="grid gap-3"
+							style="grid-template-columns: repeat({availableTools.length}, minmax(0, 1fr))"
+						>
+							{#each availableTools as item (item.id)}
+								{@render toolButton(item)}
+							{/each}
+						</div>
+					{/if}
+					{#if soonTools.length > 0}
+						<div
+							class="grid gap-3"
+							style="grid-template-columns: repeat({soonTools.length}, minmax(0, 1fr))"
+						>
+							{#each soonTools as item (item.id)}
+								{@render toolButton(item)}
+							{/each}
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>

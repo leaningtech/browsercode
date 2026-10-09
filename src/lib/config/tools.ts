@@ -12,12 +12,15 @@ import piLogoSrc from '$lib/assets/pi-logo.svg';
 
 export type ToolId = 'claude' | 'antigravity' | 'codex' | 'pi' | 'opencode';
 
+/**
+ * Exactly one of the two, never both: `icon` is an Iconify name (tinted by `accentClass`);
+ * `logoSrc` is a fixed-color brand SVG for a mark Iconify doesn't have (ignores `accentClass`'s
+ * tint). The `?: never` on each branch's other field is what makes the union exclusive.
+ */
+type ToolIcon = { icon: string; logoSrc?: never } | { icon?: never; logoSrc: string };
+
 export type ToolItem = {
 	id: ToolId;
-	/** Iconify name. Leave null and set `logoSrc` for a brand mark Iconify doesn't have. */
-	icon: string | null;
-	/** Fixed-color brand SVG, used instead of `icon`; doesn't take the accentClass tint. */
-	logoSrc?: string;
 	label: string;
 	disabled: boolean;
 	/** Tailwind classes for the icon badge when the tool is available (ignored while disabled). */
@@ -26,7 +29,7 @@ export type ToolItem = {
 	dotClass: string;
 	/** Short caveat shown under the label on the picker card, e.g. a sign-in limitation. */
 	note?: string;
-};
+} & ToolIcon;
 
 export const toolItems: ToolItem[] = [
 	{
@@ -49,7 +52,6 @@ export const toolItems: ToolItem[] = [
 	},
 	{
 		id: 'pi',
-		icon: null,
 		logoSrc: piLogoSrc,
 		label: 'Pi',
 		disabled: false,
@@ -67,7 +69,6 @@ export const toolItems: ToolItem[] = [
 	},
 	{
 		id: 'opencode',
-		icon: null,
 		logoSrc: opencodeLogoSrc,
 		label: 'OpenCode',
 		disabled: true,
