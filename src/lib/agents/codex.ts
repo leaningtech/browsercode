@@ -1,5 +1,5 @@
 import type { BrowserPod, TextFile } from '@leaningtech/browserpod';
-import { writePodFile } from '$lib/pod/fs';
+import { raceWithTimeout, writePodFile } from '$lib/pod/fs';
 
 /** The disk image mounts at /home, not /home/user. */
 export const CODEX_BIN_PATH = '/home/.bin/codex';
@@ -73,25 +73,12 @@ async function warmCodexBinary(pod: BrowserPod): Promise<void> {
 
 	await pod.run(CODEX_BIN_PATH, ['--version'], { terminal });
 
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const timedOut = new Promise<never>((_, reject) => {
-		timer = setTimeout(
-			() =>
-				reject(
-					new Error(
-						`Codex did not respond within ${WARMUP_TIMEOUT_MS / 1000}s. The disk image may still ` +
-							`be streaming on a slow connection, or ${CODEX_BIN_PATH} is missing from it.`
-					)
-				),
-			WARMUP_TIMEOUT_MS
+	await raceWithTimeout(ran, WARMUP_TIMEOUT_MS, () => {
+		throw new Error(
+			`Codex did not respond within ${WARMUP_TIMEOUT_MS / 1000}s. The disk image may still ` +
+				`be streaming on a slow connection, or ${CODEX_BIN_PATH} is missing from it.`
 		);
 	});
-
-	try {
-		await Promise.race([ran, timedOut]);
-	} finally {
-		clearTimeout(timer);
-	}
 }
 
 async function hasCodexConfig(pod: BrowserPod): Promise<boolean> {

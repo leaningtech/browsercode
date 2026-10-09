@@ -1,5 +1,5 @@
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
-import { POD_HOME, podFileSize, writeToTerminal } from '$lib/pod/fs';
+import { POD_HOME, podFileSize, raceWithTimeout, writeToTerminal } from '$lib/pod/fs';
 
 /**
  * Pinned, with npm's own integrity hash (its `dist.integrity`, as hex for `sha512sum`), since the
@@ -85,19 +85,9 @@ export async function preparePiPod(pod: BrowserPod, terminal: Terminal): Promise
 
 	await pod.run('bash', ['-c', INSTALL_SCRIPT], { terminal: installTerminal, echo: false });
 
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const timedOut = new Promise<boolean>((resolve) => {
-		timer = setTimeout(() => resolve(false), INSTALL_TIMEOUT_MS);
-	});
-
-	try {
-		if (!(await Promise.race([result, timedOut]))) {
-			throw new Error(
-				`Pi ${PI_VERSION} failed to install; the terminal shows the step that failed.`
-			);
-		}
-	} finally {
-		clearTimeout(timer);
+	const ok = await raceWithTimeout(result, INSTALL_TIMEOUT_MS, () => false);
+	if (!ok) {
+		throw new Error(`Pi ${PI_VERSION} failed to install; the terminal shows the step that failed.`);
 	}
 }
 
