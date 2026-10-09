@@ -208,7 +208,7 @@
 </script>
 
 <div
-	class="bc-page-bg relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-zinc-300"
+	class="bc-page-bg relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-bc-mist"
 >
 	<!-- Covers the shell, not the preview pane, which an embed may not render. -->
 	{#if blocker}
@@ -218,14 +218,14 @@
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 	{#if shell.header}
 		<header
-			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-mist/10 bg-bc-navy px-3"
+			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-navy px-3"
 		>
-			<div class="flex min-w-0 items-center gap-2 text-[11px] text-white/40">
+			<div class="flex min-w-0 items-center gap-2 text-[11px] text-bc-text-muted">
 				<!-- Switching projects happens by navigating away (sidebar Ide flyout or an /ide/github URL). -->
-				<span class="truncate text-white/60">{session.source.label}</span>
+				<span class="truncate text-bc-text">{session.source.label}</span>
 				{#if session.selectedFile}
-					<span class="text-white/20">/</span>
-					<span class="truncate text-white/60">{session.selectedFile}</span>
+					<span class="text-bc-icon">/</span>
+					<span class="truncate text-bc-text">{session.selectedFile}</span>
 				{/if}
 				{#if session.isSaving}
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
@@ -242,7 +242,7 @@
 	>
 		<!-- Icon rail: panel navigators anchor to the top, global view toggles to the bottom. -->
 		{#if hasRail}
-			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-mist/10 bg-bc-navy">
+			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-navy">
 				<div class="flex flex-col gap-0.5 p-1 pt-2">
 					{#if shell.fileTree}
 						<button
@@ -250,7 +250,7 @@
 							class="flex items-center justify-center rounded p-1.5 transition {activePanel ===
 							'files'
 								? 'bg-bc-azure/15 text-bc-azure'
-								: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
+								: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text'}"
 							title="Files"
 						>
 							<Icon icon="mingcute:file-line" width="18" height="18" />
@@ -262,7 +262,7 @@
 							class="flex items-center justify-center rounded p-1.5 transition {activePanel ===
 							'search'
 								? 'bg-bc-azure/15 text-bc-azure'
-								: 'text-zinc-600 hover:bg-white/5 hover:text-zinc-300'}"
+								: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text'}"
 							title="Search"
 						>
 							<Icon icon="mingcute:search-line" width="18" height="18" />
@@ -274,7 +274,7 @@
 						<SettingsMenu
 							baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
 							activeClass="bg-bc-azure/15 text-bc-azure"
-							idleClass="text-zinc-600 hover:bg-white/5 hover:text-zinc-300"
+							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
 						/>
 						<!-- The tracker is an external URL, so resolve() does not apply here. -->
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -285,7 +285,7 @@
 							title="Report a bug"
 							aria-label="Report a bug"
 							onclick={() => trackEvent('Clicked Report Bug', { mode: session.source.id })}
-							class="flex items-center justify-center rounded p-1.5 text-zinc-600 transition hover:bg-bc-coral/10 hover:text-bc-coral"
+							class="flex items-center justify-center rounded p-1.5 text-bc-icon transition hover:bg-bc-coral/10 hover:text-bc-coral"
 						>
 							<Icon icon="mingcute:bug-line" width="18" height="18" />
 						</a>
@@ -293,7 +293,7 @@
 						<ZenToggle
 							baseClass="flex items-center justify-center rounded p-1.5 transition"
 							activeClass="bg-bc-azure/15 text-bc-azure"
-							idleClass="text-zinc-600 hover:bg-white/5 hover:text-zinc-300"
+							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
 						/>
 					</div>
 				{/if}
@@ -317,8 +317,8 @@
 				style="width: {isMobile ? 240 : filePanelWidth}px;"
 			>
 				{#if activePanel === 'files'}
-					<div class="flex items-center justify-between border-b border-bc-mist/10 px-3 py-1.5">
-						<span class="text-[10px] font-medium tracking-widest text-zinc-600 uppercase">
+					<div class="flex items-center justify-between border-b border-bc-border px-3 py-1.5">
+						<span class="text-[10px] font-medium tracking-widest text-bc-icon uppercase">
 							Project files
 						</span>
 						<div class="flex items-center gap-0.5">
@@ -327,7 +327,7 @@
 								title="New file"
 								disabled={!session.podReady}
 								onclick={() => fileTree?.startCreate('file')}
-								class="rounded p-1 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300 disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon icon="mingcute:file-new-line" width="13" height="13" />
 							</button>
@@ -336,7 +336,7 @@
 								title="New folder"
 								disabled={!session.podReady}
 								onclick={() => fileTree?.startCreate('folder')}
-								class="rounded p-1 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300 disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon icon="mingcute:new-folder-line" width="13" height="13" />
 							</button>
@@ -345,7 +345,7 @@
 								title={downloading ? 'Zipping project…' : 'Download this project as a zip'}
 								disabled={!session.podReady || downloading}
 								onclick={handleDownload}
-								class="rounded p-1 text-zinc-600 transition hover:bg-white/5 hover:text-zinc-300 disabled:pointer-events-none disabled:opacity-40"
+								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
 								<Icon
 									icon={downloading ? 'mingcute:loading-line' : 'mingcute:download-line'}
@@ -364,8 +364,8 @@
 						/>
 					</div>
 				{:else if activePanel === 'search'}
-					<div class="flex items-center border-b border-bc-mist/10 px-3 py-1.5">
-						<span class="text-[10px] font-medium tracking-widest text-zinc-600 uppercase">
+					<div class="flex items-center border-b border-bc-border px-3 py-1.5">
+						<span class="text-[10px] font-medium tracking-widest text-bc-icon uppercase">
 							Search
 						</span>
 					</div>
@@ -464,7 +464,7 @@
 							onclick={togglePreview}
 							title="Show preview"
 							aria-label="Show preview"
-							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-mist/10 bg-bc-navy py-1.5 text-white/40 transition hover:bg-white/5 hover:text-white/80"
+							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-navy py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
 						>
 							<Icon icon="mingcute:left-line" width="13" height="13" />
 							{#if portal.selectedPort !== null}
@@ -505,7 +505,7 @@
 	<!-- ── Mobile tab bar ──────────────────────────────────────────────────── -->
 	{#if isMobile && mobileTabs.length > 1}
 		<nav
-			class="flex shrink-0 items-stretch border-t border-bc-mist/10 bg-bc-navy"
+			class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-navy"
 			style="height: calc(44px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			{#each mobileTabs as tab (tab.id)}
@@ -583,7 +583,7 @@
 		gap: 2px;
 		border: none;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.35);
+		color: var(--color-bc-icon);
 		font-size: 10px;
 		font-weight: 500;
 		cursor: pointer;
@@ -592,7 +592,7 @@
 			background 0.15s;
 	}
 	.mobile-tab-btn:hover {
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--color-bc-text);
 	}
 	.mobile-tab-btn.active {
 		color: var(--color-bc-mist);

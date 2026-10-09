@@ -11,13 +11,14 @@
 	import { isEnabledTool, toolItems } from '$lib/config/tools';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
+	import { aboutPanelState } from '$lib/stores/aboutPanel.svelte';
 
 	let { children } = $props();
 
-	// The tour's "star us" slide (step 6) points at this ribbon, so it needs to sit above the
+	// The tour's "star us" slide (step 5) points at this ribbon, so it needs to sit above the
 	// tour's backdrop for that one step only — back below it (its normal spot, under the sidebar
 	// flyouts) the rest of the time.
-	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 6);
+	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 5);
 
 	// Embeds render inside a host page, where none of the app chrome belongs.
 	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
@@ -86,7 +87,7 @@
 
 <IosUnsupportedModal />
 
-<div class="flex h-dvh w-screen overflow-hidden">
+<div class="flex h-dvh w-screen overflow-hidden bg-bc-abyss">
 	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but the sidebar's
 	     Help flyout and the Home page both need to trigger it from anywhere via stepperState. -->
 	{#if !isEmbed}
@@ -100,24 +101,19 @@
 	<!-- GitHub Ribbon — landing surfaces only (Home, /agents, bare /ide — see showRibbon above);
 	     the sidebar carries the GitHub link on the app surfaces. -->
 	{#if showRibbon}
-		<div
-			class="pointer-events-none fixed top-0 right-0 hidden overflow-hidden md:block {ribbonAboveTour
+		<a
+			href="https://github.com/leaningtech/browsercode"
+			target="_blank"
+			rel="noopener noreferrer"
+			aria-label="Star this project on GitHub"
+			data-tour-target="github-ribbon"
+			class="fixed top-4 right-5 hidden items-center gap-2 rounded-full border border-bc-border bg-bc-navy px-3.5 py-1.5 text-xs font-medium text-bc-mist no-underline shadow-lg shadow-black/20 transition-colors duration-150 hover:border-bc-ribbon-hover hover:text-bc-ribbon-hover md:flex {ribbonAboveTour
 				? 'z-[60]'
 				: 'z-40'}"
-			style="width: 150px; height: 175px;"
 		>
-			<a
-				href="https://github.com/leaningtech/browsercode"
-				target="_blank"
-				rel="noopener noreferrer"
-				aria-label="Star this project on GitHub"
-				class="pointer-events-auto absolute flex items-center justify-center gap-1.5 bg-bc-azure py-1.5 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(74,125,255,0.45)] transition-colors duration-150 hover:bg-bc-mist hover:text-bc-abyss"
-				style="top: 38px; right: -42px; width: 190px; transform: rotate(45deg);"
-			>
-				<Icon icon="simple-icons:github" width="13" height="13" />
-				Star us on GitHub
-			</a>
-		</div>
+			<Icon icon="simple-icons:github" width="14" height="14" />
+			Star on GitHub
+		</a>
 	{/if}
 
 	<div class="flex flex-1 flex-col overflow-hidden">
@@ -131,4 +127,19 @@
 			<UtilityBar />
 		{/if}
 	</div>
+
+	<!-- About panel scrim: one overlay for the whole viewport (not just the hero), so the dimmed
+	     tone behind the sidebar's margins and behind the panel are the exact same pixels, not two
+	     separately-computed colors that can drift apart. Low z-index (and no stacking context of
+	     its own) means the sidebar card (z-30), ribbon (z-40), footer (z-10) and the panel itself
+	     (z-20, inside <main>) all still render above it, undimmed — only the plain background
+	     between them shows the overlay. Clicking anywhere on it closes the panel. -->
+	<div
+		class="fixed inset-0 z-[5] transition-opacity duration-500 ease-out"
+		style="background: rgba(4,5,6,0.35); opacity: {aboutPanelState.open
+			? 1
+			: 0}; pointer-events: {aboutPanelState.open ? 'auto' : 'none'};"
+		onclick={() => (aboutPanelState.open = false)}
+		role="presentation"
+	></div>
 </div>

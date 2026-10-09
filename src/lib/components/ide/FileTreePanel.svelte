@@ -237,7 +237,7 @@
 {#snippet nameInput(pad: number, icon: string, onCommit: () => void)}
 	<div class="flex flex-col gap-1 py-0.5 pr-2" style="padding-left: {pad}rem">
 		<div class="flex items-center gap-1">
-			<Icon {icon} width="12" height="12" class="shrink-0 text-zinc-500" />
+			<Icon {icon} width="12" height="12" class="bc-file-icon shrink-0 text-bc-icon" />
 			<input
 				use:focusInput
 				bind:value={actionName}
@@ -250,13 +250,13 @@
 				}}
 				onblur={cancelAction}
 				oninput={() => (actionError = '')}
-				class="min-w-0 flex-1 rounded border bg-zinc-900 px-1 py-0.5 text-[11px] text-zinc-100 outline-none disabled:opacity-60 {actionError
-					? 'border-rose-500/60'
-					: 'border-emerald-500/50'}"
+				class="min-w-0 flex-1 rounded border bg-bc-surface px-1 py-0.5 text-[11px] text-bc-text outline-none disabled:opacity-60 {actionError
+					? 'border-bc-coral/60'
+					: 'border-bc-green/50'}"
 			/>
 		</div>
 		{#if actionError}
-			<p class="text-[10px] leading-tight text-rose-300/90">{actionError}</p>
+			<p class="text-[10px] leading-tight text-bc-coral">{actionError}</p>
 		{/if}
 	</div>
 {/snippet}
@@ -267,8 +267,8 @@
 		role="menuitem"
 		onclick={onSelect}
 		class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] transition {danger
-			? 'text-rose-300/80 hover:bg-rose-500/10 hover:text-rose-200'
-			: 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'}"
+			? 'text-bc-coral/80 hover:bg-bc-coral/10 hover:text-bc-coral'
+			: 'text-bc-text-muted hover:bg-bc-tint/5 hover:text-bc-text'}"
 	>
 		<Icon {icon} width="13" height="13" class="shrink-0" />
 		<span class="truncate">{label}</span>
@@ -291,20 +291,20 @@
 				<button
 					onclick={() => toggleFolder(node.path)}
 					oncontextmenu={(e) => openMenu(e, node.path, true)}
-					class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] text-zinc-500 transition hover:bg-white/5 hover:text-zinc-300"
+					class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-mist"
 					style="padding-left: {0.5 + depth * 0.75}rem"
 				>
 					<Icon
 						icon={expandedFolders.has(node.path) ? 'mingcute:down-fill' : 'mingcute:right-fill'}
 						width="10"
 						height="10"
-						class="shrink-0 text-zinc-600"
+						class="shrink-0 text-bc-icon"
 					/>
 					<Icon
 						icon={folderIcon(node.name, expandedFolders.has(node.path))}
 						width="12"
 						height="12"
-						class="shrink-0"
+						class="bc-file-icon shrink-0"
 					/>
 					<span class="truncate">{node.name}</span>
 				</button>
@@ -321,11 +321,11 @@
 				oncontextmenu={(e) => openMenu(e, node.path, false)}
 				class="flex w-full items-center gap-1 rounded px-2 py-0.5 text-left text-[11px] transition {session.selectedFile ===
 				node.path
-					? 'bg-white/8 text-zinc-100'
-					: 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}"
+					? 'bg-bc-tint/8 text-bc-text'
+					: 'text-bc-icon hover:bg-bc-tint/5 hover:text-bc-mist'}"
 				style="padding-left: {0.75 + depth * 0.75}rem"
 			>
-				<Icon icon={fileIcon(node.name)} width="12" height="12" class="shrink-0" />
+				<Icon icon={fileIcon(node.name)} width="12" height="12" class="bc-file-icon shrink-0" />
 				<span class="truncate">{node.name}</span>
 			</button>
 		{/if}
@@ -348,7 +348,7 @@
 	></button>
 	<div
 		role="menu"
-		class="fixed z-50 w-44 rounded-lg border border-white/8 bg-[#0e0e0e] p-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+		class="fixed z-50 w-44 rounded-lg border border-bc-border bg-bc-surface p-1 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
 		style="left: {target.x}px; top: {target.y}px;"
 	>
 		{#if target.isDir}
@@ -358,7 +358,7 @@
 			{@render menuItem('mingcute:new-folder-line', 'New folder…', () =>
 				startCreate('folder', target.path)
 			)}
-			<div class="my-1 h-px bg-white/[0.06]"></div>
+			<div class="my-1 h-px bg-bc-tint/6"></div>
 		{/if}
 		{@render menuItem('mingcute:edit-2-line', 'Rename…', () =>
 			startRename(target.path, target.isDir)
@@ -382,11 +382,11 @@
 {#if confirmDelete}
 	{@const entryName = confirmDelete.path.split('/').pop()}
 	<div class="fixed inset-0 z-70 flex items-center justify-center bg-black/60 p-4">
-		<div class="w-full max-w-xs rounded-xl border border-white/8 bg-[#111111] p-5">
-			<h3 class="mb-1.5 text-[13px] font-semibold text-zinc-100">
+		<div class="w-full max-w-xs rounded-xl border border-bc-border bg-bc-surface p-5">
+			<h3 class="mb-1.5 text-[13px] font-semibold text-bc-text">
 				Delete {confirmDelete.isDir ? 'folder' : 'file'} “{entryName}”?
 			</h3>
-			<p class="mb-4 text-[11.5px] leading-relaxed text-zinc-500">
+			<p class="mb-4 text-[11.5px] leading-relaxed text-bc-text-muted">
 				{#if deleteChildCount > 0}
 					It contains {deleteChildCount} file{deleteChildCount === 1 ? '' : 's'}. This cannot be
 					undone.
@@ -395,14 +395,14 @@
 				{/if}
 			</p>
 			{#if deleteError}
-				<p class="mb-3 text-[11px] text-rose-300/90">{deleteError}</p>
+				<p class="mb-3 text-[11px] text-bc-coral">{deleteError}</p>
 			{/if}
 			<div class="flex justify-end gap-2">
 				<button
 					type="button"
 					disabled={deleteBusy}
 					onclick={() => (confirmDelete = null)}
-					class="rounded-md px-3 py-1.5 text-[11.5px] text-zinc-400 transition hover:bg-white/5 hover:text-zinc-200 disabled:opacity-50"
+					class="rounded-md px-3 py-1.5 text-[11.5px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:opacity-50"
 				>
 					Cancel
 				</button>
@@ -410,7 +410,7 @@
 					type="button"
 					disabled={deleteBusy}
 					onclick={performDelete}
-					class="rounded-md bg-rose-600/90 px-3 py-1.5 text-[11.5px] font-medium text-white transition hover:bg-rose-500 disabled:opacity-60"
+					class="rounded-md bg-bc-coral/90 px-3 py-1.5 text-[11.5px] font-medium text-bc-abyss transition hover:bg-bc-coral disabled:opacity-60"
 				>
 					{deleteBusy ? 'Deleting…' : 'Delete'}
 				</button>

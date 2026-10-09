@@ -2,7 +2,8 @@ import type { ThemeRegistration } from 'shiki';
 
 /**
  * Built on the Okabe–Ito palette, which stays separable under protanopia, deuteranopia and
- * tritanopia. Every color clears WCAG AA (4.5:1) on this background.
+ * tritanopia. Every color clears WCAG AA (4.5:1) on this background. See
+ * colorblind-safe-light.ts for the light counterpart.
  */
 export const colorblindSafe: ThemeRegistration = {
 	name: 'colorblind-safe',

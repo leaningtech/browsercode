@@ -100,7 +100,7 @@
 		<!-- Controls stay left so the fixed promo ribbon keeps the corner. -->
 		<div
 			bind:this={toolbarEl}
-			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-mist/10 bg-bc-navy px-1"
+			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-border bg-bc-navy px-1"
 		>
 			{#if onCollapse}
 				<button
@@ -125,7 +125,7 @@
 						class="port-plate"
 					>
 						<span class="inline-flex items-baseline gap-1.5">
-							<span class="text-[10px] tracking-wide text-white/40">port</span>
+							<span class="text-[10px] tracking-wide text-bc-text-muted">port</span>
 							<span class="font-mono text-[11px] font-medium tracking-tight tabular-nums"
 								>{portal.selectedPort}</span
 							>
@@ -205,7 +205,7 @@
 				{#if portal.showInfo}
 					<div class="portal-menu qr-panel left-1">
 						<div class="qr-head">
-							<span class="qr-title text-[11px] text-white/55">Scan the QR code</span>
+							<span class="qr-title text-[11px] text-bc-text-muted">Scan the QR code</span>
 							<button
 								onclick={portal.closeOverlays}
 								class="tool-btn -mr-1.5"
@@ -282,15 +282,15 @@
 		border: none;
 		border-radius: 4px;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.38);
+		color: var(--color-bc-icon);
 		cursor: pointer;
 		transition:
 			color 0.14s ease,
 			background 0.14s ease;
 	}
 	.tool-btn:hover {
-		background: rgba(255, 255, 255, 0.06);
-		color: rgba(255, 255, 255, 0.78);
+		background: rgb(var(--bc-tint) / 6%);
+		color: var(--color-bc-text);
 	}
 
 	.tool-sep {
@@ -310,7 +310,7 @@
 		border: none;
 		border-radius: 4px;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.72);
+		color: var(--color-bc-mist);
 		font: inherit;
 		cursor: default;
 		transition:
@@ -321,8 +321,8 @@
 		cursor: pointer;
 	}
 	.port-plate:enabled:hover {
-		background: rgba(255, 255, 255, 0.06);
-		color: #fff;
+		background: rgb(var(--bc-tint) / 6%);
+		color: var(--color-bc-text);
 	}
 
 	.portal-menu {
@@ -331,9 +331,8 @@
 		z-index: 30;
 		padding: 4px;
 		border-radius: 8px;
-		border: 1px solid color-mix(in srgb, var(--color-bc-mist) 15%, transparent);
+		border: 1px solid var(--color-bc-border);
 		background-color: var(--color-bc-navy);
-		background-image: linear-gradient(155deg, rgba(74, 125, 255, 0.16), transparent 65%);
 		box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
 	}
 
@@ -374,8 +373,8 @@
 		display: block;
 		padding: 6px 8px;
 		border-radius: 6px;
-		background: rgba(2, 9, 20, 0.5);
-		color: rgba(255, 255, 255, 0.55);
+		background: rgb(var(--bc-tint) / 6%);
+		color: var(--color-bc-text-muted);
 		line-height: 1.5;
 		text-align: center;
 		transition:
@@ -383,7 +382,7 @@
 			background 0.14s ease;
 	}
 	.qr-link:hover {
-		background: rgba(2, 9, 20, 0.72);
+		background: rgb(var(--bc-tint) / 10%);
 		color: var(--color-bc-mist);
 	}
 	.qr-link:focus-visible {
@@ -400,7 +399,7 @@
 		border: none;
 		border-radius: 4px;
 		background: transparent;
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--color-bc-mist);
 		font: inherit;
 		font-size: 12px;
 		text-align: left;
@@ -409,7 +408,7 @@
 	}
 	.menu-row:hover {
 		background: color-mix(in srgb, var(--color-bc-azure) 10%, transparent);
-		color: #fff;
+		color: var(--color-bc-text);
 	}
 
 	.sweep {

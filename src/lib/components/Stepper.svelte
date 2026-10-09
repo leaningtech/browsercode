@@ -9,7 +9,7 @@
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
-	const totalSteps = 7;
+	const totalSteps = 6;
 
 	// Derived from the registry rather than spelled out, so shipping a CLI can't leave the tour
 	// still announcing it as "coming soon".
@@ -24,15 +24,19 @@
 	// stepperState.open here couldn't do that: legacy `$:` blocks in a non-runes component only
 	// re-run off their own component's `let` dependencies, not off external $state proxy reads.
 
-	// Measured from the real sidebar buttons (via data-tour-target) rather than hand-computed
-	// pixel math, so the pointers stay accurate if the sidebar's layout ever changes again.
-	// These are just sane fallbacks in case a target isn't found for some reason.
+	// Measured from the real sidebar/ribbon elements (via data-tour-target) rather than hand-
+	// computed pixel math, so the pointers stay accurate if the layout ever changes again. These
+	// are just sane fallbacks in case a target isn't found for some reason.
 	let ideTop = 113;
 	let agentsTop = 155;
-	let helpBottom = 28;
+	let githubTop = 31;
+	let githubRight = 160;
 
+	// `display: none` (the ribbon on mobile, via its `hidden md:flex`) still returns a rect, just
+	// an all-zero one — treat that the same as "not found" rather than snapping the tooltip there.
 	function centerOf(selector: string): DOMRect | null {
-		return document.querySelector(selector)?.getBoundingClientRect() ?? null;
+		const rect = document.querySelector(selector)?.getBoundingClientRect();
+		return rect && (rect.width || rect.height) ? rect : null;
 	}
 
 	function measureTourTargets() {
@@ -42,14 +46,19 @@
 		const ideRect = centerOf('[data-tour-target="ide"]');
 		if (ideRect) ideTop = ideRect.top + ideRect.height / 2;
 
-		const helpRect = centerOf('[data-tour-target="help"]');
-		if (helpRect) helpBottom = window.innerHeight - (helpRect.top + helpRect.height / 2);
+		const githubRect = centerOf('[data-tour-target="github-ribbon"]');
+		if (githubRect) {
+			githubTop = githubRect.top + githubRect.height / 2;
+			githubRight = window.innerWidth - githubRect.left;
+		}
 	}
 
-	// Re-measure every time the tour is actually opened — it can be triggered long after this
-	// component first mounted (from Help, or the Home page), by which point the initial-mount
-	// measurement may be stale if the viewport was resized in between. The backdrop below only
-	// exists while the modal is open, so this action re-fires on every fresh open.
+	// Re-measures whenever the element it's attached to mounts — used on the backdrop (which only
+	// exists while the modal is open, so this re-fires on every fresh open; the tour can be
+	// triggered long after this component first mounted, by which point the initial-mount
+	// measurement may be stale if the viewport was resized in between) and on the step 5 tooltip
+	// (whose target, the GitHub ribbon, only renders for that one step — see ribbonAboveTour in
+	// +layout.svelte).
 	function measureOnMount(node: HTMLElement) {
 		void node;
 		measureTourTargets();
@@ -59,11 +68,17 @@
 		measureTourTargets();
 
 		// The tour only auto-opens the first time someone lands on Home — deep-linking straight
-		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal.
-		const isFirstTime = !localStorage.getItem('hasVisited');
-		if (isFirstTime && $page.route.id === '/') {
-			openTour();
-			localStorage.setItem('hasVisited', 'true');
+		// into /ide or /agents/[tool] on a first visit shouldn't interrupt with the modal. Storage
+		// is best-effort: if it's blocked (privacy modes, sandboxed iframes), skip auto-opening
+		// rather than let the throw fail this component's mount.
+		try {
+			const isFirstTime = !localStorage.getItem('hasVisited');
+			if (isFirstTime && $page.route.id === '/') {
+				openTour();
+				localStorage.setItem('hasVisited', 'true');
+			}
+		} catch (error) {
+			console.warn('Could not read/persist the first-visit flag:', error);
 		}
 	});
 
@@ -109,59 +124,64 @@
 		navigateWithLeaveGuard('/ide', $page.route.id === '/agents/[tool]');
 	}
 
-	// Steps 3-5 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
-	const sidebarSteps = new Set([3, 4, 5]);
+	// Steps 3-4 point at sidebar buttons, so the backdrop leaves the sidebar uncovered for those.
+	const sidebarSteps = new Set([3, 4]);
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
 {#if stepperState.open}
 	<!-- Backdrop. Escape-to-close is handled by the window listener above. The GitHub ribbon
-	     (step 6) is raised above this via z-index in +layout.svelte, so it stays sharp there. -->
+	     (step 5) is raised above this via z-index in +layout.svelte, so it stays sharp there. The
+	     +0.625rem matches the sidebar's own `ml-2.5` left margin (Sidebar.svelte) — the floating
+	     card sits that far past --width-sidebar, so the backdrop needs the same offset or it dims
+	     a sliver of the card's right edge. -->
 	<div
 		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-[left] duration-500 ease-out"
-		style="left: {sidebarSteps.has(stepperState.step) ? 'var(--width-sidebar)' : '0'};"
+		style="left: {sidebarSteps.has(stepperState.step)
+			? 'calc(var(--width-sidebar) + 0.625rem)'
+			: '0'};"
 		role="presentation"
 		on:click={handleBackdropClick}
 		use:measureOnMount
 	>
 		<div
-			class="glass-panel relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
+			class="glass-panel glass-panel-solid relative w-full max-w-xl rounded-xl border border-bc-mist/15 shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="stepper-title"
 		>
 			<!-- Header strip, mirroring the IDE panel chrome -->
 			<div
-				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-zinc-500"
+				class="flex items-center justify-between border-b border-bc-mist/10 px-5 py-3 text-xs text-bc-icon"
 			>
-				<span class="font-medium tracking-wide text-zinc-400 uppercase">BrowserCode</span>
-				<span class="font-mono text-zinc-600">{stepperState.step} / {totalSteps}</span>
+				<span class="font-medium tracking-wide text-bc-text-muted uppercase">BrowserCode</span>
+				<span class="font-mono text-bc-icon">{stepperState.step} / {totalSteps}</span>
 			</div>
 
 			<div class="p-8">
 				{#if stepperState.step === 1}
 					<div class="mb-5 flex justify-center">
-						<img src={favicon} alt="BrowserCode" class="h-14 w-14" />
+						<img src={favicon} alt="BrowserCode" class="bc-logo-mark h-14 w-14" />
 					</div>
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Welcome to BrowserCode
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Run AI coding agents like Claude Code, or spin up a full IDE playground for popular
 						frameworks, with everything sandboxed right in this browser tab.
 					</p>
 				{:else if stepperState.step === 2}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Powered by BrowserPod
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is built on
 						<a
 							href="https://browserpod.io"
 							target="_blank"
 							rel="noopener noreferrer"
-							class="font-medium text-zinc-100 transition-colors duration-300 hover:text-white"
+							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 							>BrowserPod</a
 						>, a browser-based sandbox that runs AI agents, code and development tools in the
 						browser, without cloud compute.
@@ -174,22 +194,17 @@
 						class="glass-panel mt-6 flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
 					>
 						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-bc-mist" />
-						<div class="flex-1 text-sm text-zinc-300">
+						<div class="flex-1 text-sm text-bc-mist">
 							<span class="font-medium">BrowserPod</span>
-							<span class="ml-2 text-zinc-500">Learn more</span>
+							<span class="ml-2 text-bc-icon">Learn more</span>
 						</div>
-						<Icon
-							icon="mingcute:arrow-right-up-line"
-							width="16"
-							height="16"
-							class="text-zinc-500"
-						/>
+						<Icon icon="mingcute:arrow-right-up-line" width="16" height="16" class="text-bc-icon" />
 					</a>
 				{:else if stepperState.step === 3}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Build in the IDE playground
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Boot a curated framework template straight into a full editor with terminal and live
 						previews. You can find them in the sidebar.
 					</p>
@@ -197,7 +212,7 @@
 					<div class="mt-6 flex flex-wrap gap-2">
 						{#each frameworkRailItems as fw (fw.id)}
 							<span
-								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-zinc-400"
+								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-bc-text-muted"
 							>
 								<Icon icon={fw.icon} width="14" height="14" />
 								{fw.label}
@@ -205,10 +220,10 @@
 						{/each}
 					</div>
 				{:else if stepperState.step === 4}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Or run AI agents from the sidebar
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						{liveToolNames} are available now. {soonToolNames} are coming soon.
 					</p>
 
@@ -219,7 +234,7 @@
 							>
 								<span
 									class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {item.disabled
-										? 'bg-white/5 text-white/20'
+										? 'bg-bc-tint/5 text-bc-tint/20'
 										: item.accentClass}"
 								>
 									{#if item.icon}
@@ -233,9 +248,7 @@
 									{/if}
 								</span>
 								<span
-									class="flex-1 truncate text-xs {item.disabled
-										? 'text-zinc-500'
-										: 'text-zinc-300'}"
+									class="flex-1 truncate text-xs {item.disabled ? 'text-bc-icon' : 'text-bc-mist'}"
 								>
 									{item.label}
 								</span>
@@ -246,21 +259,13 @@
 						{/each}
 					</div>
 				{:else if stepperState.step === 5}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
-						This is our first beta
-					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
-						Please bend, stretch, and break it. If something's off, let us know from Help in the
-						sidebar, also where the getting-started basics and this tour live.
-					</p>
-				{:else if stepperState.step === 6}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Give us a star on GitHub
 					</h1>
-					<p class="text-sm leading-relaxed text-zinc-400">
+					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is free and open source software. Do anything you like with it:
 					</p>
-					<ul class="mb-5 flex flex-col gap-2 text-sm leading-relaxed text-zinc-400">
+					<ul class="mb-5 flex flex-col gap-2 text-sm leading-relaxed text-bc-text-muted">
 						<li class="flex items-start gap-2.5">
 							<Icon
 								icon="mingcute:check-circle-line"
@@ -284,28 +289,28 @@
 						href="https://github.com/leaningtech/browsercode"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="glass-panel inline-flex items-center gap-2 rounded-lg border border-bc-mist/10 px-4 py-2.5 text-sm font-medium text-zinc-100 transition-colors duration-150 hover:border-bc-mist/25 hover:text-white"
+						class="glass-panel inline-flex items-center gap-2 rounded-lg border border-bc-mist/10 px-4 py-2.5 text-sm font-medium text-bc-text transition-colors duration-150 hover:border-bc-mist/25"
 					>
 						<Icon icon="simple-icons:github" width="16" height="16" />
 						Star us on GitHub
 					</a>
-				{:else if stepperState.step === 7}
-					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-zinc-100">
+				{:else if stepperState.step === 6}
+					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Ready when you are
 					</h1>
-					<p class="mb-6 text-sm leading-relaxed text-zinc-400">Pick a path to get started.</p>
+					<p class="mb-6 text-sm leading-relaxed text-bc-text-muted">Pick a path to get started.</p>
 
 					<div class="flex flex-col gap-3 sm:flex-row">
 						<button
 							on:click={goIde}
-							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-white transition hover:bg-bc-azure"
+							class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-bc-azure/90 px-5 py-3 text-[14px] font-medium text-bc-abyss transition hover:bg-bc-azure"
 						>
 							<Icon icon="mingcute:code-line" width="18" height="18" />
 							Start with IDE
 						</button>
 						<button
 							on:click={goAgents}
-							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-zinc-200 transition hover:border-bc-mist/30"
+							class="glass-panel flex flex-1 items-center justify-center gap-2 rounded-lg border border-bc-mist/15 px-5 py-3 text-[14px] font-medium text-bc-text transition hover:border-bc-mist/30"
 						>
 							<Icon icon="mingcute:robot-line" width="18" height="18" />
 							Start with agents
@@ -316,12 +321,12 @@
 
 			<!-- Footer with nav + step pips -->
 			<div
-				class="flex items-center justify-between border-t border-bc-mist/10 bg-black/20 px-5 py-3"
+				class="flex items-center justify-between border-t border-bc-mist/10 bg-bc-statusbar px-5 py-3"
 			>
 				<button
 					on:click={prevStep}
 					disabled={stepperState.step === 1}
-					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+					class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-bc-text-muted transition-colors hover:bg-bc-tint/5 hover:text-bc-text disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 				>
 					<Icon icon="mingcute:arrow-left-line" width="14" height="14" />
 					Back
@@ -330,9 +335,10 @@
 				<div class="flex items-center gap-1.5">
 					{#each { length: totalSteps }, i (i)}
 						<span
-							class="h-1.5 w-1.5 rounded-full transition-colors duration-300"
-							class:bg-bc-azure={i + 1 === stepperState.step}
-							class:bg-zinc-700={i + 1 !== stepperState.step}
+							class="h-1.5 w-1.5 rounded-full transition-colors duration-300 {i + 1 ===
+							stepperState.step
+								? 'bg-bc-azure'
+								: 'bg-bc-tint/15'}"
 						></span>
 					{/each}
 				</div>
@@ -340,14 +346,14 @@
 				<div class="flex items-center gap-2">
 					<button
 						on:click={finish}
-						class="rounded-md px-3 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
+						class="rounded-md px-3 py-1.5 text-xs font-medium text-bc-icon transition-colors hover:text-bc-mist"
 					>
 						Skip
 					</button>
 					{#if stepperState.step < totalSteps}
 						<button
 							on:click={nextStep}
-							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-bc-azure/85"
+							class="inline-flex items-center gap-1.5 rounded-md bg-bc-azure px-3 py-1.5 text-xs font-medium text-bc-abyss transition-colors hover:bg-bc-azure/85"
 						>
 							Next
 							<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
@@ -388,26 +394,14 @@
 		</div>
 	{/if}
 
-	<!-- Step 5: helper tooltip pointing at the Help sidebar button. -->
+	<!-- Step 5: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. The
+	     ribbon itself only mounts for this step (see ribbonAboveTour in +layout.svelte), so
+	     `use:measureOnMount` re-measures it right as it appears, same as the backdrop does on open. -->
 	{#if stepperState.step === 5}
 		<div
-			class="pointer-events-none fixed z-[60] ml-3 flex items-center"
-			style="left: var(--width-sidebar); bottom: {helpBottom}px; transform: translateY(50%);"
-		>
-			<span class="h-2 w-2 rotate-45 bg-bc-mist"></span>
-			<span
-				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
-			>
-				Found a bug? Start here
-			</span>
-		</div>
-	{/if}
-
-	<!-- Step 6: helper tooltip pointing to the GitHub fork ribbon in the top-right corner. -->
-	{#if stepperState.step === 6}
-		<div
 			class="pointer-events-none fixed z-[60] flex items-center"
-			style="top: 24px; right: 160px; transform: translateY(-50%);"
+			style="top: {githubTop}px; right: {githubRight}px; transform: translateY(-50%);"
+			use:measureOnMount
 		>
 			<span
 				class="flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
