@@ -2,7 +2,7 @@
 
 <div align="center">
   <img
-    src="./static/readme/browsercode-white-transp.svg"
+    src="./static/readme/browsercode-wordmark.svg"
     alt="BrowserCode logo"
     width="400"
   />
