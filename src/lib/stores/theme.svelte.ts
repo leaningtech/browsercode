@@ -7,16 +7,28 @@ export type Theme = 'dark' | 'light';
 
 const STORAGE_KEY = 'bc-theme';
 
+/** Falls back to dark when storage is blocked (privacy modes, sandboxed /embed iframes) — this
+ *  runs at module-import time, so an uncaught throw here would take down every importer. */
 function readStored(): Theme {
-	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored === 'light' ? 'light' : 'dark';
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		return stored === 'light' ? 'light' : 'dark';
+	} catch (error) {
+		console.warn('Could not read the stored theme:', error);
+		return 'dark';
+	}
 }
 
 export const themeState = $state({ current: readStored() });
 
+/** Persisting is best-effort — same storage-blocked cases as readStored() above. */
 function apply(theme: Theme) {
 	document.documentElement.dataset.theme = theme;
-	localStorage.setItem(STORAGE_KEY, theme);
+	try {
+		localStorage.setItem(STORAGE_KEY, theme);
+	} catch (error) {
+		console.warn('Could not persist the theme:', error);
+	}
 }
 
 apply(themeState.current);

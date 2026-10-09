@@ -5,12 +5,18 @@ import type { ThemeRegistration } from 'shiki';
  * blue/periwinkle/magenta/gold/coral, offered as a distinct theme choice rather than folded into
  * the house browsercode-dark/-light pair. See browserpod-light.ts for the light counterpart: same
  * accents, with the plain-text/background polarity flipped for a white ground.
+ *
+ * The chrome colors below (background/gutter/widget) are the one exception: they're plain
+ * neutrals, not part of the brand palette, so they match browsercode-dark.ts's current
+ * --color-bc-terminal/-surface/-border rather than the pre-redesign shades this theme originally
+ * shipped with — otherwise the editor canvas reads as a visibly different near-black than the
+ * panels around it.
  */
 export const browserpodDark: ThemeRegistration = {
 	name: 'browserpod-dark',
 	type: 'dark',
 	colors: {
-		'editor.background': '#09090b',
+		'editor.background': '#0d0d0f',
 		'editor.foreground': '#d9d9d9',
 		'editorCursor.foreground': '#10b981',
 		'editor.selectionBackground': '#10b9812e',
@@ -18,11 +24,11 @@ export const browserpodDark: ThemeRegistration = {
 		'editor.lineHighlightBackground': '#ffffff05',
 		'editorLineNumber.foreground': '#ffffff40',
 		'editorLineNumber.activeForeground': '#ffffff8c',
-		'editorGutter.background': '#09090b',
+		'editorGutter.background': '#0d0d0f',
 		'editorIndentGuide.background1': '#ffffff0a',
 		'editorIndentGuide.activeBackground1': '#ffffff1f',
-		'editorWidget.background': '#111111',
-		'editorWidget.border': '#ffffff14',
+		'editorWidget.background': '#12161f',
+		'editorWidget.border': '#273249',
 		'scrollbarSlider.background': '#ffffff1f',
 		'scrollbarSlider.hoverBackground': '#ffffff38',
 		'scrollbarSlider.activeBackground': '#ffffff38',

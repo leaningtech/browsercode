@@ -2,7 +2,10 @@
 	import Icon from '@iconify/svelte';
 	import { parseGitHubUrl } from '$lib/github/parse';
 
-	let { autofocus = false }: { autofocus?: boolean } = $props();
+	let {
+		autofocus = false,
+		onNavigate
+	}: { autofocus?: boolean; onNavigate?: (path: string) => void } = $props();
 
 	let url = $state('');
 	let error = $state('');
@@ -23,8 +26,12 @@
 			return;
 		}
 		const { owner, repo, ref, dir } = target;
-		// Full reload so any prior pod is torn down cleanly.
-		window.location.href = `/ide/github/${owner}/${repo}/tree/${ref}${dir ? `/${dir}` : ''}`;
+		const path = `/ide/github/${owner}/${repo}/tree/${ref}${dir ? `/${dir}` : ''}`;
+		// Callers with a live session to protect (the Sidebar's dialog) pass their own
+		// navigateWithLeaveGuard-backed navigate; the plain /ide landing page has no session yet,
+		// so it's fine to fall back to a full reload here — still the pod-teardown mechanism.
+		if (onNavigate) onNavigate(path);
+		else window.location.href = path;
 	}
 
 	function focusInput(el: HTMLInputElement) {
@@ -62,7 +69,7 @@
 		onclick={openRepo}
 		class="flex shrink-0 cursor-pointer items-center gap-1.5 self-center rounded-md px-3 py-1 text-[13px] leading-5 font-medium transition-colors duration-200 focus-visible:ring-1 focus-visible:ring-bc-mist/60 focus-visible:outline-none {target
 			? 'bg-bc-azure text-bc-abyss hover:bg-bc-azure/85'
-			: 'bg-[rgb(var(--bc-tint)/10%)] text-bc-mist hover:bg-[rgb(var(--bc-tint)/16%)] hover:text-bc-text'}"
+			: 'bg-bc-tint/10 text-bc-mist hover:bg-bc-tint/16 hover:text-bc-text'}"
 	>
 		<Icon icon="simple-icons:github" width="14" height="14" />
 		Clone

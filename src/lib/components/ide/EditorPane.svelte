@@ -187,7 +187,7 @@
 					title={file.path}
 					class="inline-flex h-8 items-center gap-1.5 border-none bg-transparent pl-3 text-[11px] font-medium"
 				>
-					<Icon icon={fileIcon(file.path)} width="11" height="11" class="shrink-0" />
+					<Icon icon={fileIcon(file.path)} width="11" height="11" class="bc-file-icon shrink-0" />
 					<span class="max-w-40 truncate" class:italic={file.preview}>
 						{file.path.split('/').pop()}
 					</span>
@@ -199,8 +199,7 @@
 				>
 					<!-- Dirty tabs show a dot where the close button sits; hover swaps it back. -->
 					{#if dirty}
-						<span class="h-1.5 w-1.5 rounded-full bg-[rgb(var(--bc-tint)/50%)] group-hover:hidden"
-						></span>
+						<span class="h-1.5 w-1.5 rounded-full bg-bc-tint/50 group-hover:hidden"></span>
 					{/if}
 					<Icon
 						icon="mingcute:close-line"

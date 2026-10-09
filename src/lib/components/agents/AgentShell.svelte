@@ -115,7 +115,7 @@
 	     always-visible way in and out. Desktop only. -->
 	{#if !isMobile && shell.tools}
 		<ZenToggle
-			baseClass="absolute bottom-4 left-4 z-30 flex items-center justify-center rounded-lg border p-2 backdrop-blur-sm transition"
+			baseClass="absolute right-4 bottom-4 z-30 flex items-center justify-center rounded-lg border p-2 backdrop-blur-sm transition"
 			activeClass="border-bc-azure/40 bg-bc-azure/20 text-bc-azure"
 			idleClass="border-white/10 bg-black/40 text-white/40 hover:bg-black/60 hover:text-white/70"
 		/>
@@ -127,9 +127,7 @@
 			onclick={session.gate.openChange}
 			aria-label={session.credential.label}
 			title={session.credential.label}
-			class="absolute bottom-4 z-30 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 p-2 text-white/40 backdrop-blur-sm transition hover:bg-black/60 hover:text-white/70 {isMobile
-				? 'left-4'
-				: 'left-16'}"
+			class="absolute bottom-4 left-4 z-30 flex items-center justify-center rounded-lg border border-white/10 bg-black/40 p-2 text-white/40 backdrop-blur-sm transition hover:bg-black/60 hover:text-white/70"
 		>
 			<Icon icon="mingcute:key-2-line" width="18" height="18" />
 		</button>
@@ -160,8 +158,8 @@
 		>
 			<div
 				class="absolute top-0 bottom-0 left-0.5 w-px rounded-full transition-[background] duration-150 {isDragging
-					? 'bg-[rgb(var(--bc-tint)/25%)]'
-					: 'bg-[rgb(var(--bc-tint)/7%)] group-hover:bg-[rgb(var(--bc-tint)/25%)]'}"
+					? 'bg-bc-tint/25'
+					: 'bg-bc-tint/7 group-hover:bg-bc-tint/25'}"
 			></div>
 		</button>
 

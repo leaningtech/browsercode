@@ -2,7 +2,8 @@
 	import Icon from '@iconify/svelte';
 	import CloneRepoForm from './CloneRepoForm.svelte';
 
-	let { onClose }: { onClose: () => void } = $props();
+	let { onClose, onNavigate }: { onClose: () => void; onNavigate?: (path: string) => void } =
+		$props();
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') onClose();
@@ -17,8 +18,7 @@
 	onclick={(e) => e.target === e.currentTarget && onClose()}
 >
 	<div
-		style="background-color: var(--color-bc-navy)"
-		class="glass-panel w-full max-w-sm rounded-xl border border-bc-border p-6 shadow-2xl"
+		class="glass-panel glass-panel-solid w-full max-w-sm rounded-xl border border-bc-border p-6 shadow-2xl"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="clone-repo-title"
@@ -35,11 +35,11 @@
 			<button
 				onclick={onClose}
 				aria-label="Close"
-				class="shrink-0 rounded-md p-1 text-bc-icon transition hover:bg-[rgb(var(--bc-tint)/10%)] hover:text-bc-mist"
+				class="shrink-0 rounded-md p-1 text-bc-icon transition hover:bg-bc-tint/10 hover:text-bc-mist"
 			>
 				<Icon icon="mingcute:close-line" width="16" height="16" />
 			</button>
 		</div>
-		<CloneRepoForm autofocus />
+		<CloneRepoForm autofocus {onNavigate} />
 	</div>
 </div>

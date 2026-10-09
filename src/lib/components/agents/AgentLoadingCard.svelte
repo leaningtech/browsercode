@@ -28,8 +28,7 @@
 </script>
 
 <div
-	style="background-color: var(--color-bc-navy)"
-	class="glass-panel w-full max-w-[520px] overflow-hidden rounded-[14px] border border-bc-border px-8 pt-8 pb-7 shadow-2xl"
+	class="glass-panel glass-panel-solid w-full max-w-[520px] overflow-hidden rounded-[14px] border border-bc-border px-8 pt-8 pb-7 shadow-2xl"
 >
 	<div class="mb-6 flex items-center gap-3.5">
 		<span class="flex h-12 w-12 items-center justify-center rounded-xl {tool.accentClass}">
@@ -43,7 +42,7 @@
 		</div>
 	</div>
 
-	<div class="relative h-2 w-full overflow-hidden rounded-full bg-[rgb(var(--bc-tint)/7%)]">
+	<div class="relative h-2 w-full overflow-hidden rounded-full bg-bc-tint/7">
 		<div class="track absolute top-0 bottom-0 w-1/3 rounded-full"></div>
 	</div>
 
@@ -76,7 +75,7 @@
 		{#if onCancel}
 			<button
 				onclick={onCancel}
-				class="rounded-md bg-[rgb(var(--bc-tint)/5%)] px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-[rgb(var(--bc-tint)/10%)]"
+				class="rounded-md bg-bc-tint/5 px-4.5 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
 			>
 				Cancel
 			</button>

@@ -30,7 +30,10 @@
 	   Cyan/lilac/green each have a "light pair" in the source palette — e.g. cyan #06b6d4
 	   with cyan-light #b8eef4. Per-theme, these tokens hold the *light pair* on dark (it
 	   pops against the near-black ground) and the *regular* accent on light (re-themed
-	   below) — not a custom contrast-adjusted shade of either. */
+	   below) — not a custom contrast-adjusted shade of either, with one exception: the
+	   literal "regular" cyan/lilac/green all fail WCAG AA (4.5:1) as text on the light
+	   background (2.3:1 / 2.6:1 / 1.6:1), so the light override below darkens each to the
+	   same hue at ~4.6:1 instead of using the source palette's value verbatim. */
 	--color-bc-abyss: #07090e;
 	/* Opaque chrome surface: tooltips, popups, flyout menus. */
 	--color-bc-navy: #090e1a;
@@ -51,7 +54,10 @@
 	   hairline/border color, an idle-icon/disabled/placeholder gray, and the primary/muted text
 	   tiers — --color-bc-mist above serves as the secondary tier between them. */
 	--color-bc-border: #273249;
-	--color-bc-icon: #5c687a;
+	/* Lightened off #5c687a, which clears 3:1 (fine for bare icons) but not the 4.5:1 normal-text
+	   bar this doubles as text for in plenty of spots — Stepper's Skip button, "Learn more"/"No
+	   file open"/"Loading…" labels, search placeholder copy — where it only hit ~3.2-3.5:1. */
+	--color-bc-icon: #748196;
 	--color-bc-text: #f2f4f7;
 	--color-bc-text-muted: #848e9c;
 
@@ -62,41 +68,62 @@
 	/* "Star on GitHub" pill hover: a softer brightening than --color-bc-text, so the border/text
 	   don't jump all the way to near-white on dark. */
 	--color-bc-ribbon-hover: #d4d9e0;
+
+	/* Tailwind-facing counterpart to --bc-tint below: same value, registered as a normal theme
+	   color so Tailwind's own color-mix()-based opacity support kicks in — `bg-bc-tint/8`,
+	   `border-bc-tint/30` etc. work instead of writing out `bg-[rgb(var(--bc-tint)/8%)]` every
+	   time (no <alpha-value> placeholder needed; that's a v3 theme.js idiom, not a v4 @theme
+	   one). --bc-tint itself stays a bare triplet — plain CSS (Portal.svelte, TerminalTabs.svelte,
+	   ImageViewer.svelte's <style> blocks, and a few spots right in this file) interpolates it
+	   directly inside its own rgb(...), which only works with the bare triplet form. */
+	--color-bc-tint: rgb(255 255 255);
 }
 
 /* Light theme — same token names, re-themed with the cyan/lilac/green accent family on a light
    neutral ground. Toggled by Sidebar.svelte's theme switch (src/lib/stores/theme.svelte.ts),
-   which sets `data-theme` on <html>. `--bc-tint` is the RGB triplet behind every translucent
-   "glass" surface and literal white/X utility below (rgb(var(--bc-tint) / X%)) — white highlights
-   on dark in dark mode, soft near-black shading on light in light mode — so those surfaces flip
-   with the rest of the palette instead of staying stuck at a fixed white opacity. */
+   which sets `data-theme` on <html>. `--bc-tint` (and its Tailwind-facing twin --color-bc-tint
+   above) is behind every translucent "glass" surface, hover tint and hairline border in the
+   app — white highlights on dark in dark mode, soft near-black shading on light in light mode —
+   so those surfaces flip with the rest of the palette instead of staying stuck at a fixed white
+   opacity. */
 :root {
 	--bc-tint: 255 255 255;
 }
 :root[data-theme='light'] {
 	--bc-tint: 15 23 42;
+	--color-bc-tint: rgb(15 23 42);
 
 	--color-bc-abyss: #f6f8fb;
 	--color-bc-navy: #ffffff;
 	--color-bc-surface: #ffffff;
 	--color-bc-terminal: #ffffff;
 	--color-bc-statusbar: #eef1f5;
-	/* Regular cyan — the light-theme half of the light-pair/regular split described above. */
-	--color-bc-azure: #06b6d4;
+	/* Regular cyan, darkened off the source palette's #06b6d4 to clear WCAG AA (4.5:1) as text on
+	   this background — see the note on the dark-mode block above. Darkened one step further
+	   than that alone needs: primary buttons fill with this at 90% opacity
+	   (bg-bc-azure/90, text-bc-abyss) over a white card, and that blend alone was still only
+	   ~3.9:1 — #036c7e keeps the blended fill at ~4.6:1 too, not just the solid color. */
+	--color-bc-azure: #036c7e;
 	--color-bc-mist: #475569;
-	/* Regular lilac. */
-	--color-bc-orchid: #a78bfa;
-	/* Regular green. */
-	--color-bc-green: #87d68d;
+	/* Regular lilac, darkened off #a78bfa for the same reason. */
+	--color-bc-orchid: #7a4ff7;
+	/* Regular green, darkened off #87d68d for the same reason. */
+	--color-bc-green: #2c8132;
 	--color-bc-gold: #b45309;
-	--color-bc-coral: #dc2626;
+	/* Same /90-blend consideration as azure above: #dc2626 solid clears AA by a hair (4.54:1), but
+	   bg-bc-coral/90 (LeaveWarningModal, FileTreePanel's delete button) blends to ~4.0:1 against a
+	   white card. #cb2121 keeps that blended fill at ~4.6:1. */
+	--color-bc-coral: #cb2121;
 
 	--color-bc-border: #e2e8f0;
-	--color-bc-icon: #64748b;
+	/* Darkened off #64748b (this pair's original light-mode value), which reads fine as an idle
+	   icon but fails WCAG AA for the actual body text it doubles as here (descriptions, footer
+	   links): 4.47:1 against this background, 4.2:1 against --color-bc-statusbar. */
+	--color-bc-icon: #5f6e83;
 	--color-bc-text: #0f172a;
-	--color-bc-text-muted: #64748b;
+	--color-bc-text-muted: #5f6e83;
 
-	--color-bc-link-hover: #a78bfa;
+	--color-bc-link-hover: #7a4ff7;
 	/* Not complained about on light — the ribbon hover stays as bright as --color-bc-text there. */
 	--color-bc-ribbon-hover: #0f172a;
 }
@@ -138,6 +165,14 @@ body {
 		inset 0 -1px 0 rgb(var(--bc-tint) / 2%),
 		0 16px 44px rgba(15, 23, 42, 0.1),
 		0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* Opaque backing for a .glass-panel that must not reveal whatever sits behind it (most dialogs
+   and cards) — combine as `class="glass-panel glass-panel-solid ..."`. Needs to win over
+   .glass-panel's own `background` shorthand above (which resets background-color to transparent
+   as part of its gradient), so this has to stay declared after it here. */
+.glass-panel-solid {
+	background-color: var(--color-bc-navy);
 }
 
 /* Flat, fully opaque — used for flyout/dropdown menus, where see-through content underneath
@@ -316,6 +351,15 @@ body {
    reads as a washed-out light gray, so light mode also inverts it dark. */
 :root[data-theme='light'] .bc-mono-icon {
 	filter: grayscale(1) invert(1);
+}
+
+/* File-tree/editor-tab/search file-type icons (Catppuccin Mocha, via file-icons.ts) ship one
+   fixed palette per glyph — pastel tones meant to pop against a near-black ground — so they're
+   barely visible on light mode's white panels (down around 1.3-2.3:1 against white). Darkening
+   and re-saturating in place gets every sampled color to 4:1+ without hand-picking an override
+   for each of the ~50 file types the set covers. */
+:root[data-theme='light'] .bc-file-icon {
+	filter: brightness(0.55) saturate(1.3);
 }
 
 /* Set by utils/drag.ts. The iframe rule is the load-bearing half: a live preview would swallow

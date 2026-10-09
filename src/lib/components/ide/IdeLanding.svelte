@@ -46,7 +46,7 @@
 				{#each frameworkRailItems as fw (fw.id)}
 					<button
 						onclick={() => openFramework(fw.id)}
-						class="glass-panel flex items-center gap-2 rounded-lg border border-bc-border px-3 py-2 text-left text-[13px] text-bc-mist transition hover:border-[rgb(var(--bc-tint)/30%)]"
+						class="glass-panel flex items-center gap-2 rounded-lg border border-bc-border px-3 py-2 text-left text-[13px] text-bc-mist transition hover:border-bc-tint/30"
 					>
 						<Icon icon={fw.icon} width="16" height="16" class="shrink-0" />
 						<span class="truncate">{fw.label}</span>
