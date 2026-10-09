@@ -11,7 +11,7 @@
 
 [![Discord server](https://img.shields.io/discord/988743885121548329?color=%235865F2&logo=discord&logoColor=%23fff)](https://discord.gg/8ySMrQv6X)
 [![Issues](https://img.shields.io/github/issues/leaningtech/browsercode)](https://github.com/leaningtech/browsercode/issues)
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.3.0-blue)
 
   <h1>Run AI coding CLIs and frameworks in the browser</h1>
 
@@ -35,9 +35,9 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 
 - Node.js v22, Rust and Python (preview) running in the browser via WebAssembly (more runtimes coming)
 - A browser-contained, POSIX-like filesystem
-- Command line tools: bash, git, npm
+- Command line tools: bash, git, npm, pnpm, curl, ripgrep and fd
 - Browser sandbox isolation from the user's operating system
-- Restricted outbound networking: the npm and yarn registries, GitHub, and the major AI provider APIs are reachable by default
+- Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
 - Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
 
@@ -111,8 +111,8 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 
 - At launch, each agent is given an instructions file (`CLAUDE.md` for Claude Code, `AGENTS.md` for Codex CLI and Pi) so it understands it is running in a custom environment. However, it may first attempt its default behavior before referencing the file
 - Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
-- BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/native-binaries)
-- Networking over TCP isn't available
+- BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/working-around-native-npm-dependencies)
+- Outbound connections are HTTPS-only (port 443) and limited to the allowlist: plain HTTP, SSH (so `git@github.com` remotes) and other ports are refused, and so is `localhost` from inside a pod. Portals still expose servers you start in a pod
 - For maximum compatibility, please use a Chromium browser. Safari currently isn't supported
 
 <h2 id="roadmap">Roadmap</h2>
