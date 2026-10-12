@@ -37,13 +37,13 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 - A browser-contained, POSIX-like filesystem
 - Command line tools: bash, git, npm, pnpm, curl, ripgrep and fd
 - Browser sandbox isolation from the user's operating system
-- Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
+- Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
 - Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
 
 BrowserCode started out as a way to run AI coding CLIs entirely client-side. It's since grown into a full IDE: alongside the CLIs, it can boot and preview web frameworks directly in the browser, so you can prototype an agent's output without ever leaving the tab.
 
-BrowserCode 1.1.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code, Codex CLI and Pi, completely client-side.
+BrowserCode 1.3.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code, Codex CLI and Pi, completely client-side.
 
 <h2 id="quickstart">Quickstart</h2>
 
