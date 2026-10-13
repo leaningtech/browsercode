@@ -16,7 +16,7 @@ Practical implications you must internalize:
 - Concurrency is not metered — you can spawn additional processes freely, but you are still bound by the user's device resources.
 - You have `bash`, `git`, `node` (v22.15), `npm`, `pnpm`, `rg`, `fd`, `curl`, `wget`, `tar`, `unzip`, and standard coreutils. Use them.
 - `timeout` does not work here: it never runs its command, and kills it once the delay expires. Use a tool's own time limit instead (for example `curl --max-time`).
-- This environment is set up for Node.js — assume that unless the user explicitly asks for another runtime. `python3` (3.12) runs, but only with its standard library: there is no `pip`, and PyPI is unreachable. There is no Rust toolchain in the Pod; Rust programs must be cross-compiled outside it. Go and Ruby are on BrowserPod's roadmap.
+- This environment is set up for Node.js — assume that unless the user explicitly asks for another runtime. `python3` (3.12) runs, but only with its standard library: there is no `pip`, and PyPI is unreachable. Do not assume a Rust toolchain: check with `command -v cargo` first, since Rust programs are normally cross-compiled outside the Pod. Go and Ruby are on BrowserPod's roadmap.
 
 ---
 
