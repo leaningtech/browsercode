@@ -12,6 +12,39 @@ export function writeToTerminal(terminal: Terminal | null, data: string): void {
 	(terminal as (Terminal & { write?: (data: string) => void }) | null)?.write?.(data);
 }
 
+/**
+ * Races `signal` against a `ms` timeout. `pod.run` resolves on spawn, not exit, so a boot or
+ * install step that never produces its expected output would otherwise hang forever — callers
+ * watch a custom terminal for that output and resolve `signal` once they see it.
+ *
+ * `onTimeout` decides what the timeout means for that caller: throw to reject the whole race (a
+ * hard failure), or return a fallback value to resolve with instead (the caller then inspects it,
+ * e.g. to tell a timeout apart from an explicit failure signal). Either way, the timer is always
+ * cleared so it can't fire after the race has already settled.
+ */
+export async function raceWithTimeout<T>(
+	signal: Promise<T>,
+	ms: number,
+	onTimeout: () => T
+): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const timedOut = new Promise<T>((resolve, reject) => {
+		timer = setTimeout(() => {
+			try {
+				resolve(onTimeout());
+			} catch (error) {
+				reject(error);
+			}
+		}, ms);
+	});
+
+	try {
+		return await Promise.race([signal, timedOut]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
 export async function readPodFile(pod: BrowserPod, absPath: string): Promise<string> {
 	const file = (await pod.openFile(absPath, 'utf-8')) as TextFile;
 	const size = await file.getSize();

@@ -1,0 +1,28 @@
+<script lang="ts">
+	import Icon from '@iconify/svelte';
+
+	let { onDismiss }: { onDismiss: () => void } = $props();
+</script>
+
+<div
+	class="glass-panel glass-panel-solid pointer-events-auto flex max-w-md items-start gap-3 rounded-lg border border-bc-border px-4 py-3 shadow-2xl"
+>
+	<span
+		class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-bc-green/10 text-bc-green"
+	>
+		<Icon icon="mingcute:key-2-line" width="18" height="18" />
+	</span>
+	<div class="flex-1 text-[12.5px] leading-relaxed text-bc-mist">
+		<span class="font-medium text-bc-text">Account sign-in may not complete here.</span>
+		In <code class="text-bc-text">/login</code>, use
+		<span class="font-medium text-bc-text">Copy code login</span> or an API key instead of the browser
+		redirect.
+	</div>
+	<button
+		onclick={onDismiss}
+		aria-label="Dismiss"
+		class="shrink-0 rounded-md p-1 text-bc-icon transition hover:bg-bc-tint/10 hover:text-bc-mist"
+	>
+		<Icon icon="mingcute:close-line" width="14" height="14" />
+	</button>
+</div>

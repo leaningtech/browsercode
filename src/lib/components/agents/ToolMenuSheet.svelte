@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
+	import ToolIcon from '$lib/components/ToolIcon.svelte';
 	import { toolItems, type ToolId } from '$lib/config/tools';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
@@ -54,19 +54,16 @@
 						? 'bg-bc-tint/10'
 						: 'bg-bc-tint/5'}"
 				>
-					{#if item.icon}
-						<Icon icon={item.icon} width="18" height="18" />
-					{:else}
-						<img
-							src={opencodeLogoSrc}
-							alt={item.label}
-							class="h-4.5 w-4.5 {item.disabled
-								? 'opacity-20'
-								: activeId === item.id
-									? 'opacity-90'
-									: 'opacity-40'}"
-						/>
-					{/if}
+					<ToolIcon
+						{item}
+						iconSize={18}
+						alt={item.label}
+						imgClass="h-4.5 w-4.5 {item.disabled
+							? 'opacity-20'
+							: activeId === item.id
+								? 'opacity-90'
+								: 'opacity-40'}"
+					/>
 				</div>
 				<span class="flex-1 text-[14px] font-medium">{item.label}</span>
 				{#if activeId === item.id}

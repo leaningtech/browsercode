@@ -1,7 +1,7 @@
 <script lang="ts">
 	import favicon from '$lib/assets/favicon.svg';
-	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import Icon from '@iconify/svelte';
+	import ToolIcon from '$lib/components/ToolIcon.svelte';
 	import { page } from '$app/stores';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
@@ -232,15 +232,11 @@
 										? 'bg-bc-tint/5 text-bc-icon'
 										: item.accentClass}"
 								>
-									{#if item.icon}
-										<Icon icon={item.icon} width="14" height="14" />
-									{:else}
-										<img
-											src={opencodeLogoSrc}
-											alt=""
-											class="h-3.5 w-3.5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
-										/>
-									{/if}
+									<ToolIcon
+										{item}
+										iconSize={14}
+										imgClass="h-3.5 w-3.5 {item.disabled ? 'opacity-20' : 'opacity-90'}"
+									/>
 								</span>
 								<span class="flex-1 truncate">{item.label}</span>
 								{#if isRunning}

@@ -14,6 +14,7 @@
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import CredentialGateOverlay from './CredentialGateOverlay.svelte';
+	import PiLoginTip from './PiLoginTip.svelte';
 	import TerminalTip from './TerminalTip.svelte';
 	import ToolMenuSheet from './ToolMenuSheet.svelte';
 
@@ -47,8 +48,11 @@
 
 	let showToolMenu = $state(false);
 	let tipDismissed = $state(false);
+	let piTipDismissed = $state(false);
 	// Shown on every boot, not just the first ever visit, but not in a tab that booted nothing.
 	let showTerminalTip = $derived(session.lock === 'held' && !tipDismissed);
+	// Pi's account sign-in has a sandbox-specific gotcha (see PiLoginTip) worth surfacing up front.
+	let showPiLoginTip = $derived(session.id === 'pi' && session.lock === 'held' && !piTipDismissed);
 
 	function startPortalDrag(event: MouseEvent): void {
 		isDragging = true;
@@ -66,7 +70,8 @@
 	}
 
 	// Any keypress means they've already found the terminal. Guarded, so one that lands while the
-	// tab lock is still pending does not dismiss a tip that has yet to appear.
+	// tab lock is still pending does not dismiss a tip that has yet to appear. The Pi login tip
+	// isn't about the terminal itself, so it stays up until its own close button is clicked.
 	function dismissTerminalTip(): void {
 		if (showTerminalTip) tipDismissed = true;
 	}
@@ -143,9 +148,18 @@
 		{/if}
 	{/if}
 
-	<!-- Non-blocking tip -->
-	{#if showTerminalTip && !(isMobile && activeMobileView !== 'terminal')}
-		<TerminalTip onDismiss={dismissTerminalTip} />
+	<!-- Non-blocking tips, stacked so either can be dismissed on its own without leaving a gap -->
+	{#if (showTerminalTip || showPiLoginTip) && !(isMobile && activeMobileView !== 'terminal')}
+		<div
+			class="pointer-events-none absolute inset-x-0 top-4 z-30 flex flex-col items-center gap-3 px-4"
+		>
+			{#if showTerminalTip}
+				<TerminalTip onDismiss={() => (tipDismissed = true)} />
+			{/if}
+			{#if showPiLoginTip}
+				<PiLoginTip onDismiss={() => (piTipDismissed = true)} />
+			{/if}
+		</div>
 	{/if}
 
 	{#if !isMobile && shell.preview && portal.portals.length > 0 && isPortalVisible}
