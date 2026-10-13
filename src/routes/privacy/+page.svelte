@@ -22,12 +22,8 @@
 			>, including its agents, its playground IDE and its embeddable view (together, "BrowserCode").
 		</p>
 		<p>
-			BrowserCode runs on BrowserPod, our WebAssembly runtime. How we handle information for
-			BrowserPod customers and their own websites is described in the <a
-				href="https://browserpod.io/browserpod-privacy"
-				target="_blank"
-				rel="noopener noreferrer">BrowserPod Privacy Policy</a
-			>.
+			BrowserCode runs on BrowserPod, our browser-native code sandbox, which runs Node.js, Rust,
+			Python and other full-stack runtimes directly in your browser.
 		</p>
 		<h2>1. Who We Are</h2>
 		<p>
@@ -241,10 +237,7 @@
 				Logging Information. Logging Information is stored in data centres in the European Union.
 			</li>
 		</ul>
-		<p>
-			Plausible Analytics runs on our own infrastructure, and is the same instance we use for
-			BrowserPod.
-		</p>
+		<p>Plausible Analytics runs on our own infrastructure, hosted in the European Union.</p>
 		<p>
 			Cloudflare may process personal data outside the United Kingdom. Where personal data is
 			transferred internationally, we rely on appropriate safeguards, such as the UK International
@@ -288,19 +281,12 @@
 			>. If you are not satisfied with our response, you may complain to the UK Information
 			Commissioner's Office.
 		</p>
-		<h2>15. Security</h2>
-		<p>
-			We use commercially reasonable physical, technical and organisational safeguards to protect
-			personal information. Pods run inside your browser's sandbox, isolated from your operating
-			system. No method of transmission over the internet or of electronic storage is completely
-			secure, so we cannot guarantee absolute security.
-		</p>
-		<h2>16. Changes to This Policy</h2>
+		<h2>15. Changes to This Policy</h2>
 		<p>
 			We may update this Privacy Policy from time to time. When we do, we will update the "Last
 			updated" date at the top of this page.
 		</p>
-		<h2>17. Contact Us</h2>
+		<h2>16. Contact Us</h2>
 		<p>
 			If you have questions about this Privacy Policy or about how we handle your personal data,
 			please contact us at <a href="mailto:privacy@browserpod.io">privacy@browserpod.io</a>.
