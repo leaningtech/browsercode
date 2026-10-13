@@ -3,6 +3,7 @@
 	import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems } from '$lib/config/frameworks';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -367,6 +368,18 @@
 						<span class="flex-1 truncate">Report a bug</span>
 					</a>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					<a
+						href={resolve('/privacy')}
+						onclick={() => trackEvent('Clicked Help', { action: 'privacy' })}
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+					>
+						<span
+							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/10 text-bc-mist"
+						>
+							<Icon icon="mingcute:shield-line" width="14" height="14" />
+						</span>
+						<span class="flex-1 truncate">Privacy Policy</span>
+					</a>
 				</div>
 			</div>
 		</div>

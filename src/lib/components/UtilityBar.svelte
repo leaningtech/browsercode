@@ -33,7 +33,7 @@
 		<a
 			href={resolve('/privacy')}
 			class="ml-1 text-bc-text-muted no-underline transition-colors duration-150 hover:text-bc-link-hover"
-			>Privacy</a
+			>Privacy Policy</a
 		>
 	</span>
 
