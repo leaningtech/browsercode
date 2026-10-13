@@ -67,7 +67,7 @@
 			Your IP address is used only to derive your country and to count unique visits within a day,
 			and is not stored.
 		</p>
-		<h3>Logging Information</h3>
+		<h3>Logging information</h3>
 		<p>
 			BrowserCode starts a BrowserPod environment (a "Pod") in your browser, using BrowserCode's own
 			BrowserPod API key. BrowserPod keeps records of Pod network activity so that abuse reports and
@@ -88,8 +88,8 @@
 			uses our API key, they are not linked to you or to any account of yours.
 		</p>
 		<p>
-			When a Pod starts, BrowserPod counts it against BrowserCode's account. This records nothing
-			about you.
+			When a Pod starts, BrowserPod counts it against BrowserCode's account. This does not record
+			anything about you.
 		</p>
 		<h3>Cookies and third-party content</h3>
 		<p>
@@ -158,7 +158,7 @@
 		</p>
 		<h2>7. Bug Reports and Community</h2>
 		<p>
-			BrowserCode's <strong>Report a bug</strong> links open a new issue on our public GitHub repository,
+			BrowserCode's <strong>"Report a bug"</strong> links each open a new issue on our public GitHub repository,
 			pre-filled with the BrowserCode page you were on, the repository you had open, your preview URL,
 			the BrowserCode and BrowserPod versions, and your browser's user agent. Nothing is sent until you
 			submit the issue on GitHub, and you can edit or remove any of it first. Issues are public, and are
@@ -182,7 +182,7 @@
 				reports and lawful requests about traffic generated through BrowserCode;
 			</li>
 			<li>respond to bug reports, enquiries and other communications; and</li>
-			<li>protect our rights and users, and comply with legal obligations.</li>
+			<li>protect our rights and our users, and comply with legal obligations.</li>
 		</ul>
 		<p>
 			We do not use your personal information for automated decision-making that has legal or
@@ -233,7 +233,7 @@
 		<ul>
 			<li>
 				<strong>Cloudflare, Inc.</strong>, which hosts and delivers BrowserCode, and runs the
-				BrowserPod infrastructure that relays a Pod's network connections and Portals and stores
+				BrowserPod infrastructure that relays a Pod's network connections and Portals, and stores
 				Logging Information. Logging Information is stored in data centres in the European Union.
 			</li>
 		</ul>
