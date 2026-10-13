@@ -38,7 +38,7 @@
 	"dependencies": {
 		"@iconify-json/mingcute": "^1.2.7",
 		"@iconify/svelte": "^5.2.1",
-		"@leaningtech/browserpod": "3.1.0",
+		"@leaningtech/browserpod": "3.4.0",
 		"@shikijs/langs": "^4.4.3",
 		"@shikijs/monaco": "^4.4.3",
 		"@shikijs/themes": "^4.4.3",
