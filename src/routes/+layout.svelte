@@ -46,7 +46,9 @@
 				? 'Playground IDE — BrowserCode'
 				: $page.route.id === '/agents'
 					? 'Agents — BrowserCode'
-					: 'BrowserCode — Start coding on your browser tab'
+					: $page.route.id === '/privacy'
+						? 'Privacy Policy — BrowserCode'
+						: 'BrowserCode — Start coding on your browser tab'
 	);
 
 	let pageDescription = $derived(
@@ -56,7 +58,9 @@
 				? 'Build and preview web apps right in your browser, on BrowserCode.'
 				: $page.route.id === '/agents'
 					? 'Use your favorite CLI agents without any installations, sandboxed.'
-					: 'BrowserCode runs a full Node.js sandbox in WebAssembly — no installs, no servers.'
+					: $page.route.id === '/privacy'
+						? 'How Leaning Technologies handles your data when you use BrowserCode.'
+						: 'BrowserCode runs a full Node.js sandbox in WebAssembly — no installs, no servers.'
 	);
 
 	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
 	import browserpodLogo from '$lib/assets/browserpod.svg';
 	import heroDust from '$lib/assets/hero-dust.webp';
@@ -255,9 +256,9 @@
 				</p>
 
 				<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist uppercase">
-					Get involved
+					Useful links
 				</div>
-				<div class="grid gap-2.5 sm:grid-cols-3">
+				<div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
 					<a
 						href="https://github.com/leaningtech/browsercode"
 						target="_blank"
@@ -320,6 +321,24 @@
 						<div>
 							<div class="text-[13px] font-medium text-bc-text">BrowserPod</div>
 							<div class="text-[11.5px] text-bc-text-muted">The WebAssembly sandbox underneath</div>
+						</div>
+					</a>
+					<a
+						href={resolve('/privacy')}
+						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24"
+					>
+						<div class="flex items-center justify-between">
+							<Icon icon="mingcute:shield-line" width="20" height="20" class="text-bc-text" />
+							<Icon
+								icon="mingcute:arrow-right-line"
+								width="14"
+								height="14"
+								class="text-bc-text-muted transition-colors duration-150 group-hover:text-bc-mist"
+							/>
+						</div>
+						<div>
+							<div class="text-[13px] font-medium text-bc-text">Privacy Policy</div>
+							<div class="text-[11.5px] text-bc-text-muted">How we handle your data</div>
 						</div>
 					</a>
 				</div>

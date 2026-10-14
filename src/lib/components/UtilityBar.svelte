@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { resolve } from '$app/paths';
 	import pkg from '@leaningtech/browserpod/package.json';
 	import appPkg from '../../../package.json';
 	import favicon from '$lib/assets/favicon.svg';
@@ -28,6 +29,11 @@
 		<span class="text-bc-text-muted">BrowserCode</span>
 		<span class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist"
 			>v{appPkg.version}</span
+		>
+		<a
+			href={resolve('/privacy')}
+			class="ml-1 text-bc-text-muted no-underline transition-colors duration-150 hover:text-bc-link-hover"
+			>Privacy Policy</a
 		>
 	</span>
 
