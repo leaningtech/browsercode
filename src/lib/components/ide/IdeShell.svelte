@@ -52,7 +52,7 @@
 	let downloading = $state(false);
 
 	async function handleDownload() {
-		if (downloading || !session.podReady) return;
+		if (downloading || !session.fsReady) return;
 		downloading = true;
 		try {
 			await downloadProject(session);
@@ -325,7 +325,7 @@
 							<button
 								type="button"
 								title="New file"
-								disabled={!session.podReady}
+								disabled={!session.fsReady}
 								onclick={() => fileTree?.startCreate('file')}
 								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
@@ -334,7 +334,7 @@
 							<button
 								type="button"
 								title="New folder"
-								disabled={!session.podReady}
+								disabled={!session.fsReady}
 								onclick={() => fileTree?.startCreate('folder')}
 								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>
@@ -343,7 +343,7 @@
 							<button
 								type="button"
 								title={downloading ? 'Zipping project…' : 'Download this project as a zip'}
-								disabled={!session.podReady || downloading}
+								disabled={!session.fsReady || downloading}
 								onclick={handleDownload}
 								class="rounded p-1 text-bc-icon transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
 							>

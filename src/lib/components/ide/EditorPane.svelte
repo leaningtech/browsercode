@@ -148,10 +148,10 @@
 		}
 	});
 
-	// Saves are gated on `hasPortal`, so edits made during boot never persist. Flush
-	// them once the dev server is up.
+	// Saves are gated on `canSave`, so edits made during boot never persist. Flush
+	// them once saving opens up.
 	$effect(() => {
-		if (session.hasPortal) untrack(() => void session.saveAll());
+		if (session.canSave) untrack(() => void session.saveAll());
 	});
 
 	// Teardown: Monaco leaks DOM/workers if not disposed

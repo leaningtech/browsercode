@@ -56,8 +56,10 @@ export class IdeSession {
 	revealRequest = $state<{ path: string; line: number; column: number } | null>(null);
 	loading = $state(true);
 	isSaving = $state(false);
-	hasPortal = $state(false);
-	podReady = $state(false);
+	/** Set once the dev server is reachable; earlier saves would race the hydrate. */
+	canSave = $state(false);
+	/** True once the project is on disk, so files can be read and changed. */
+	fsReady = $state(false);
 	/** Current boot pipeline step; drives the preview loader's stage readout. */
 	bootStage = $state<BootStage>('booting');
 
@@ -117,7 +119,7 @@ export class IdeSession {
 			if (this.cancelled(token)) return;
 
 			// The project exists on disk now, so the editor may read from the pod.
-			this.podReady = true;
+			this.fsReady = true;
 			await this.source.prepare?.(ctx);
 			if (this.cancelled(token)) return;
 
@@ -187,7 +189,7 @@ export class IdeSession {
 			if (!Number.isInteger(portNumber) || portNumber <= 0) return;
 			const trimmedUrl = typeof url === 'string' ? url.trim() : '';
 			const active = trimmedUrl.length > 0;
-			if (active) this.hasPortal = true;
+			if (active) this.canSave = true;
 			onPortalUpdate({ port: portNumber, url: active ? trimmedUrl : null, active });
 		});
 
@@ -254,7 +256,7 @@ export class IdeSession {
 	 */
 	private runFsCommand(command: string): Promise<string | null> {
 		const task = async (): Promise<string | null> => {
-			if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+			if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
 			try {
 				if (!this.fsTerminal) {
 					const decoder = new TextDecoder();
@@ -279,7 +281,7 @@ export class IdeSession {
 
 	/** Creates an empty file and opens it in the editor. Returns an error message or null. */
 	async createFile(path: string): Promise<string | null> {
-		if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+		if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
 			await writePodFile(this.pod, `${this.workdir}/${path}`, '');
@@ -293,7 +295,7 @@ export class IdeSession {
 
 	/** Creates a folder. Returns an error message or null. */
 	async createFolder(path: string): Promise<string | null> {
-		if (!this.pod || !this.podReady) return 'Pod is not ready yet';
+		if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
 			await this.pod.createDirectory(`${this.workdir}/${path}`, { recursive: true });
@@ -327,7 +329,7 @@ export class IdeSession {
 
 	/** Re-reads a tab as picture or text per its new path; unsaved edits are dropped. */
 	private async reloadTab(entry: OpenFile): Promise<void> {
-		if (!this.pod || !this.podReady) return;
+		if (!this.pod || !this.fsReady) return;
 		try {
 			const absPath = `${this.workdir}/${entry.path}`;
 			const image = isImagePath(entry.path) ? await loadPodImage(this.pod, absPath) : undefined;
@@ -366,7 +368,7 @@ export class IdeSession {
 	 * state on a preview open, so focusing tabs never re-previews them.
 	 */
 	async openFile(path: string, preview = false): Promise<void> {
-		if (!this.pod || !this.podReady || this.unmounted) return;
+		if (!this.pod || !this.fsReady || this.unmounted) return;
 		const existing = this.openFiles.find((file) => file.path === path);
 		if (existing) {
 			if (!preview) existing.preview = false;
@@ -459,9 +461,7 @@ export class IdeSession {
 	private async saveEntry(entry: OpenFile): Promise<void> {
 		// Neither carries writable text: an image tab has none, a binary tab's is a lossy decode.
 		if (entry.image || entry.binary) return;
-		// Saving only makes sense once the dev server is reachable; earlier writes
-		// would race the template hydration.
-		if (!this.pod || !this.hasPortal || this.unmounted) return;
+		if (!this.pod || !this.canSave || this.unmounted) return;
 		if (this.savingPaths.has(entry.path)) return;
 		this.savingPaths.add(entry.path);
 		this.isSaving = true;
@@ -483,7 +483,7 @@ export class IdeSession {
 	 * tab is closed.
 	 */
 	async startBash(el: HTMLElement): Promise<void> {
-		if (!this.pod || !this.podReady) return;
+		if (!this.pod || !this.fsReady) return;
 		try {
 			const terminal = await this.pod.createDefaultTerminal(el);
 			// --rcfile picks up the branded prompt/banner written by writeShellRc at boot.
