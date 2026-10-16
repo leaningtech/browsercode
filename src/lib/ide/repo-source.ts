@@ -1,6 +1,6 @@
 /** Project source for a shallow GitHub clone. */
 import { fetchRepoTree } from '$lib/github/api';
-import { POD_HOME, readPodFile, writePodFile } from '$lib/pod/fs';
+import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import { patchClonedManifest, resolveInstallArgs } from './native-deps';
 import { ANSI } from './shell-rc';
@@ -52,13 +52,13 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 async function prepareManifest(ctx: BootContext): Promise<string[]> {
 	const manifestPath = `${ctx.workdir}/package.json`;
 	try {
-		const raw = await readPodFile(ctx.pod, manifestPath);
+		const raw = await ctx.fs.readFile(manifestPath);
 		const result = patchClonedManifest(raw);
 		if (!result) {
 			ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
 			return resolveInstallArgs(raw);
 		}
-		await writePodFile(ctx.pod, manifestPath, result.patched);
+		await ctx.fs.writeFile(manifestPath, result.patched);
 		// Header takes the leading blank line; the changes follow indented under it as one block.
 		ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
 		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
@@ -75,7 +75,7 @@ async function prepareManifest(ctx: BootContext): Promise<string[]> {
 async function resolveStartScript(ctx: BootContext): Promise<string[] | null> {
 	let scripts: Record<string, string> = {};
 	try {
-		const raw = await readPodFile(ctx.pod, `${ctx.workdir}/package.json`);
+		const raw = await ctx.fs.readFile(`${ctx.workdir}/package.json`);
 		scripts = (JSON.parse(raw) as { scripts?: Record<string, string> }).scripts ?? {};
 	} catch (error) {
 		console.error('Failed to read package.json:', error);

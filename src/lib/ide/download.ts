@@ -1,10 +1,9 @@
 /**
- * Pulls files out of the pod and into the user's downloads: the whole project as a zip,
+ * Pulls files out of the workspace and into the user's downloads: the whole project as a zip,
  * or one file on its own. Files created outside the IDE (e.g. the terminal) aren't tracked
  * in `session.projectFiles`, so the zip skips them.
  */
 import { zipSync } from 'fflate';
-import { readPodBinaryFile } from '$lib/pod/fs';
 import type { IdeSession } from './session.svelte';
 
 /** Turn a display label into a safe zip filename. */
@@ -33,8 +32,7 @@ function triggerDownload(bytes: Uint8Array<ArrayBuffer>, filename: string, mimeT
 }
 
 export async function downloadProject(session: IdeSession): Promise<void> {
-	const pod = session.pod;
-	if (!pod) return;
+	if (!session.fsReady) return;
 
 	// Flush unsaved edits first so the zip matches the editor.
 	await session.saveAll();
@@ -42,7 +40,7 @@ export async function downloadProject(session: IdeSession): Promise<void> {
 	// Read sequentially; projects are small.
 	const files: Record<string, Uint8Array> = {};
 	for (const path of session.projectFiles) {
-		files[path] = await readPodBinaryFile(pod, `${session.workdir}/${path}`);
+		files[path] = await session.fs.readBinaryFile(`${session.workdir}/${path}`);
 	}
 
 	triggerDownload(zipSync(files), zipFilename(session.source.label), 'application/zip');
@@ -50,13 +48,12 @@ export async function downloadProject(session: IdeSession): Promise<void> {
 
 /** Downloads a single project-relative file under its own name. */
 export async function downloadFile(session: IdeSession, path: string): Promise<void> {
-	const pod = session.pod;
-	if (!pod) return;
+	if (!session.fsReady) return;
 
 	// Flush this file's pending edits so the download matches the editor.
 	await session.saveFile(path);
 
-	const bytes = await readPodBinaryFile(pod, `${session.workdir}/${path}`);
+	const bytes = await session.fs.readBinaryFile(`${session.workdir}/${path}`);
 	const name = path.split('/').pop() || 'download';
 	triggerDownload(bytes, name, 'application/octet-stream');
 }

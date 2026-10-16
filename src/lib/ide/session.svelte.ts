@@ -1,16 +1,12 @@
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { SvelteSet } from 'svelte/reactivity';
-import { readPodFile, writePodFile, writeToTerminal } from '$lib/pod/fs';
+import { writePodFile, writeToTerminal } from '$lib/pod/fs';
 import type { PortalUpdate } from '$lib/pod/portals';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
-import {
-	isBinaryContent,
-	isImagePath,
-	loadPodImage,
-	releaseImage,
-	type ImagePayload
-} from './media';
+import { isBinaryContent, isImagePath, loadImage, releaseImage, type ImagePayload } from './media';
+import { PodFs } from './pod-fs';
 import type { BootContext, ProjectSource } from './project-source';
+import type { WorkspaceFs } from './workspace-fs';
 
 /** Force color: npm/vite print plain text with no TTY in the pod. */
 const COLOR_ENV = ['FORCE_COLOR=3', 'COLORTERM=truecolor'];
@@ -44,6 +40,8 @@ export class IdeSession {
 	readonly source: ProjectSource;
 	/** Directory the project lives in inside the pod; pod file paths resolve against it. */
 	readonly workdir: string;
+	/** Where the project's files live. Paths are absolute: resolve project paths against `workdir`. */
+	readonly fs: WorkspaceFs;
 
 	projectFiles = $state<string[]>([]);
 	/** Explicitly-known directories (from UI folder actions); lets empty folders render in the tree. */
@@ -65,10 +63,6 @@ export class IdeSession {
 
 	pod: BrowserPod | null = null;
 	outputTerminal: Terminal | null = null;
-	/** Lazily created hidden terminal that carries UI-initiated fs commands. */
-	private fsTerminal: Terminal | null = null;
-	/** Serializes fs commands so two never share the hidden terminal at once. */
-	private fsQueue: Promise<unknown> = Promise.resolve();
 	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
 	private savingPaths = new SvelteSet<string>();
 	/** Tabs pinned (double-clicked) while their first read was still in flight. */
@@ -81,6 +75,7 @@ export class IdeSession {
 	constructor(source: ProjectSource) {
 		this.source = source;
 		this.workdir = source.workdir;
+		this.fs = new PodFs(() => this.pod);
 	}
 
 	private get activeFile(): OpenFile | undefined {
@@ -112,7 +107,7 @@ export class IdeSession {
 
 			const pod = await this.bootPod(terminalEl, onPortalUpdate, token);
 			if (!pod) return;
-			const ctx = this.bootContext(pod, token);
+			const ctx = this.bootContext(token);
 
 			this.bootStage = 'hydrating';
 			await this.source.hydrate(ctx, this.projectFiles);
@@ -147,9 +142,9 @@ export class IdeSession {
 	}
 
 	/** All a source gets of the pod; `cancelled` stays bound to the boot that handed it over. */
-	private bootContext(pod: BrowserPod, token: number): BootContext {
+	private bootContext(token: number): BootContext {
 		return {
-			pod,
+			fs: this.fs,
 			workdir: this.workdir,
 			write: (data) => this.termWrite(data),
 			run: (command, args, options) => this.runInOutput(command, args, options),
@@ -246,45 +241,17 @@ export class IdeSession {
 		return this.projectFiles.some(under) || this.projectDirs.some(under);
 	}
 
-	/**
-	 * Runs a shell command in a hidden terminal (BrowserPod has no rename/delete
-	 * API). Fire-and-trust: `run` resolves on process exit but exposes no exit
-	 * code, and probing the result through the file API is unreliable (its view
-	 * can lag the process world), so callers update the tree optimistically once
-	 * the command finishes. Serialized on a queue so two commands never share the
-	 * hidden terminal at once. Returns an error message or null.
-	 */
-	private runFsCommand(command: string): Promise<string | null> {
-		const task = async (): Promise<string | null> => {
-			if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
-			try {
-				if (!this.fsTerminal) {
-					const decoder = new TextDecoder();
-					this.fsTerminal = await this.pod.createCustomTerminal({
-						onOutput: (chunk) => console.debug('[ide-fs]', decoder.decode(chunk, { stream: true }))
-					});
-				}
-				await this.pod.run('bash', ['-c', command], {
-					echo: true,
-					terminal: this.fsTerminal,
-					cwd: this.workdir
-				});
-				return null;
-			} catch (error) {
-				return error instanceof Error ? error.message : String(error);
-			}
-		};
-		const result = this.fsQueue.then(task, task);
-		this.fsQueue = result.catch(() => undefined);
-		return result;
+	/** Absolute path of a project-relative one. */
+	private abs(path: string): string {
+		return `${this.workdir}/${path}`;
 	}
 
 	/** Creates an empty file and opens it in the editor. Returns an error message or null. */
 	async createFile(path: string): Promise<string | null> {
-		if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Pod is not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
-			await writePodFile(this.pod, `${this.workdir}/${path}`, '');
+			await this.fs.writeFile(this.abs(path), '');
 		} catch (error) {
 			return error instanceof Error ? error.message : String(error);
 		}
@@ -295,10 +262,10 @@ export class IdeSession {
 
 	/** Creates a folder. Returns an error message or null. */
 	async createFolder(path: string): Promise<string | null> {
-		if (!this.pod || !this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Pod is not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
-			await this.pod.createDirectory(`${this.workdir}/${path}`, { recursive: true });
+			await this.fs.createDirectory(this.abs(path));
 		} catch (error) {
 			return error instanceof Error ? error.message : String(error);
 		}
@@ -309,8 +276,12 @@ export class IdeSession {
 	/** Renames a file or folder; open tabs and the selection follow the moved path. Returns an error message or null. */
 	async renameEntry(from: string, to: string): Promise<string | null> {
 		if (this.entryExists(to)) return 'Something with that name already exists';
-		const failure = await this.runFsCommand(`mv -- ${shQuote(from)} ${shQuote(to)}`);
-		if (failure) return failure;
+		if (!this.fsReady) return 'Pod is not ready yet';
+		try {
+			await this.fs.renameEntry(this.abs(from), this.abs(to));
+		} catch (error) {
+			return error instanceof Error ? error.message : String(error);
+		}
 		const remap = (p: string) =>
 			p === from ? to : p.startsWith(`${from}/`) ? to + p.slice(from.length) : p;
 		this.projectFiles = this.projectFiles.map(remap);
@@ -329,11 +300,11 @@ export class IdeSession {
 
 	/** Re-reads a tab as picture or text per its new path; unsaved edits are dropped. */
 	private async reloadTab(entry: OpenFile): Promise<void> {
-		if (!this.pod || !this.fsReady) return;
+		if (!this.fsReady) return;
 		try {
-			const absPath = `${this.workdir}/${entry.path}`;
-			const image = isImagePath(entry.path) ? await loadPodImage(this.pod, absPath) : undefined;
-			const content = image ? '' : await readPodFile(this.pod, absPath);
+			const absPath = this.abs(entry.path);
+			const image = isImagePath(entry.path) ? await loadImage(this.fs, absPath) : undefined;
+			const content = image ? '' : await this.fs.readFile(absPath);
 			if (this.unmounted || !this.openFiles.includes(entry)) {
 				releaseImage(image);
 				return;
@@ -350,8 +321,12 @@ export class IdeSession {
 
 	/** Deletes a file or folder recursively; tabs under the path close. Returns an error message or null. */
 	async deleteEntry(path: string): Promise<string | null> {
-		const failure = await this.runFsCommand(`rm -rf -- ${shQuote(path)}`);
-		if (failure) return failure;
+		if (!this.fsReady) return 'Pod is not ready yet';
+		try {
+			await this.fs.deleteEntry(this.abs(path));
+		} catch (error) {
+			return error instanceof Error ? error.message : String(error);
+		}
 		const gone = (p: string) => p === path || p.startsWith(`${path}/`);
 		this.projectFiles = this.projectFiles.filter((p) => !gone(p));
 		this.projectDirs = this.projectDirs.filter((p) => !gone(p));
@@ -368,7 +343,7 @@ export class IdeSession {
 	 * state on a preview open, so focusing tabs never re-previews them.
 	 */
 	async openFile(path: string, preview = false): Promise<void> {
-		if (!this.pod || !this.fsReady || this.unmounted) return;
+		if (!this.fsReady || this.unmounted) return;
 		const existing = this.openFiles.find((file) => file.path === path);
 		if (existing) {
 			if (!preview) existing.preview = false;
@@ -381,9 +356,9 @@ export class IdeSession {
 		this.loading = true;
 		this.selectedFile = path;
 		try {
-			const absPath = `${this.workdir}/${path}`;
-			const image = isImagePath(path) ? await loadPodImage(this.pod, absPath) : undefined;
-			const content = image ? '' : await readPodFile(this.pod, absPath);
+			const absPath = this.abs(path);
+			const image = isImagePath(path) ? await loadImage(this.fs, absPath) : undefined;
+			const content = image ? '' : await this.fs.readFile(absPath);
 			if (this.unmounted || this.openFiles.some((file) => file.path === path)) {
 				releaseImage(image);
 				return;
@@ -461,13 +436,13 @@ export class IdeSession {
 	private async saveEntry(entry: OpenFile): Promise<void> {
 		// Neither carries writable text: an image tab has none, a binary tab's is a lossy decode.
 		if (entry.image || entry.binary) return;
-		if (!this.pod || !this.canSave || this.unmounted) return;
+		if (!this.canSave || this.unmounted) return;
 		if (this.savingPaths.has(entry.path)) return;
 		this.savingPaths.add(entry.path);
 		this.isSaving = true;
 		const content = entry.content;
 		try {
-			await writePodFile(this.pod, `${this.workdir}/${entry.path}`, content);
+			await this.fs.writeFile(this.abs(entry.path), content);
 			entry.savedContent = content;
 		} catch (error) {
 			console.error('Failed to save file:', error);
@@ -503,11 +478,6 @@ export class IdeSession {
 		this.bootToken += 1;
 		if (this.pod) void shutdownPod(this.pod);
 	}
-}
-
-/** Single-quotes a path for `bash -c`. */
-function shQuote(value: string): string {
-	return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
 // shutdown() is not part of the published type definitions yet.

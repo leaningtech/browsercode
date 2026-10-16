@@ -1,11 +1,11 @@
 /**
  * How a project gets into the pod. `IdeSession` runs one boot pipeline over these hooks.
  */
-import type { BrowserPod } from '@leaningtech/browserpod';
+import type { WorkspaceFs } from './workspace-fs';
 
 /** Pod-side handles the hooks work against; the session owns the terminal and the boot token. */
 export type BootContext = {
-	pod: BrowserPod;
+	fs: WorkspaceFs;
 	workdir: string;
 	/** Writes raw text to the Output terminal. */
 	write: (data: string) => void;

@@ -1,11 +1,10 @@
 /**
- * How a pod file opens in a tab: pod files have no URL an `<img>` can reach, so an image's bytes
- * are read once and republished as an object URL, owned by the tab that holds it.
+ * How a workspace file opens in a tab: workspace files have no URL an `<img>` can reach, so an
+ * image's bytes are read once and republished as an object URL, owned by the tab that holds it.
  */
-import type { BrowserPod } from '@leaningtech/browserpod';
-import { podFileSize, readPodBinaryFile } from '$lib/pod/fs';
+import type { WorkspaceFs } from './workspace-fs';
 
-/** The blob decodes to a bitmap several times its size, in a tab that also hosts the pod. */
+/** The blob decodes to a bitmap several times its size, in a tab that also hosts the runtime. */
 export const MAX_IMAGE_BYTES = 10_485_760;
 
 /** `url` stays valid until {@link releaseImage}; null past {@link MAX_IMAGE_BYTES}. */
@@ -39,11 +38,11 @@ export function isBinaryContent(content: string): boolean {
 	return content.includes('\u0000') || content.includes('\uFFFD');
 }
 
-/** Reads an image out of the pod and publishes it as an object URL. */
-export async function loadPodImage(pod: BrowserPod, absPath: string): Promise<ImagePayload> {
-	const size = await podFileSize(pod, absPath);
+/** Reads an image out of the workspace and publishes it as an object URL. */
+export async function loadImage(fs: WorkspaceFs, absPath: string): Promise<ImagePayload> {
+	const size = await fs.fileSize(absPath);
 	if (size > MAX_IMAGE_BYTES) return { url: null, bytes: size };
-	const bytes = await readPodBinaryFile(pod, absPath);
+	const bytes = await fs.readBinaryFile(absPath);
 	const blob = new Blob([bytes], { type: IMAGE_MIME[extensionOf(absPath)] });
 	return { url: URL.createObjectURL(blob), bytes: bytes.byteLength };
 }
