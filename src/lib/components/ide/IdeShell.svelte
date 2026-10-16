@@ -9,12 +9,12 @@
 	import LoadingScene from '$lib/components/ide/LoadingScene.svelte';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import { fade } from 'svelte/transition';
-	import type { BootStage, IdeSession } from '$lib/ide/session.svelte';
+	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
 	import { PortalState } from '$lib/stores/portals.svelte';
 	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 	import { startDrag } from '$lib/utils/drag';
-	import { podBlocker, type PodBlocker } from '$lib/utils/platform';
+	import type { PodBlocker } from '$lib/utils/platform';
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
 	import { watchIsMobile } from '$lib/utils/viewport';
@@ -22,14 +22,6 @@
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
-
-	// Which boot-log line is the *active* (spinning) one for each real stage.
-	const STAGE_LINE: Record<BootStage, number> = {
-		booting: 0,
-		hydrating: 1,
-		installing: 2,
-		starting: 3
-	};
 
 	// The route picks the project source, so the shell never learns how the project arrived.
 	// `shell` narrows which parts render; the playground omits it and gets the lot.
@@ -40,13 +32,8 @@
 	/** Nothing to collapse into when the preview is the only pane. */
 	let collapsiblePreview = $derived(shell.preview && hasLeftColumn);
 
-	// Only the hydrate step differs per source.
-	let bootLines = $derived([
-		'booting BrowserPod',
-		session.source.hydrateLabel,
-		'installing dependencies',
-		'starting dev server'
-	]);
+	// The runtime names its own boot steps; the session tracks which one is under way.
+	let bootLines = $derived(session.runtime.stages);
 
 	let blocker = $state<PodBlocker | null>(null);
 	let downloading = $state(false);
@@ -107,7 +94,7 @@
 		if (!previewLive) loaderVisible = true;
 	});
 
-	let activeLine = $derived(STAGE_LINE[session.bootStage]);
+	let activeLine = $derived(session.bootStage);
 
 	/** Editor floor, so dragging the terminal up leaves a usable strip of it. */
 	const MIN_EDITOR_FRACTION = 0.1;
@@ -184,7 +171,7 @@
 	onMount(() => (shell.leaveGuard ? installLeaveGuard() : undefined));
 
 	onMount(async () => {
-		blocker = podBlocker();
+		blocker = session.runtime.blocker();
 		if (blocker) {
 			session.loading = false;
 			return;
@@ -194,7 +181,7 @@
 		try {
 			await session.boot(outputEl, portal.apply);
 		} catch (error) {
-			console.error('Failed initializing BrowserPod:', error);
+			console.error('Failed initializing the runtime:', error);
 			session.loading = false;
 		}
 	});

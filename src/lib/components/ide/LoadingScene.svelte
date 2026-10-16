@@ -9,7 +9,7 @@
 		onFlashComplete
 	}: {
 		/** Ordered boot-log messages, dmesg-style (lowercase). */
-		lines?: string[];
+		lines?: readonly string[];
 		/** Highest line index real progress justifies revealing (-1 before boot starts). */
 		activeLine?: number;
 		flash?: boolean;
