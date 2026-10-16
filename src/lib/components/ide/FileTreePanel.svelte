@@ -95,7 +95,7 @@
 
 	/** Kicks off inline creation; without `parent`, targets the open file's folder. */
 	export function startCreate(kind: 'file' | 'folder', parent?: string) {
-		if (!session.podReady) return;
+		if (!session.fsReady) return;
 		closeMenu();
 		renaming = null;
 		const target = parent ?? (session.selectedFile ? parentOf(session.selectedFile) : '');
@@ -202,7 +202,7 @@
 	}
 
 	function openMenu(event: MouseEvent, path: string, isDir: boolean) {
-		if (!session.podReady) return;
+		if (!session.fsReady) return;
 		event.preventDefault();
 		// Clamp to the viewport so the menu (≈184×152px) never spills off the edge.
 		menu = {

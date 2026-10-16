@@ -25,7 +25,7 @@
 	}
 
 	function addTerminal() {
-		if (!session.podReady) return;
+		if (!session.fsReady) return;
 		const id = nextId++;
 		bashTabs.push({ id, label: 'Terminal' });
 		selectTab(id);
@@ -72,7 +72,7 @@
 		{/each}
 		<button
 			onclick={addTerminal}
-			disabled={!session.podReady}
+			disabled={!session.fsReady}
 			title="New terminal"
 			aria-label="New terminal"
 			class="vrh-tab vrh-tab--add shrink-0"
