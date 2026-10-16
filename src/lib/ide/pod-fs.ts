@@ -17,35 +17,34 @@ export class PodFs implements WorkspaceFs {
 	/** Serializes shell commands so two never share the hidden terminal at once. */
 	private fsQueue: Promise<unknown> = Promise.resolve();
 
-	/** `getPod` is read per call, so the fs can exist before the pod boots and rejects until then. */
-	constructor(private readonly getPod: () => BrowserPod | null) {}
+	constructor(private readonly pod: BrowserPod) {}
 
 	async readFile(path: string): Promise<string> {
-		return readPodFile(this.requirePod(), path);
+		return readPodFile(this.pod, path);
 	}
 
 	async readFileWithinLimit(path: string, maxBytes: number): Promise<string | null> {
-		return readPodFileWithinLimit(this.requirePod(), path, maxBytes);
+		return readPodFileWithinLimit(this.pod, path, maxBytes);
 	}
 
 	async readBinaryFile(path: string): Promise<Uint8Array<ArrayBuffer>> {
-		return readPodBinaryFile(this.requirePod(), path);
+		return readPodBinaryFile(this.pod, path);
 	}
 
 	async fileSize(path: string): Promise<number> {
-		return podFileSize(this.requirePod(), path);
+		return podFileSize(this.pod, path);
 	}
 
 	async writeFile(path: string, content: string): Promise<void> {
-		return writePodFile(this.requirePod(), path, content);
+		return writePodFile(this.pod, path, content);
 	}
 
 	async writeBinaryFile(path: string, content: ArrayBuffer): Promise<void> {
-		return writePodBinaryFile(this.requirePod(), path, content);
+		return writePodBinaryFile(this.pod, path, content);
 	}
 
 	async createDirectory(path: string): Promise<void> {
-		await this.requirePod().createDirectory(path, { recursive: true });
+		await this.pod.createDirectory(path, { recursive: true });
 	}
 
 	renameEntry(from: string, to: string): Promise<void> {
@@ -56,12 +55,6 @@ export class PodFs implements WorkspaceFs {
 		return this.runFsCommand(`rm -rf -- ${shQuote(path)}`);
 	}
 
-	private requirePod(): BrowserPod {
-		const pod = this.getPod();
-		if (!pod) throw new Error('Pod is not ready yet');
-		return pod;
-	}
-
 	/**
 	 * Runs a shell command in the hidden terminal (BrowserPod has no rename/delete API).
 	 * Fire-and-trust: `run` resolves on process exit but exposes no exit code, and probing the
@@ -70,14 +63,13 @@ export class PodFs implements WorkspaceFs {
 	 */
 	private runFsCommand(command: string): Promise<void> {
 		const task = async (): Promise<void> => {
-			const pod = this.requirePod();
 			if (!this.fsTerminal) {
 				const decoder = new TextDecoder();
-				this.fsTerminal = await pod.createCustomTerminal({
+				this.fsTerminal = await this.pod.createCustomTerminal({
 					onOutput: (chunk) => console.debug('[ide-fs]', decoder.decode(chunk, { stream: true }))
 				});
 			}
-			await pod.run('bash', ['-c', command], {
+			await this.pod.run('bash', ['-c', command], {
 				echo: true,
 				terminal: this.fsTerminal,
 				cwd: POD_HOME
