@@ -8,6 +8,7 @@
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { repoSource } from '$lib/ide/repo-source';
+	import { javaSource } from '$lib/ide/java-source';
 	import { parseEmbedOptions } from '$lib/embed/options';
 
 	// The host page composes the embed through the query string; nothing here is navigable, so the
@@ -20,7 +21,11 @@
 	const ideSession =
 		source && source.kind !== 'agent'
 			? new IdeSession(
-					source.kind === 'framework' ? templateSource(source.id) : repoSource(source.ref)
+					source.kind === 'framework'
+						? templateSource(source.id)
+						: source.kind === 'java'
+							? javaSource(source.example)
+							: repoSource(source.ref)
 				)
 			: null;
 </script>
@@ -50,6 +55,7 @@
 				<li><code class="break-all">?repo=&lt;github url&gt;</code></li>
 				<li><code class="break-all">?framework=&lt;id&gt;</code></li>
 				<li><code class="break-all">?agent=&lt;id&gt;</code></li>
+				<li><code class="break-all">?runtime=cheerpj</code></li>
 			</ul>
 			<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
 				optionally with <code class="break-all text-bc-mist"
