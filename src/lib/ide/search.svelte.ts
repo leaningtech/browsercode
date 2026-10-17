@@ -1,5 +1,4 @@
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import { readPodFileWithinLimit } from '$lib/pod/fs';
 import type { IdeSession } from '$lib/ide/session.svelte';
 
 /** A project file whose name/path matched the query. */
@@ -131,7 +130,7 @@ export class ProjectSearch {
 		return !SKIP_EXT.has(ext);
 	}
 
-	/** Content for `path`, preferring the live editor buffer and caching pod reads. */
+	/** Content for `path`, preferring the live editor buffer and caching workspace reads. */
 	private async contentOf(path: string): Promise<string | null> {
 		const open = this.session.openFiles.find((file) => file.path === path);
 		if (open) {
@@ -141,11 +140,9 @@ export class ProjectSearch {
 		}
 		const cached = this.index.get(path);
 		if (cached !== undefined) return cached;
-		const pod = this.session.pod;
-		if (!pod) return null;
+		if (!this.session.fsReady) return null;
 		try {
-			const content = await readPodFileWithinLimit(
-				pod,
+			const content = await this.session.fs.readFileWithinLimit(
 				`${this.session.workdir}/${path}`,
 				MAX_FILE_BYTES
 			);

@@ -2,7 +2,7 @@
  * Project source for the curated framework templates served out of `static/templates/<id>/`.
  */
 import { frameworkConfigs, type FrameworkConfig, type FrameworkId } from '$lib/config/frameworks';
-import { POD_HOME, writePodBinaryFile } from '$lib/pod/fs';
+import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { BootContext, ProjectSource } from './project-source';
 
@@ -21,7 +21,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 				if (ctx.cancelled()) return;
 				const content = await fetchTemplateFile(config, file);
 				if (ctx.cancelled()) return;
-				await writePodBinaryFile(ctx.pod, `${ctx.workdir}/${file}`, content);
+				await ctx.fs.writeBinaryFile(`${ctx.workdir}/${file}`, content);
 			}
 		},
 		initialFile: (files: string[]) =>
