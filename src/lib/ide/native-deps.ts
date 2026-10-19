@@ -56,15 +56,28 @@ const WASM_BUNDLERS = {
 const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '*' };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
-	// Vite 8.2+
+	// Every repo: esbuild/rollup can end up in the tree transitively (a plugin, a test runner, a
+	// framework CLI) even when nothing at the top level names them, so this isn't conditional on
+	// what the manifest declares. A repo that already depends on either directly needs that entry
+	// rewritten to match too, or npm rejects the override as conflicting with a direct dependency.
+	{
+		applies: () => true,
+		patches: (_deps, current) => {
+			const patches = [force('overrides', WASM_BUNDLERS)];
+			for (const section of DEP_SECTIONS) {
+				const direct: Record<string, string> = {};
+				for (const [name, value] of Object.entries(WASM_BUNDLERS)) {
+					if (current(section, name) !== undefined) direct[name] = value;
+				}
+				if (Object.keys(direct).length > 0) patches.push(force(section, direct));
+			}
+			return patches;
+		}
+	},
+	// Vite 8.2+: its own config/dep bundling needs a wasm32 binding for Rolldown to resolve to.
 	{
 		applies: (deps) => minorAtLeast(deps, 'vite', 8, 2),
 		patches: () => [fill('devDependencies', ROLLDOWN_WASM)]
-	},
-	// Vite 7 and earlier
-	{
-		applies: (deps) => majorBelow(deps, 'vite', 8),
-		patches: () => [force('overrides', WASM_BUNDLERS)]
 	},
 	// Next.js
 	{
@@ -77,7 +90,7 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 	// Nuxt 4+
 	{
 		applies: (deps) => majorAtLeast(deps, 'nuxt', 4),
-		patches: () => [fill('dependencies', ROLLDOWN_WASM), force('overrides', WASM_BUNDLERS)],
+		patches: () => [fill('dependencies', ROLLDOWN_WASM)],
 		installFlags: ['--legacy-peer-deps']
 	}
 ];
@@ -130,14 +143,6 @@ function majorAtLeast(deps: DeclaredDeps, name: string, major: number): boolean 
 	if (spec === undefined) return false;
 	const highest = highestMajor(spec);
 	return highest === null || highest >= major;
-}
-
-/** True when `name` is declared and cannot install `major` or newer. */
-function majorBelow(deps: DeclaredDeps, name: string, major: number): boolean {
-	const spec = deps.get(name);
-	if (spec === undefined) return false;
-	const highest = highestMajor(spec);
-	return highest !== null && highest < major;
 }
 
 function parseManifest(manifestRaw: string): Manifest | null {
