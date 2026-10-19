@@ -119,7 +119,7 @@ export class IdeSession {
 			await this.source.hydrate(ctx, this.projectFiles);
 			if (this.cancelled(token)) return;
 
-			// The project exists on disk now, so the editor may read from the pod.
+			// The project exists on disk now, so the editor may read from it.
 			this.fsReady = true;
 			await this.source.prepare?.(ctx);
 			if (this.cancelled(token)) return;
@@ -149,7 +149,7 @@ export class IdeSession {
 
 	/** Creates an empty file and opens it in the editor. Returns an error message or null. */
 	async createFile(path: string): Promise<string | null> {
-		if (!this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Project files are not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
 			await this.fs.writeFile(this.abs(path), '');
@@ -163,7 +163,7 @@ export class IdeSession {
 
 	/** Creates a folder. Returns an error message or null. */
 	async createFolder(path: string): Promise<string | null> {
-		if (!this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Project files are not ready yet';
 		if (this.entryExists(path)) return 'Something with that name already exists';
 		try {
 			await this.fs.createDirectory(this.abs(path));
@@ -177,7 +177,7 @@ export class IdeSession {
 	/** Renames a file or folder; open tabs and the selection follow the moved path. Returns an error message or null. */
 	async renameEntry(from: string, to: string): Promise<string | null> {
 		if (this.entryExists(to)) return 'Something with that name already exists';
-		if (!this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Project files are not ready yet';
 		try {
 			await this.fs.renameEntry(this.abs(from), this.abs(to));
 		} catch (error) {
@@ -222,7 +222,7 @@ export class IdeSession {
 
 	/** Deletes a file or folder recursively; tabs under the path close. Returns an error message or null. */
 	async deleteEntry(path: string): Promise<string | null> {
-		if (!this.fsReady) return 'Pod is not ready yet';
+		if (!this.fsReady) return 'Project files are not ready yet';
 		try {
 			await this.fs.deleteEntry(this.abs(path));
 		} catch (error) {
@@ -328,7 +328,7 @@ export class IdeSession {
 		if (entry) await this.saveEntry(entry);
 	}
 
-	/** Flushes every tab with unsaved edits to the pod. */
+	/** Flushes every tab with unsaved edits to the workspace. */
 	async saveAll(): Promise<void> {
 		const dirty = this.openFiles.filter((file) => file.content !== file.savedContent);
 		await Promise.all(dirty.map((entry) => this.saveEntry(entry)));

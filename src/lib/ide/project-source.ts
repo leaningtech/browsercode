@@ -1,9 +1,9 @@
 /**
- * How a project gets into the pod. `IdeSession` runs one boot pipeline over these hooks.
+ * How a project gets onto its runtime. `IdeSession` runs one boot pipeline over these hooks.
  */
 import type { WorkspaceFs } from './workspace-fs';
 
-/** Pod-side handles the hooks work against; the session owns the terminal and the boot token. */
+/** Runtime-side handles the hooks work against; the session owns the terminal and the boot token. */
 export type BootContext = {
 	fs: WorkspaceFs;
 	workdir: string;
@@ -25,16 +25,16 @@ export type ProjectSource = {
 	label: string;
 	/** Names the hydrate step in the preview loader's boot log. */
 	hydrateLabel: string;
-	/** Where the project lands; pod paths resolve against it. */
+	/** Where the project lands; runtime paths resolve against it. */
 	workdir: string;
 	/** Preview is pinned to this port when set. Unknown for an arbitrary repo. */
 	appPort?: number;
 	/** What this session cloned, for the bug report's repo field. */
 	repo?: { url: string; ref: string };
-	/** Fetched before the pod boots, so the file tree renders while the project arrives. */
+	/** Fetched before the runtime boots, so the file tree renders while the project arrives. */
 	listFiles: () => Promise<string[]>;
 	hydrate: (ctx: BootContext, files: string[]) => Promise<void>;
-	/** Runs once the pod is readable, before the first tab opens. */
+	/** Runs once the files are readable, before the first tab opens. */
 	prepare?: (ctx: BootContext) => Promise<void>;
 	initialFile: (files: string[]) => string | undefined;
 	/** npm invocations run before the dev server. */
@@ -44,6 +44,6 @@ export type ProjectSource = {
 	 * returning null has already said so on the terminal.
 	 */
 	startCommand: (ctx: BootContext) => Promise<string[] | null>;
-	/** Called once the pod is readable, so a boot that dies earlier is not counted. */
+	/** Called once the files are readable, so a boot that dies earlier is not counted. */
 	trackBoot: () => void;
 };
