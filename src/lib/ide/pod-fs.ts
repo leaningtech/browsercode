@@ -48,20 +48,18 @@ export class PodFs implements WorkspaceFs {
 	}
 
 	renameEntry(from: string, to: string): Promise<void> {
-		return this.runFsCommand(`mv -- ${shQuote(from)} ${shQuote(to)}`);
+		return this.runFsCommand(`mv -- ${shQuote(from)} ${shQuote(to)}`, `Failed to rename ${from}`);
 	}
 
 	deleteEntry(path: string): Promise<void> {
-		return this.runFsCommand(`rm -rf -- ${shQuote(path)}`);
+		return this.runFsCommand(`rm -rf -- ${shQuote(path)}`, `Failed to delete ${path}`);
 	}
 
 	/**
-	 * Runs a shell command in the hidden terminal (BrowserPod has no rename/delete API).
-	 * Fire-and-trust: `run` resolves on process exit but exposes no exit code, and probing the
-	 * result through the file API is unreliable (its view can lag the process world), so callers
-	 * update the tree optimistically once the command finishes.
+	 * Runs a shell command in the hidden terminal (BrowserPod has no rename/delete API) and rejects
+	 * with `failure` when it exits non-zero.
 	 */
-	private runFsCommand(command: string): Promise<void> {
+	private runFsCommand(command: string, failure: string): Promise<void> {
 		const task = async (): Promise<void> => {
 			if (!this.fsTerminal) {
 				const decoder = new TextDecoder();
@@ -69,11 +67,13 @@ export class PodFs implements WorkspaceFs {
 					onOutput: (chunk) => console.debug('[ide-fs]', decoder.decode(chunk, { stream: true }))
 				});
 			}
-			await this.pod.run('bash', ['-c', command], {
+			// Typed as an opaque `Process`, but awaiting it yields the exit code.
+			const exitCode = (await this.pod.run('bash', ['-c', command], {
 				echo: true,
 				terminal: this.fsTerminal,
 				cwd: POD_HOME
-			});
+			})) as unknown as number;
+			if (exitCode !== 0) throw new Error(`${failure} (exit code ${exitCode})`);
 		};
 		const result = this.fsQueue.then(task, task);
 		this.fsQueue = result.catch(() => undefined);
