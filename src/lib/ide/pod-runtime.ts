@@ -70,6 +70,8 @@ export class PodRuntime implements IdeRuntime {
 			const trimmedUrl = typeof url === 'string' ? url.trim() : '';
 			const active = trimmedUrl.length > 0;
 			env.onPortal({ port: portNumber, url: active ? trimmedUrl : null, active });
+			// Saves are safe once a portal is live; earlier ones would race the hydrate.
+			if (active) env.onSavable();
 		});
 
 		return this.context();
