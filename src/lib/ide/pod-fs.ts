@@ -64,7 +64,10 @@ export class PodFs implements WorkspaceFs {
 			if (!this.fsTerminal) {
 				const decoder = new TextDecoder();
 				this.fsTerminal = await this.pod.createCustomTerminal({
-					onOutput: (chunk) => console.debug('[ide-fs]', decoder.decode(chunk, { stream: true }))
+					// Typed as an ArrayBuffer, but it is a Uint8Array over a growable SharedArrayBuffer,
+					// which TextDecoder refuses; the constructor copies it into a plain one.
+					onOutput: (chunk) =>
+						console.debug('[ide-fs]', decoder.decode(new Uint8Array(chunk), { stream: true }))
 				});
 			}
 			// Typed as an opaque `Process`, but awaiting it yields the exit code.
