@@ -14,7 +14,7 @@ import type { WorkspaceFs } from './workspace-fs';
  */
 export const BOOTING = 0;
 export const HYDRATING = 1;
-/** BrowserPod: `npm install`, then the dev server. */
+/** BrowserPod: install step, then the start command. */
 export const INSTALLING = 2;
 export const STARTING = 3;
 

@@ -26,8 +26,9 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 		},
 		initialFile: (files: string[]) =>
 			files.includes(config.defaultFile) ? config.defaultFile : files[0],
-		installCommands: () => config.setupCommandArgs ?? [['install']],
-		startCommand: async () => config.devCommandArgs ?? ['run', 'dev'],
+		installCommands: () =>
+			(config.setupCommandArgs ?? [['install']]).map((args) => ['npm', ...args]),
+		startCommand: async () => ['npm', ...(config.devCommandArgs ?? ['run', 'dev'])],
 		trackBoot: () => trackEvent('Booted Playground', { framework: config.label })
 	};
 }

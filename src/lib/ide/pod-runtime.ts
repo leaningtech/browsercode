@@ -79,17 +79,18 @@ export class PodRuntime implements IdeRuntime {
 	async launch(): Promise<void> {
 		const ctx = this.context();
 		this.env?.onStage(INSTALLING);
-		for (const args of this.source.installCommands()) {
+		for (const [command, ...args] of this.source.installCommands()) {
 			if (ctx.cancelled()) return;
-			await this.runInOutput('npm', args);
+			await this.runInOutput(command, args);
 		}
 		if (ctx.cancelled()) return;
 
-		const startArgs = await this.source.startCommand(ctx);
-		if (ctx.cancelled() || !startArgs) return;
+		const start = await this.source.startCommand(ctx);
+		if (ctx.cancelled() || !start) return;
 
 		this.env?.onStage(STARTING);
-		await this.runInOutput('npm', startArgs);
+		const [command, ...args] = start;
+		await this.runInOutput(command, args);
 	}
 
 	/**
