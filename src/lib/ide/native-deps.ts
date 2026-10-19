@@ -53,7 +53,7 @@ const WASM_BUNDLERS = {
 	rollup: 'npm:@rollup/wasm-node@*'
 };
 
-const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '1.2.5' };
+const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '*' };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
 	// Vite 8.2+
