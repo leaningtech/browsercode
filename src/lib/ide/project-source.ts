@@ -9,6 +9,10 @@ export type BootContext = {
 	workdir: string;
 	/** Writes raw text to the Output terminal. */
 	write: (data: string) => void;
+	/**
+	 * Runs a program on the runtime, echoed on the Output terminal. A runtime ignores the options
+	 * it has no use for.
+	 */
 	run: (
 		command: string,
 		args: string[],
@@ -25,6 +29,8 @@ export type BootContext = {
 export type ProjectCommand = { command: string[]; env?: string[] };
 
 export type ProjectSource = {
+	/** The runtime the project boots on: a BrowserPod, or CheerpJ for Java. */
+	runtime: 'pod' | 'cheerpj';
 	/** Carried into analytics and bug reports as the boot mode. */
 	id: string;
 	/** Doubles as the filename the project downloads under. */

@@ -56,12 +56,13 @@
 
 	// ── boot log (bottom-left) ──
 
-	// Reveal lines one at a time up to what real progress justifies (activeLine + 1). untrack keeps
-	// the effect keyed to activeLine, not to its own writes to `revealed`.
+	// Reveal lines one at a time up to what real progress justifies (activeLine + 1), and drop the
+	// ones past it at once when a rebuild steps back. untrack keeps the effect keyed to activeLine,
+	// not to its own writes to `revealed`.
 	let revealed = $state(0);
 	$effect(() => {
 		const target = activeLine + 1;
-		if (reduceMotion) {
+		if (reduceMotion || untrack(() => revealed) > target) {
 			revealed = target;
 			return;
 		}

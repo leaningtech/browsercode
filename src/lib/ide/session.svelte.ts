@@ -1,6 +1,7 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { PortalUpdate } from '$lib/pod/portals';
 import { isBinaryContent, isImagePath, loadImage, releaseImage, type ImagePayload } from './media';
+import { CheerpjRuntime } from './cheerpj-runtime.svelte';
 import { PodRuntime } from './pod-runtime';
 import type { ProjectSource } from './project-source';
 import { BOOTING, HYDRATING, type IdeRuntime } from './runtime';
@@ -22,14 +23,15 @@ export type OpenFile = {
 };
 
 /**
- * Runs the playground IDE's boot pipeline over the `ProjectSource` it is given: boots the runtime,
- * hydrates the project, launches it and exposes file/terminal/portal state. UI components render
- * from this; it holds no editor state of its own, so Monaco lives entirely in the component layer.
+ * Runs the playground IDE's boot pipeline over the `ProjectSource` it is given: boots the runtime
+ * the source asks for, hydrates the project, launches it and exposes file/terminal/portal state.
+ * UI components render from this; it holds no editor state of its own, so Monaco lives entirely
+ * in the component layer.
  */
 export class IdeSession {
 	/** How this session's project gets in, and everything the UI reads about it. */
 	readonly source: ProjectSource;
-	/** The machine the project runs on. */
+	/** The machine the project runs on, chosen by the source. */
 	readonly runtime: IdeRuntime;
 	/** Directory the project lives in on the runtime; file paths resolve against it. */
 	readonly workdir: string;
@@ -52,10 +54,11 @@ export class IdeSession {
 	/** Index into `runtime.stages`; drives the preview loader's stage readout. */
 	bootStage = $state(BOOTING);
 	/**
-	 * `launching` from `boot` until the launch settles, whether the project started or failed
-	 * to; a pod's never does, as its dev server keeps running. Then `ready`.
+	 * `launching` from `boot` until the first launch settles, whether the project started or
+	 * failed to; a pod's never does, as its dev server keeps running. Then `ready`, and
+	 * `building` while `run` builds and starts the project again.
 	 */
-	phase = $state<'idle' | 'launching' | 'ready'>('idle');
+	phase = $state<'idle' | 'launching' | 'ready' | 'building'>('idle');
 
 	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
 	private savingPaths = new SvelteSet<string>();
@@ -68,7 +71,8 @@ export class IdeSession {
 	constructor(source: ProjectSource) {
 		this.source = source;
 		this.workdir = source.workdir;
-		this.runtime = new PodRuntime(source);
+		this.runtime =
+			source.runtime === 'cheerpj' ? new CheerpjRuntime(source) : new PodRuntime(source);
 	}
 
 	/**
@@ -331,6 +335,18 @@ export class IdeSession {
 	async saveAll(): Promise<void> {
 		const dirty = this.openFiles.filter((file) => file.content !== file.savedContent);
 		await Promise.all(dirty.map((entry) => this.saveEntry(entry)));
+	}
+
+	/** Saves every tab, then has the runtime build and start the project again. */
+	async run(): Promise<void> {
+		if (this.phase !== 'ready') return;
+		this.phase = 'building';
+		try {
+			await this.saveAll();
+			await this.runtime.run?.();
+		} finally {
+			this.phase = 'ready';
+		}
 	}
 
 	private async saveEntry(entry: OpenFile): Promise<void> {

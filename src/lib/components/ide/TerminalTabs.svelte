@@ -70,15 +70,30 @@
 				</button>
 			</div>
 		{/each}
-		<button
-			onclick={addTerminal}
-			disabled={!session.fsReady}
-			title="New terminal"
-			aria-label="New terminal"
-			class="vrh-tab vrh-tab--add shrink-0"
-		>
-			<Icon icon="mingcute:add-line" width="12" height="12" />
-		</button>
+		<!-- A runtime without a shell has only the Output tab. -->
+		{#if session.runtime.startBash}
+			<button
+				onclick={addTerminal}
+				disabled={!session.fsReady}
+				title="New terminal"
+				aria-label="New terminal"
+				class="vrh-tab vrh-tab--add shrink-0"
+			>
+				<Icon icon="mingcute:add-line" width="12" height="12" />
+			</button>
+		{/if}
+		<!-- Only runtimes that build on demand run again; the rest pick up saves themselves. -->
+		{#if session.runtime.run}
+			<button
+				onclick={() => session.run()}
+				disabled={session.phase !== 'ready'}
+				title="Build and run"
+				class="vrh-run shrink-0"
+			>
+				<Icon icon="mingcute:play-fill" width="11" height="11" />
+				{session.phase === 'building' ? 'Building…' : 'Run'}
+			</button>
+		{/if}
 	</div>
 	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-terminal">
 		<div
@@ -97,6 +112,31 @@
 </div>
 
 <style>
+	.vrh-run {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		height: 24px;
+		/* Pushed to the far end of the bar, past the tabs. */
+		margin: 0 6px 0 auto;
+		padding: 0 8px;
+		border: none;
+		border-radius: 4px;
+		background: transparent;
+		color: var(--color-bc-text);
+		font-family: monospace;
+		font-size: 11px;
+		font-weight: 500;
+		cursor: pointer;
+	}
+	.vrh-run:hover:not(:disabled) {
+		background: rgb(var(--bc-tint) / 6%);
+	}
+	.vrh-run:disabled {
+		color: var(--color-bc-icon);
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
 	.vrh-tab {
 		display: inline-flex;
 		height: 100%;

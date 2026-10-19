@@ -26,6 +26,7 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 
 	return {
 		id: 'github',
+		runtime: 'pod',
 		label: dir ? `${owner}/${repo}/${dir}` : `${owner}/${repo}`,
 		hydrateLabel: 'cloning repository',
 		workdir: dir ? `${repoDir}/${dir}` : repoDir,
