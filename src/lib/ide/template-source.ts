@@ -11,6 +11,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 
 	return {
 		id: 'framework',
+		runtime: 'pod',
 		label: config.label,
 		hydrateLabel: 'copying project files',
 		workdir: POD_HOME,
