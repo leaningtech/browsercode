@@ -39,7 +39,7 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 			installArgs = await prepareManifest(ctx);
 		},
 		initialFile: (files: string[]) => files[0],
-		installCommands: () => [installArgs],
+		installCommands: () => [['npm', ...installArgs]],
 		startCommand: resolveStartScript,
 		trackBoot: () => trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` })
 	};
@@ -87,5 +87,5 @@ async function resolveStartScript(ctx: BootContext): Promise<string[] | null> {
 		);
 		return null;
 	}
-	return ['run', script];
+	return ['npm', 'run', script];
 }

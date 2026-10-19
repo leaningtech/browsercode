@@ -37,11 +37,11 @@ export type ProjectSource = {
 	/** Runs once the files are readable, before the first tab opens. */
 	prepare?: (ctx: BootContext) => Promise<void>;
 	initialFile: (files: string[]) => string | undefined;
-	/** npm invocations run before the dev server. */
+	/** Commands run in order before the start command, each as `[program, ...args]`. */
 	installCommands: () => string[][];
 	/**
-	 * npm invocation that starts the dev server, or null when there is nothing to run. A source
-	 * returning null has already said so on the terminal.
+	 * Command that starts the project, as `[program, ...args]`, or null when there is nothing to
+	 * run. A source returning null has already said so on the terminal.
 	 */
 	startCommand: (ctx: BootContext) => Promise<string[] | null>;
 	/** Called once the files are readable, so a boot that dies earlier is not counted. */
