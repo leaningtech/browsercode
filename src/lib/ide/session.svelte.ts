@@ -45,7 +45,7 @@ export class IdeSession {
 	revealRequest = $state<{ path: string; line: number; column: number } | null>(null);
 	loading = $state(true);
 	isSaving = $state(false);
-	/** Set once the dev server is reachable; earlier saves would race the hydrate. */
+	/** Set once the runtime says saves are safe. */
 	canSave = $state(false);
 	/** True once the project is on disk, so files can be read and changed. */
 	fsReady = $state(false);
@@ -105,10 +105,8 @@ export class IdeSession {
 
 			const ctx = await this.runtime.boot({
 				outputEl: terminalEl,
-				onPortal: (update) => {
-					if (update.active) this.canSave = true;
-					onPortalUpdate(update);
-				},
+				onPortal: onPortalUpdate,
+				onSavable: () => (this.canSave = true),
 				onStage: (index) => (this.bootStage = index),
 				cancelled: () => this.cancelled(token)
 			});
