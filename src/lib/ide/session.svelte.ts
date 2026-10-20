@@ -51,6 +51,11 @@ export class IdeSession {
 	fsReady = $state(false);
 	/** Index into `runtime.stages`; drives the preview loader's stage readout. */
 	bootStage = $state(BOOTING);
+	/**
+	 * `launching` from `boot` until the launch settles, whether the project started or failed
+	 * to; a pod's never does, as its dev server keeps running. Then `ready`.
+	 */
+	phase = $state<'idle' | 'launching' | 'ready'>('idle');
 
 	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
 	private savingPaths = new SvelteSet<string>();
@@ -59,8 +64,6 @@ export class IdeSession {
 
 	private unmounted = false;
 	private bootToken = 0;
-	private booting = false;
-	private booted = false;
 
 	constructor(source: ProjectSource) {
 		this.source = source;
@@ -96,44 +99,40 @@ export class IdeSession {
 		onPortalUpdate: (update: PortalUpdate) => void,
 		onOutput: () => void
 	): Promise<void> {
-		if (this.booting || this.booted) return;
-		this.booting = true;
+		if (this.phase !== 'idle') return;
+		this.phase = 'launching';
 		const token = ++this.bootToken;
-		try {
-			this.bootStage = BOOTING;
-			this.projectFiles = await this.source.listFiles();
-			if (this.cancelled(token)) return;
+		this.bootStage = BOOTING;
+		this.projectFiles = await this.source.listFiles();
+		if (this.cancelled(token)) return;
 
-			const ctx = await this.runtime.boot({
-				outputEl: terminalEl,
-				onPortal: onPortalUpdate,
-				onOutput,
-				onSavable: () => (this.canSave = true),
-				onStage: (index) => (this.bootStage = index),
-				cancelled: () => this.cancelled(token)
-			});
-			if (!ctx) return;
-			this.booted = true;
+		const ctx = await this.runtime.boot({
+			outputEl: terminalEl,
+			onPortal: onPortalUpdate,
+			onOutput,
+			onSavable: () => (this.canSave = true),
+			onStage: (index) => (this.bootStage = index),
+			cancelled: () => this.cancelled(token)
+		});
+		if (!ctx) return;
 
-			this.bootStage = HYDRATING;
-			await this.source.hydrate(ctx, this.projectFiles);
-			if (this.cancelled(token)) return;
+		this.bootStage = HYDRATING;
+		await this.source.hydrate(ctx, this.projectFiles);
+		if (this.cancelled(token)) return;
 
-			// The project exists on disk now, so the editor may read from it.
-			this.fsReady = true;
-			await this.source.prepare?.(ctx);
-			if (this.cancelled(token)) return;
+		// The project exists on disk now, so the editor may read from it.
+		this.fsReady = true;
+		await this.source.prepare?.(ctx);
+		if (this.cancelled(token)) return;
 
-			const initialFile = this.source.initialFile(this.projectFiles);
-			if (initialFile) await this.openFile(initialFile);
-			else this.loading = false;
+		const initialFile = this.source.initialFile(this.projectFiles);
+		if (initialFile) await this.openFile(initialFile);
+		else this.loading = false;
 
-			this.source.trackBoot();
+		this.source.trackBoot();
 
-			await this.runtime.launch();
-		} finally {
-			this.booting = false;
-		}
+		await this.runtime.launch();
+		this.phase = 'ready';
 	}
 
 	/** True if the tree already knows an entry at `path` (or something nested under it). */
