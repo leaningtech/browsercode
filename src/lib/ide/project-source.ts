@@ -3,7 +3,7 @@
  */
 import type { WorkspaceFs } from './workspace-fs';
 
-/** Runtime-side handles the hooks work against; the session owns the terminal and the boot token. */
+/** Runtime-side handles the hooks work against; the session owns the boot token. */
 export type BootContext = {
 	fs: WorkspaceFs;
 	workdir: string;
