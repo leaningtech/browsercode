@@ -10,12 +10,12 @@ import type { WorkspaceFs } from './workspace-fs';
 
 /**
  * Indices into `IdeRuntime.stages`. The session reports the first two for every runtime; the
- * rest are the steps each runtime's `launch` reports through `onStage`.
+ * runtime reports the last two through `onStage`, naming them in `stages`: `SETUP` readies the
+ * project (a pod's install step), `STARTING` starts it.
  */
 export const BOOTING = 0;
 export const HYDRATING = 1;
-/** BrowserPod: install step, then the start command. */
-export const INSTALLING = 2;
+export const SETUP = 2;
 export const STARTING = 3;
 
 /** What the session hands a runtime for one boot. */

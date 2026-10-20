@@ -8,7 +8,7 @@ import { podBlocker, type PodBlocker } from '$lib/utils/platform';
 import { PodFs } from './pod-fs';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
 import type { BootContext, ProjectSource } from './project-source';
-import { INSTALLING, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
+import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
 import type { WorkspaceFs } from './workspace-fs';
 
 /** Force color: npm/vite print plain text with no TTY in the pod. */
@@ -81,7 +81,7 @@ export class PodRuntime implements IdeRuntime {
 	/** Installs, then starts the dev server. */
 	async launch(): Promise<void> {
 		const ctx = this.context();
-		this.env?.onStage(INSTALLING);
+		this.env?.onStage(SETUP);
 		for (const { command, env } of this.source.installCommands()) {
 			if (ctx.cancelled()) return;
 			await this.runCommand(command, env);
