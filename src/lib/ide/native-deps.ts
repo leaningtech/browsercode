@@ -27,7 +27,7 @@ type SectionPatch = {
 };
 
 type FrameworkRule = {
-	applies: (deps: DeclaredDeps) => boolean;
+	applies: (deps: DeclaredDeps, packageManager: PackageManager) => boolean;
 	patches?: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
 	/** Install flags, keyed by package manager; a manager with no entry here needs none. */
 	installFlags?: Partial<Record<PackageManager, string[]>>;
@@ -52,7 +52,7 @@ const DEP_SECTIONS = new Set([
 ]);
 
 /** Native binaries the pod cannot execute. */
-const WASM_BUNDLERS = {
+export const WASM_BUNDLERS = {
 	esbuild: 'npm:esbuild-wasm@*',
 	rollup: 'npm:@rollup/wasm-node@*'
 };
@@ -60,12 +60,14 @@ const WASM_BUNDLERS = {
 const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '*' };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
-	// Every repo: esbuild/rollup can end up in the tree transitively (a plugin, a test runner, a
-	// framework CLI) even when nothing at the top level names them, so this isn't conditional on
-	// what the manifest declares. A repo that already depends on either directly needs that entry
-	// rewritten to match too, or npm rejects the override as conflicting with a direct dependency.
+	// Every repo npm installs: esbuild/rollup can end up in the tree transitively (a plugin, a test
+	// runner, a framework CLI) even when nothing at the top level names them, so this isn't
+	// conditional on what the manifest declares. A repo that already depends on either directly
+	// needs that entry rewritten to match too, or npm rejects the override as conflicting with a
+	// direct dependency. pnpm reads neither field — `pnpm-workspace.ts` writes its overrides to the
+	// one file it does read, and pnpm applies those to direct dependencies as well.
 	{
-		applies: () => true,
+		applies: (_deps, packageManager) => packageManager === 'npm',
 		patches: (_deps, current) => {
 			const patches = [force('overrides', WASM_BUNDLERS)];
 			for (const section of DEP_SECTIONS) {
@@ -184,7 +186,8 @@ function alreadyPresent(
  * file's indentation and trailing newline, are preserved.
  */
 export function patchClonedManifest(
-	manifestRaw: string
+	manifestRaw: string,
+	packageManager: PackageManager
 ): { patched: string; notes: string[] } | null {
 	const manifest = parseManifest(manifestRaw);
 	if (!manifest) return null;
@@ -208,7 +211,7 @@ export function patchClonedManifest(
 
 	const notes: string[] = [];
 	for (const rule of FRAMEWORK_RULES) {
-		if (!rule.applies(deps) || !rule.patches) continue;
+		if (!rule.applies(deps, packageManager) || !rule.patches) continue;
 		for (const { section: sectionName, mode, entries } of rule.patches(deps, currentValue)) {
 			const section = workingCopy(sectionName);
 			for (const [name, value] of Object.entries(entries)) {
@@ -236,7 +239,7 @@ export function resolveInstallArgs(manifestRaw: string, packageManager: PackageM
 	const deps = declaredDeps(manifest);
 	const flags = new Set<string>();
 	for (const rule of FRAMEWORK_RULES) {
-		if (!rule.applies(deps)) continue;
+		if (!rule.applies(deps, packageManager)) continue;
 		for (const flag of rule.installFlags?.[packageManager] ?? []) flags.add(flag);
 	}
 	return ['install', ...flags];

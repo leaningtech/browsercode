@@ -10,6 +10,7 @@ import {
 	usesWorkspaceProtocol,
 	type PackageManager
 } from './native-deps';
+import { PNPM_WORKSPACE_FILE, patchPnpmOverrides } from './pnpm-workspace';
 import { ANSI } from './shell-rc';
 import type { BootContext, ProjectCommand, ProjectSource } from './project-source';
 
@@ -48,6 +49,7 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 			const prepared = await prepareManifest(ctx, repoDir);
 			packageManager = prepared.packageManager;
 			install = packageManagerCommand(packageManager, prepared.installArgs);
+			if (packageManager === 'pnpm') await preparePnpmOverrides(ctx, repoDir);
 		},
 		initialFile: (files: string[]) => files[0],
 		installCommands: () => [install],
@@ -111,7 +113,7 @@ async function prepareManifest(
 		return { installArgs: ['install'], packageManager: 'npm' };
 	}
 	const packageManager = await resolvePackageManager(ctx, repoDir, raw);
-	const result = patchClonedManifest(raw);
+	const result = patchClonedManifest(raw, packageManager);
 	if (!result) {
 		ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
 		return { installArgs: resolveInstallArgs(raw, packageManager), packageManager };
@@ -121,6 +123,35 @@ async function prepareManifest(
 	ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
 	for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
 	return { installArgs: resolveInstallArgs(result.patched, packageManager), packageManager };
+}
+
+/**
+ * Writes the wasm bundler overrides where pnpm reads them. pnpm finds `pnpm-workspace.yaml` by
+ * searching up from the directory it runs in, so the one that governs this install is either the
+ * workdir's own or, when we booted into a subdirectory, the clone root's. Neither existing means
+ * the repo is a single pnpm project, which gets the file created for it.
+ */
+async function preparePnpmOverrides(ctx: BootContext, repoDir: string): Promise<void> {
+	const inWorkdir = `${ctx.workdir}/${PNPM_WORKSPACE_FILE}`;
+	const atRoot = `${repoDir}/${PNPM_WORKSPACE_FILE}`;
+	try {
+		const path = (await fileExists(ctx, inWorkdir))
+			? inWorkdir
+			: ctx.workdir !== repoDir && (await fileExists(ctx, atRoot))
+				? atRoot
+				: null;
+		const result = patchPnpmOverrides(path === null ? null : await ctx.fs.readFile(path));
+		if (!result) return;
+		await ctx.fs.writeFile(path ?? inWorkdir, result.patched);
+		const verb = path === null ? 'Created' : 'Modified';
+		ctx.write(`\r\n${ANSI.dim}${verb} ${PNPM_WORKSPACE_FILE}${ANSI.reset}\r\n`);
+		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
+	} catch (error) {
+		ctx.write(
+			`\r\n${ANSI.coral}Could not patch ${PNPM_WORKSPACE_FILE}; esbuild and rollup may not run in the pod.${ANSI.reset}\r\n`
+		);
+		console.warn(`Could not patch ${PNPM_WORKSPACE_FILE}:`, error);
+	}
 }
 
 async function resolveStartScript(
