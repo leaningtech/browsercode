@@ -95,34 +95,38 @@ async function resolvePackageManager(
 
 /**
  * Patches the cloned manifest and returns the install args and package manager for it. All three
- * come from the one read, so install does not re-read the file prepare() just wrote.
+ * come from the one read, so install does not re-read the file prepare() just wrote. Reading,
+ * patching and writing share one `try`: any of them failing leaves the repo installable as cloned
+ * rather than taking the whole boot down.
  */
 async function prepareManifest(
 	ctx: BootContext,
 	repoDir: string
 ): Promise<{ installArgs: string[]; packageManager: PackageManager }> {
 	const manifestPath = `${ctx.workdir}/package.json`;
-	let raw: string;
+	// Held outside the try so a failure past this point still installs with the right manager,
+	// just against the manifest as cloned.
+	let packageManager: PackageManager = 'npm';
 	try {
-		raw = await ctx.fs.readFile(manifestPath);
+		const raw = await ctx.fs.readFile(manifestPath);
+		packageManager = await resolvePackageManager(ctx, repoDir, raw);
+		const result = patchClonedManifest(raw, packageManager);
+		if (!result) {
+			ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
+			return { installArgs: resolveInstallArgs(raw, packageManager), packageManager };
+		}
+		await ctx.fs.writeFile(manifestPath, result.patched);
+		// Header takes the leading blank line; the changes follow indented under it as one block.
+		ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
+		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
+		return { installArgs: resolveInstallArgs(result.patched, packageManager), packageManager };
 	} catch (error) {
 		ctx.write(
 			`\r\n${ANSI.coral}Could not patch package.json; installing the repo as cloned.${ANSI.reset}\r\n`
 		);
 		console.warn('Could not patch the cloned manifest:', error);
-		return { installArgs: ['install'], packageManager: 'npm' };
+		return { installArgs: ['install'], packageManager };
 	}
-	const packageManager = await resolvePackageManager(ctx, repoDir, raw);
-	const result = patchClonedManifest(raw, packageManager);
-	if (!result) {
-		ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
-		return { installArgs: resolveInstallArgs(raw, packageManager), packageManager };
-	}
-	await ctx.fs.writeFile(manifestPath, result.patched);
-	// Header takes the leading blank line; the changes follow indented under it as one block.
-	ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
-	for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
-	return { installArgs: resolveInstallArgs(result.patched, packageManager), packageManager };
 }
 
 /**
