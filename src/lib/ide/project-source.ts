@@ -18,6 +18,12 @@ export type BootContext = {
 	cancelled: () => boolean;
 };
 
+/**
+ * One program invocation a source asks the runtime to run, as `[program, ...args]`, plus any
+ * environment that invocation needs on top of whatever the runtime already sets.
+ */
+export type ProjectCommand = { command: string[]; env?: string[] };
+
 export type ProjectSource = {
 	/** Carried into analytics and bug reports as the boot mode. */
 	id: string;
@@ -37,13 +43,13 @@ export type ProjectSource = {
 	/** Runs once the files are readable, before the first tab opens. */
 	prepare?: (ctx: BootContext) => Promise<void>;
 	initialFile: (files: string[]) => string | undefined;
-	/** Commands run in order before the start command, each as `[program, ...args]`. */
-	installCommands: () => string[][];
+	/** Commands run in order before the start command. */
+	installCommands: () => ProjectCommand[];
 	/**
-	 * Command that starts the project, as `[program, ...args]`, or null when there is nothing to
-	 * run. A source returning null has already said so on the terminal.
+	 * Command that starts the project, or null when there is nothing to run. A source returning
+	 * null has already said so on the terminal.
 	 */
-	startCommand: (ctx: BootContext) => Promise<string[] | null>;
+	startCommand: (ctx: BootContext) => Promise<ProjectCommand | null>;
 	/** Called once the files are readable, so a boot that dies earlier is not counted. */
 	trackBoot: () => void;
 };

@@ -9,6 +9,9 @@ type Manifest = {
 	[key: string]: unknown;
 };
 
+/** The package managers the pod can install a cloned repo with. */
+export type PackageManager = 'npm' | 'pnpm';
+
 /** What the repo declares, package name to version spec, dependencies and devDependencies. */
 type DeclaredDeps = Map<string, string>;
 
@@ -26,7 +29,8 @@ type SectionPatch = {
 type FrameworkRule = {
 	applies: (deps: DeclaredDeps) => boolean;
 	patches?: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
-	installFlags?: string[];
+	/** Install flags, keyed by package manager; a manager with no entry here needs none. */
+	installFlags?: Partial<Record<PackageManager, string[]>>;
 };
 
 /** Ours wins: for where the repo's own value is the thing that breaks the pod. */
@@ -91,7 +95,9 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 	{
 		applies: (deps) => majorAtLeast(deps, 'nuxt', 4),
 		patches: () => [fill('dependencies', ROLLDOWN_WASM)],
-		installFlags: ['--legacy-peer-deps']
+		// npm 7+ fails hard on a peer mismatch unless told not to; pnpm only warns by default, so
+		// it needs no equivalent flag here.
+		installFlags: { npm: ['--legacy-peer-deps'] }
 	}
 ];
 
@@ -224,14 +230,36 @@ export function patchClonedManifest(
 }
 
 /** Deduplicated so two matching rules asking for the same flag pass it once. */
-export function resolveInstallArgs(manifestRaw: string): string[] {
+export function resolveInstallArgs(manifestRaw: string, packageManager: PackageManager): string[] {
 	const manifest = parseManifest(manifestRaw);
 	if (!manifest) return ['install'];
 	const deps = declaredDeps(manifest);
 	const flags = new Set<string>();
 	for (const rule of FRAMEWORK_RULES) {
 		if (!rule.applies(deps)) continue;
-		for (const flag of rule.installFlags ?? []) flags.add(flag);
+		for (const flag of rule.installFlags?.[packageManager] ?? []) flags.add(flag);
 	}
 	return ['install', ...flags];
 }
+
+/** True when the manifest pins pnpm as its package manager (`"packageManager": "pnpm@..."`). */
+export function declaresPnpm(manifestRaw: string): boolean {
+	const pm = parseManifest(manifestRaw)?.packageManager;
+	return typeof pm === 'string' && pm.startsWith('pnpm@');
+}
+
+/** True when a declared dependency uses the `workspace:` protocol, which plain npm can't resolve. */
+export function usesWorkspaceProtocol(manifestRaw: string): boolean {
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return false;
+	return [...declaredDeps(manifest).values()].some((spec) => spec.startsWith('workspace:'));
+}
+
+/** Environment each package manager needs to run in the pod; empty for one that needs none. */
+export const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
+	npm: [],
+	// pnpm pins an exact version via `packageManager` and otherwise refuses to run, but the pod's
+	// own pnpm has no native binary to switch to for an arbitrary pinned version. This tells pnpm to
+	// use whatever is already on PATH instead of trying to fetch that exact pin.
+	pnpm: ['pnpm_config_pm_on_fail=ignore']
+};
