@@ -1,6 +1,7 @@
 /**
  * Per-framework patches applied to a cloned GitHub repo's package.json before install, and the
- * `npm install` flags it needs.
+ * install flags it needs. What a repo installed with pnpm needs written outside package.json
+ * lives in `pnpm-workspace.ts`.
  */
 
 type Manifest = {
@@ -57,6 +58,13 @@ export const WASM_BUNDLERS = {
 	rollup: 'npm:@rollup/wasm-node@*'
 };
 
+/**
+ * The wasm build of rolldown's native binding, which has to match whichever rolldown the repo
+ * resolves. `*` gives 1.2.x today and every Vite 8.2+ resolves rolldown 1.2.x, so they agree. They
+ * stop agreeing the day rolldown 1.3 ships, because those Vite versions stay on 1.2 — check this
+ * first if a Vite repo starts failing to resolve the binding. A pin goes stale the same way, in
+ * the other direction, which is what `*` replaced.
+ */
 const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '*' };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
@@ -262,7 +270,9 @@ export function usesWorkspaceProtocol(manifestRaw: string): boolean {
 export const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
 	npm: [],
 	// pnpm pins an exact version via `packageManager` and otherwise refuses to run, but the pod's
-	// own pnpm has no native binary to switch to for an arbitrary pinned version. This tells pnpm to
-	// use whatever is already on PATH instead of trying to fetch that exact pin.
+	// own pnpm has no native binary to switch to for an arbitrary pinned version. This tells pnpm
+	// to use whatever is already on PATH instead of trying to fetch that exact pin. The pod's pnpm
+	// 12 reads it; pnpm 10 and older ignore the setting, so a pod that moves back to one of those
+	// needs another way around the pin.
 	pnpm: ['pnpm_config_pm_on_fail=ignore']
 };

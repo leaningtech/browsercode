@@ -112,7 +112,9 @@ async function prepareManifest(
 		packageManager = await resolvePackageManager(ctx, repoDir, raw);
 		const result = patchClonedManifest(raw, packageManager);
 		if (!result) {
-			ctx.write(`\r\n${ANSI.dim}No dependency patches apply to this repo.${ANSI.reset}\r\n`);
+			// Rare on npm, where the bundler override always applies: it takes a repo that already
+			// declares our values, or a package.json too broken to parse, which install reports anyway.
+			ctx.write(`\r\n${ANSI.dim}Left package.json as cloned.${ANSI.reset}\r\n`);
 			return { installArgs: resolveInstallArgs(raw, packageManager), packageManager };
 		}
 		await ctx.fs.writeFile(manifestPath, result.patched);
