@@ -21,6 +21,7 @@
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
+	import EmbedBadge from '$lib/components/EmbedBadge.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
 
 	// The route picks the project source, so the shell never learns how the project arrived.
@@ -28,6 +29,9 @@
 	let { session, shell = FULL_SHELL }: { session: IdeSession; shell?: ShellOptions } = $props();
 
 	let hasRail = $derived(shell.fileTree || shell.search || shell.tools);
+	// The badge rides the header when there is one; otherwise it floats over the panes, which is
+	// the only place left in a shell narrowed down to a bare preview or terminal.
+	let floatingBadge = $derived(shell.brand && !shell.header);
 	let hasLeftColumn = $derived(shell.editor || shell.terminal);
 	/** Nothing to collapse into when the preview is the only pane. */
 	let collapsiblePreview = $derived(shell.preview && hasLeftColumn);
@@ -208,6 +212,10 @@
 			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-navy px-3"
 		>
 			<div class="flex min-w-0 items-center gap-2 text-[11px] text-bc-text-muted">
+				{#if shell.brand}
+					<EmbedBadge class="-ml-1" />
+					<span class="h-3.5 w-px shrink-0 bg-bc-border"></span>
+				{/if}
 				<!-- Switching projects happens by navigating away (sidebar Ide flyout or an /ide/github URL). -->
 				<span class="truncate text-bc-text">{session.source.label}</span>
 				{#if session.selectedFile}
@@ -223,10 +231,14 @@
 
 	<!-- ── Body ────────────────────────────────────────────────────────────── -->
 	<div
-		class="body-wrap flex min-h-0 flex-1 overflow-hidden"
+		class="body-wrap relative flex min-h-0 flex-1 overflow-hidden"
 		class:is-mobile={isMobile}
 		bind:this={bodyEl}
 	>
+		<!-- Above the preview iframe, which covers this corner whenever the preview is shown. -->
+		{#if floatingBadge}
+			<EmbedBadge floating class="absolute right-3 bottom-3 z-40" />
+		{/if}
 		<!-- Icon rail: panel navigators anchor to the top, global view toggles to the bottom. -->
 		{#if hasRail}
 			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-navy">
