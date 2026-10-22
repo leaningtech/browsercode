@@ -33,8 +33,8 @@
 					rel="noopener noreferrer"
 					class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 					>BrowserPod</a
-				> sandbox, a WebAssembly Node.js environment with a real filesystem, npm and git. Nothing installs
-				on your machine.
+				> sandbox, a WebAssembly environment with a real filesystem, npm and git. Nothing installs on
+				your machine.
 			</span>
 		</div>
 
