@@ -77,6 +77,20 @@ export function patchPnpmOverrides(
 		lines[index] = render(indent, name, value);
 		notes.push(note('replaced', name, value));
 	}
+	// A selector (`esbuild@<=0.24.2`, `vite>esbuild`) outranks the plain entry for what it covers,
+	// so a repo's own security pin would bring native esbuild back. Those point at the wasm build
+	// too, except `-`, which drops the package there and is the repo's call to make.
+	for (let index = header + 1; index < end; index++) {
+		const entry = parseEntry(lines[index], indent);
+		if (!entry) continue;
+		for (const [name, value] of entries) {
+			if (entry.key === name || !selectorPattern(name).test(entry.key)) continue;
+			const current = scalarValue(entry.rest);
+			if (current === value || current === '-') continue;
+			lines[index] = render(indent, entry.written, value);
+			notes.push(note('replaced', entry.key, value));
+		}
+	}
 	if (notes.length === 0) return null;
 	lines.splice(header + 1, 0, ...additions);
 	return { patched: lines.join('\n'), notes };
@@ -104,10 +118,34 @@ function isKey(line: string, indent: string, name: string): boolean {
 
 /** The value the file currently gives `name`, unquoted and with any trailing comment dropped. */
 function declaredValue(line: string, indent: string, name: string): string {
-	const rest = keyPattern(indent, name).exec(line)?.[1] ?? '';
-	const quoted = /^'((?:[^']|'')*)'|^"((?:[^"\\]|\\.)*)"/.exec(rest);
+	return scalarValue(keyPattern(indent, name).exec(line)?.[1] ?? '');
+}
+
+function scalarValue(text: string): string {
+	const quoted = /^'((?:[^']|'')*)'|^"((?:[^"\\]|\\.)*)"/.exec(text);
 	if (quoted) return (quoted[1] ?? quoted[2] ?? '').replace(/''/g, "'");
-	return rest.split(/[ \t]+#/)[0].trim();
+	return text.split(/[ \t]+#/)[0].trim();
+}
+
+/** An entry at exactly `indent`: its key as the file wrote it, that key unquoted, and its value. */
+function parseEntry(
+	line: string,
+	indent: string
+): { written: string; key: string; rest: string } | null {
+	if (!line.startsWith(indent) || /^[ \t]/.test(line.slice(indent.length))) return null;
+	const match = /^('(?:[^']|'')*'|"(?:[^"\\]|\\.)*"|[^'"#\s]\S*?)[ \t]*:(?:[ \t]+(.*))?$/.exec(
+		line.slice(indent.length)
+	);
+	if (!match) return null;
+	return { written: match[1], key: scalarValue(match[1]), rest: match[2] ?? '' };
+}
+
+/**
+ * Matches a selector whose overridden package is `name`, alone or under a parent. The range may
+ * hold only comparator characters, so `esbuild@1>foo` (foo under esbuild) is not mistaken for one.
+ */
+function selectorPattern(name: string): RegExp {
+	return new RegExp(`(?:^|>)${escapeRegExp(name)}(?:@[\\d.<>=^~xX*| -]*)?$`);
 }
 
 /** Values are quoted because ours carry `:` and `@`, which plain scalars make a gamble. */
