@@ -61,22 +61,57 @@
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
 
 	// ── Mobile state ──────────────────────────────────────────────────────────
+	type Pane = 'editor' | 'terminal' | 'preview';
+
 	let isMobile = $state(false);
-	let activeMobileView = $state<'editor' | 'terminal' | 'preview'>(
-		untrack(() => (shell.editor ? 'editor' : shell.terminal ? 'terminal' : 'preview'))
+	// Seeded once, deliberately: `shell` is built before mount and never swapped. The requested
+	// pane wins when the shell renders it; otherwise the first one that is actually there does.
+	let activeMobileView = $state<Pane>(
+		untrack(() =>
+			shell[shell.initialPane]
+				? shell.initialPane
+				: shell.editor
+					? 'editor'
+					: shell.terminal
+						? 'terminal'
+						: 'preview'
+		)
 	);
 	// One pane needs no tab bar.
 	let mobileTabs = $derived(
-		[
-			{ id: 'editor', label: 'Editor', icon: 'mingcute:code-line', shown: shell.editor },
-			{ id: 'terminal', label: 'Terminal', icon: 'mingcute:terminal-line', shown: shell.terminal },
-			{ id: 'preview', label: 'Preview', icon: 'mingcute:eye-2-line', shown: shell.preview }
-		].filter((tab) => tab.shown)
+		(
+			[
+				{ id: 'editor', label: 'Editor', icon: 'mingcute:code-line', shown: shell.editor },
+				{
+					id: 'terminal',
+					label: 'Terminal',
+					icon: 'mingcute:terminal-line',
+					shown: shell.terminal
+				},
+				{ id: 'preview', label: 'Preview', icon: 'mingcute:eye-2-line', shown: shell.preview }
+			] satisfies { id: Pane; label: string; icon: string; shown: boolean }[]
+		).filter((tab) => tab.shown)
 	);
+
+	// The narrow layout shows one pane at a time, so a dev server coming up or the terminal
+	// printing happens out of sight — which reads as nothing happening at all. Each marks its
+	// own tab until that tab is opened.
+	let unseen = $state({ terminal: false, preview: false });
+
+	function showMobileView(view: Pane): void {
+		activeMobileView = view;
+		if (view === 'terminal') unseen.terminal = false;
+		if (view === 'preview') unseen.preview = false;
+	}
 
 	// A source with a declared app port keeps the preview pinned to it; other
 	// ports stay reachable through the toolbar's port menu.
-	const portal = new PortalState({ preferredPort: () => session.source.appPort });
+	const portal = new PortalState({
+		preferredPort: () => session.source.appPort,
+		onActivate: () => {
+			if (isMobile && activeMobileView !== 'preview') unseen.preview = true;
+		}
+	});
 
 	let isPreviewVisible = $state(true);
 	let previewCollapsed = $derived(!isPreviewVisible && !isMobile);
@@ -113,6 +148,21 @@
 	let leftColEl = $state<HTMLElement | null>(null);
 
 	let outputEl = $state<HTMLElement | null>(null);
+
+	/** Watched only while it can still raise the cue, so a busy terminal costs nothing. */
+	$effect(() => {
+		if (!outputEl || !isMobile || activeMobileView === 'terminal' || unseen.terminal) return;
+		// Crossing the breakpoint refits xterm, which rewrites every row it holds. That lands here
+		// as a burst of mutations with nothing new said, so the first beat after arming is spent
+		// letting the reflow pass; a terminal with something to report says it again right after.
+		const settled = performance.now() + 500;
+		const observer = new MutationObserver(() => {
+			if (performance.now() >= settled) unseen.terminal = true;
+		});
+		// Writes land as row content; attributes are left out so the blinking cursor is not output.
+		observer.observe(outputEl, { childList: true, characterData: true, subtree: true });
+		return () => observer.disconnect();
+	});
 
 	function fitTerminals() {
 		window.dispatchEvent(new Event('resize'));
@@ -161,6 +211,12 @@
 			isMobile = mobile;
 			// Close the side panel by default on mobile so it doesn't cover the view
 			if (isMobile && activePanel) activePanel = null;
+			// Widening puts every pane on screen at once, so whatever a tab was flagging has now
+			// been seen — leaving the marks up would have them reappear on the way back down.
+			if (!mobile) {
+				unseen.terminal = false;
+				unseen.preview = false;
+			}
 		})
 	);
 
@@ -508,13 +564,22 @@
 			style="height: calc(44px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			{#each mobileTabs as tab (tab.id)}
+				{@const cued = tab.id !== 'editor' && unseen[tab.id]}
 				<button
-					onclick={() => (activeMobileView = tab.id as 'editor' | 'terminal' | 'preview')}
+					onclick={() => showMobileView(tab.id)}
 					class="mobile-tab-btn"
 					class:active={activeMobileView === tab.id}
+					class:cued
 				>
-					<Icon icon={tab.icon} width="16" height="16" />
-					<span>{tab.label}</span>
+					<span class="tab-icon">
+						<Icon icon={tab.icon} width="16" height="16" />
+						{#if cued}
+							<span class="tab-dot"></span>
+						{/if}
+					</span>
+					<span
+						>{tab.label}{#if cued}<span class="sr-only">, new activity</span>{/if}</span
+					>
 				</button>
 			{/each}
 		</nav>
@@ -596,6 +661,43 @@
 	.mobile-tab-btn.active {
 		color: var(--color-bc-mist);
 		background: color-mix(in srgb, var(--color-bc-azure) 10%, transparent);
+	}
+	/* Tints the whole tab, not just the dot: the label is the part read at a glance. */
+	.mobile-tab-btn.cued:not(.active) {
+		color: var(--color-bc-azure);
+	}
+
+	.tab-icon {
+		position: relative;
+		display: inline-flex;
+	}
+	/* Pulses a few times to catch the eye, then rests as a plain dot — it has to keep saying
+	   "there is something here" long after the movement that announced it. */
+	.tab-dot {
+		position: absolute;
+		top: -1px;
+		right: -3px;
+		width: 6px;
+		height: 6px;
+		border-radius: 9999px;
+		background: var(--color-bc-azure);
+		animation: tab-cue 1.3s ease-out 3;
+	}
+	@keyframes tab-cue {
+		0% {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bc-azure) 70%, transparent);
+		}
+		70% {
+			box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-bc-azure) 0%, transparent);
+		}
+		100% {
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bc-azure) 0%, transparent);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.tab-dot {
+			animation: none;
+		}
 	}
 
 	/* On mobile, overlay the files side panel so it doesn't squeeze

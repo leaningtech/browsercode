@@ -41,6 +41,8 @@ The iframe must carry `allow="cross-origin-isolated"`. Without all three the emb
 - `codex` asks for an OpenAI API key inside the frame.
 - `claude` opens a new tab for OAuth sign-in.
 - Controls without meaning are omitted: a preview-only embed has no hide button and no port badge.
+- Narrower than 768px — which a column in a blog post often is, desktop or not — the panes become tabs. An embed opens on the preview whenever `view` includes it, since a running app says what this is better than an editor does.
+- A tab marks itself when its own pane does something you cannot see from the one you are on: the terminal on new output, the preview once a dev server answers. Opening that tab clears the mark.
 - Every embed carries a BrowserCode badge linking back to browsercode.io. It sits in the top bar when the embed shows the editor, and floats in the bottom-right corner otherwise.
 
 ## Examples
