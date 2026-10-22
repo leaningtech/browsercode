@@ -59,6 +59,10 @@ function parseShell(url: URL): ShellOptions {
 		tools: false,
 		// The host page has none of our chrome, so the embed carries the attribution itself.
 		brand: true,
+		// An embed is often framed narrower than the mobile breakpoint even on a desktop, which
+		// leaves one pane showing. Opening on the running app says what this is far better than
+		// an editor does; the tab bar, and its activity cues, lead back to the rest.
+		initialPane: 'preview',
 		leaveGuard: false
 	};
 }
