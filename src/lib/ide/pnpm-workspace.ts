@@ -36,7 +36,10 @@ export function patchPnpmOverrides(
 		};
 	}
 
-	const lines = raw.split('\n');
+	// A file committed from Windows ends its lines in `\r\n`, which would keep every line-anchored
+	// pattern below from matching. Lines are split without it and rejoined with it.
+	const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+	const lines = raw.split(/\r?\n/);
 	// A block header is `overrides:` with nothing after it but a comment. Any other top-level
 	// `overrides` key is flow style (`overrides: { ... }`) or an alias, which this cannot edit —
 	// and appending a second one would give the file a duplicate key, so bail instead.
@@ -46,9 +49,9 @@ export function patchPnpmOverrides(
 			throw new Error('pnpm-workspace.yaml holds an overrides key this cannot edit');
 		}
 		const body = [...PREAMBLE, `${BLOCK}:`, ...entries.map(([n, v]) => render('  ', n, v))];
-		const separator = raw.endsWith('\n') ? '' : '\n';
+		const separator = raw.endsWith('\n') ? '' : eol;
 		return {
-			patched: `${raw}${separator}${body.join('\n')}\n`,
+			patched: `${raw}${separator}${body.join(eol)}${eol}`,
 			notes: entries.map(([name, value]) => note('added', name, value))
 		};
 	}
@@ -93,7 +96,7 @@ export function patchPnpmOverrides(
 	}
 	if (notes.length === 0) return null;
 	lines.splice(header + 1, 0, ...additions);
-	return { patched: lines.join('\n'), notes };
+	return { patched: lines.join(eol), notes };
 }
 
 /** True for a line that declares something, rather than being blank or comment-only. */
