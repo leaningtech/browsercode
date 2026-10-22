@@ -54,11 +54,14 @@ export class IdeSession {
 	/** Index into `runtime.stages`; drives the preview loader's stage readout. */
 	bootStage = $state(BOOTING);
 	/**
-	 * `launching` from `boot` until the first launch settles, whether the project started or
-	 * failed to; a pod's never does, as its dev server keeps running. Then `ready`, and
-	 * `building` while `run` builds and starts the project again.
+	 * The current state of the session boot. `launching` from `boot` until the first launch
+	 * settles; a pod's launch never does, as its dev server keeps running. Then `ready`, even
+	 * when the project failed to build or start, so Run can try again, and `building` while
+	 * `run` builds and starts it again. `failed` for good once a boot step throws.
 	 */
-	phase = $state<'idle' | 'launching' | 'ready' | 'building'>('idle');
+	phase = $state<'idle' | 'launching' | 'ready' | 'building' | 'failed'>('idle');
+	/** Why the boot failed; set with `phase = 'failed'`. */
+	failure = $state<string | null>(null);
 
 	/** Paths with a save in flight; a second save of the same file waits for the next edit. */
 	private savingPaths = new SvelteSet<string>();
@@ -106,37 +109,46 @@ export class IdeSession {
 		if (this.phase !== 'idle') return;
 		this.phase = 'launching';
 		const token = ++this.bootToken;
-		this.bootStage = BOOTING;
-		this.projectFiles = await this.source.listFiles();
-		if (this.cancelled(token)) return;
+		try {
+			this.bootStage = BOOTING;
+			this.projectFiles = await this.source.listFiles();
+			if (this.cancelled(token)) return;
 
-		const ctx = await this.runtime.boot({
-			outputEl: terminalEl,
-			onPortal: onPortalUpdate,
-			onOutput,
-			onSavable: () => (this.canSave = true),
-			onStage: (index) => (this.bootStage = index),
-			cancelled: () => this.cancelled(token)
-		});
-		if (!ctx) return;
+			const ctx = await this.runtime.boot({
+				outputEl: terminalEl,
+				onPortal: onPortalUpdate,
+				onOutput,
+				onSavable: () => (this.canSave = true),
+				onStage: (index) => (this.bootStage = index),
+				cancelled: () => this.cancelled(token)
+			});
+			if (!ctx) return;
 
-		this.bootStage = HYDRATING;
-		await this.source.hydrate(ctx, this.projectFiles);
-		if (this.cancelled(token)) return;
+			this.bootStage = HYDRATING;
+			await this.source.hydrate(ctx, this.projectFiles);
+			if (this.cancelled(token)) return;
 
-		// The project exists on disk now, so the editor may read from it.
-		this.fsReady = true;
-		await this.source.prepare?.(ctx);
-		if (this.cancelled(token)) return;
+			// The project exists on disk now, so the editor may read from it.
+			this.fsReady = true;
+			await this.source.prepare?.(ctx);
+			if (this.cancelled(token)) return;
 
-		const initialFile = this.source.initialFile(this.projectFiles);
-		if (initialFile) await this.openFile(initialFile);
-		else this.loading = false;
+			const initialFile = this.source.initialFile(this.projectFiles);
+			if (initialFile) await this.openFile(initialFile);
+			else this.loading = false;
 
-		this.source.trackBoot();
+			this.source.trackBoot();
 
-		await this.runtime.launch();
-		this.phase = 'ready';
+			await this.runtime.launch();
+			this.phase = 'ready';
+		} catch (error) {
+			// A boot torn down by `shutdown` may throw on its way out; that is no failure.
+			if (this.cancelled(token)) return;
+			console.error('Failed initializing the runtime:', error);
+			this.failure = error instanceof Error ? error.message : String(error);
+			this.phase = 'failed';
+			this.loading = false;
+		}
 	}
 
 	/** True if the tree already knows an entry at `path` (or something nested under it). */
