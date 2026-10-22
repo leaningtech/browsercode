@@ -13,6 +13,17 @@ export function writeToTerminal(terminal: Terminal | null, data: string): void {
 }
 
 /**
+ * Calls `listener` whenever a default terminal prints. Reads the xterm it wraps, which isn't in the
+ * published types; its parse event fires even while the terminal is `display: none`, where xterm
+ * pauses rendering and its DOM never changes.
+ */
+export function onTerminalOutput(terminal: Terminal, listener: () => void): void {
+	(
+		terminal as Terminal & { xterm?: { onWriteParsed?: (listener: () => void) => unknown } }
+	).xterm?.onWriteParsed?.(listener);
+}
+
+/**
  * Races `signal` against a `ms` timeout. `pod.run` resolves on spawn, not exit, so a boot or
  * install step that never produces its expected output would otherwise hang forever — callers
  * watch a custom terminal for that output and resolve `signal` once they see it.

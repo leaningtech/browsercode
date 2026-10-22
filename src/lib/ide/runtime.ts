@@ -23,6 +23,8 @@ export type RuntimeEnv = {
 	/** Where the runtime mounts its output view. */
 	outputEl: HTMLElement;
 	onPortal: (update: PortalUpdate) => void;
+	/** Fires whenever the output view prints, including while it is hidden. */
+	onOutput: () => void;
 	/** Says saves are safe from now on; until then the editor keeps edits to itself. */
 	onSavable: () => void;
 	/** Reports a stage past `HYDRATING`, as an index into `stages`. */
