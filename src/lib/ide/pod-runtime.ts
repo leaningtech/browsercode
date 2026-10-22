@@ -81,9 +81,9 @@ export class PodRuntime implements IdeRuntime {
 	async launch(): Promise<void> {
 		const ctx = this.context();
 		this.env?.onStage(INSTALLING);
-		for (const [command, ...args] of this.source.installCommands()) {
+		for (const { command, env } of this.source.installCommands()) {
 			if (ctx.cancelled()) return;
-			await this.runInOutput(command, args);
+			await this.runCommand(command, env);
 		}
 		if (ctx.cancelled()) return;
 
@@ -91,8 +91,7 @@ export class PodRuntime implements IdeRuntime {
 		if (ctx.cancelled() || !start) return;
 
 		this.env?.onStage(STARTING);
-		const [command, ...args] = start;
-		await this.runInOutput(command, args);
+		await this.runCommand(start.command, start.env);
 	}
 
 	/**
@@ -128,19 +127,30 @@ export class PodRuntime implements IdeRuntime {
 		};
 	}
 
+	/** Runs a source's `[program, ...args]`, with the environment that command asked for. */
+	private async runCommand(command: string[], env?: string[]): Promise<void> {
+		const [program, ...args] = command;
+		await this.runInOutput(program, args, { env });
+	}
+
 	/** Echoes the command with the branded ❯ prompt, then runs it against the Output terminal. */
 	private async runInOutput(
 		command: string,
 		args: string[],
-		{ cwd = this.source.workdir, color = true }: { cwd?: string; color?: boolean } = {}
+		{
+			cwd = this.source.workdir,
+			color = true,
+			env = []
+		}: { cwd?: string; color?: boolean; env?: string[] } = {}
 	): Promise<void> {
 		if (!this.pod || !this.outputTerminal) return;
 		this.logCommand(command, args);
+		const fullEnv = [...(color ? COLOR_ENV : []), ...env];
 		await this.pod.run(command, args, {
 			echo: false,
 			terminal: this.outputTerminal,
 			cwd,
-			...(color ? { env: COLOR_ENV } : {})
+			...(fullEnv.length > 0 ? { env: fullEnv } : {})
 		});
 	}
 
