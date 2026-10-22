@@ -44,7 +44,7 @@
 			>
 				<Icon icon="mingcute:alert-line" width="22" height="22" />
 			</div>
-			<h3 class="mb-3 text-sm font-semibold text-bc-text">Nothing to boot</h3>
+			<h3 class="mb-3 text-[14px] font-semibold text-bc-text">Nothing to boot</h3>
 			<p class="text-[12px] leading-relaxed text-bc-text-muted">Pass one of</p>
 			<ul class="mt-2 space-y-1 text-left text-[12px] text-bc-mist">
 				<li><code class="break-all">?repo=&lt;github url&gt;</code></li>

@@ -79,7 +79,7 @@
 				/>
 			</button>
 		</div>
-		<div class="text-xs leading-relaxed text-bc-text-muted">
+		<div class="text-[12px] leading-relaxed text-bc-text-muted">
 			Create one at
 			<!-- The provider's console is an external URL, so resolve() does not apply here. -->
 			<!-- eslint-disable svelte/no-navigation-without-resolve -->

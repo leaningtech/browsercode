@@ -19,7 +19,7 @@
 			<Icon icon="mingcute:alert-line" width="22" height="22" />
 		</div>
 		{#if blocker === 'not-isolated'}
-			<h3 class="mb-2 text-sm font-semibold text-bc-text">Isolation headers missing</h3>
+			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Isolation headers missing</h3>
 			<p class="text-[12px] leading-relaxed break-words text-bc-text-muted">
 				The page embedding this frame must send
 				<code class="text-bc-text">Cross-Origin-Opener-Policy: same-origin</code>
@@ -34,7 +34,7 @@
 				class="mt-3 inline-block text-[12px] text-bc-mist hover:text-bc-link-hover">Learn more</a
 			>
 		{:else}
-			<h3 class="mb-2 text-sm font-semibold text-bc-text">Incompatible Browser</h3>
+			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Incompatible Browser</h3>
 			<p class="text-[12px] leading-relaxed text-bc-text-muted">
 				Requires <strong class="text-bc-text">Atomics.waitAsync</strong> (Chrome, Edge, Safari 16.4+).
 			</p>

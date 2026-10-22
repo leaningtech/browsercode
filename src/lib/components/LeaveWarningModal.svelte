@@ -47,7 +47,7 @@
 			>
 				<Icon icon="mingcute:alert-line" width="22" height="22" />
 			</div>
-			<h3 id="leave-warning-title" class="mb-2 text-sm font-semibold text-bc-text">
+			<h3 id="leave-warning-title" class="mb-2 text-[14px] font-semibold text-bc-text">
 				Leave this session?
 			</h3>
 			<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
