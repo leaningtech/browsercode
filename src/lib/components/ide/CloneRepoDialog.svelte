@@ -25,7 +25,7 @@
 	>
 		<div class="mb-4 flex items-start justify-between gap-3">
 			<div>
-				<h3 id="clone-repo-title" class="mb-1 text-sm font-semibold text-bc-text">
+				<h3 id="clone-repo-title" class="mb-1 text-[14px] font-semibold text-bc-text">
 					Clone from GitHub
 				</h3>
 				<p class="text-[12px] leading-relaxed text-bc-text-muted">

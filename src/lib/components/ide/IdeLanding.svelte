@@ -10,7 +10,7 @@
 
 <div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
 	<div class="w-full max-w-lg">
-		<h1 class="mb-1 font-display text-lg font-semibold text-bc-text">IDE Playground</h1>
+		<h1 class="mb-1 font-display text-[18px] font-semibold text-bc-text">IDE Playground</h1>
 		<p class="mb-4 text-[13px] text-bc-text-muted">
 			Start from a framework template or clone a GitHub repo.
 		</p>

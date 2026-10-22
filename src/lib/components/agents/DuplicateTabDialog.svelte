@@ -22,7 +22,7 @@
 		>
 			<Icon icon="mingcute:alert-line" width="22" height="22" />
 		</div>
-		<h3 class="mb-2 text-sm font-semibold text-bc-text">Already open in another tab</h3>
+		<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Already open in another tab</h3>
 		<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
 			Sorry, you can only open one tab of the same agent.
 		</p>

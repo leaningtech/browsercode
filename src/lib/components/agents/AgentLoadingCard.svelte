@@ -71,7 +71,7 @@
 	{/if}
 
 	<div class="mt-5.5 flex items-center justify-between">
-		<span class="text-xs text-bc-icon tabular-nums">{elapsed.toFixed(1)}s elapsed</span>
+		<span class="text-[12px] text-bc-icon tabular-nums">{elapsed.toFixed(1)}s elapsed</span>
 		{#if onCancel}
 			<button
 				onclick={onCancel}

@@ -132,6 +132,15 @@
 	html {
 		font-size: calc(100vw / 55);
 	}
+	/* BrowserPod builds a terminal's cell grid from `getComputedStyle(document.body).fontSize`,
+	   re-reading it on every resize, so the scale above was handing a phone-width viewport a
+	   ~7px grid while the 12px rule on .xterm-rows (below) kept painting full-size glyphs into
+	   it — the overlapping, squashed text an agent embed showed on a phone. Floored at the
+	   glyph size so the two always agree; the floor only bites under 660px, where the scaled
+	   value would drop below 12px anyway. */
+	body {
+		font-size: max(12px, calc(100vw / 55));
+	}
 }
 
 html,
