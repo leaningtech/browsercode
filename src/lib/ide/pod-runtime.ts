@@ -3,7 +3,7 @@
  * writing files or running git, then it installs and starts the project's dev server.
  */
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
-import { writePodFile, writeToTerminal } from '$lib/pod/fs';
+import { onTerminalOutput, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import { podBlocker, type PodBlocker } from '$lib/utils/platform';
 import { PodFs } from './pod-fs';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
@@ -59,6 +59,7 @@ export class PodRuntime implements IdeRuntime {
 		this.podFs = new PodFs(pod);
 
 		this.outputTerminal = await pod.createDefaultTerminal(env.outputEl);
+		onTerminalOutput(this.outputTerminal, env.onOutput);
 		this.writeBanner();
 		await this.writeShellRc(pod);
 		if (env.cancelled()) return null;
