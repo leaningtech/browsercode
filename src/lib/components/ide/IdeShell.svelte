@@ -135,6 +135,11 @@
 
 	let activeLine = $derived(session.bootStage);
 
+	// The failure banner shrinks the body; xterm only refits on a resize event.
+	$effect(() => {
+		if (session.phase === 'failed') setTimeout(() => fitTerminals(), 0);
+	});
+
 	/** Editor floor, so dragging the terminal up leaves a usable strip of it. */
 	const MIN_EDITOR_FRACTION = 0.1;
 	const MAX_EDITOR_FRACTION = 0.85;
@@ -228,12 +233,7 @@
 		}
 		await tick();
 		if (!outputEl) throw new Error('Terminal container is not ready yet');
-		try {
-			await session.boot(outputEl, portal.apply, noteTerminalOutput);
-		} catch (error) {
-			console.error('Failed initializing the runtime:', error);
-			session.loading = false;
-		}
+		await session.boot(outputEl, portal.apply, noteTerminalOutput);
 	});
 
 	onDestroy(() => {
@@ -273,6 +273,34 @@
 				{/if}
 			</div>
 		</header>
+	{/if}
+
+	<!-- Across the shell, not in a pane: an embed or the mobile view may hide any one of them. -->
+	{#if session.phase === 'failed'}
+		<div
+			role="alert"
+			class="flex shrink-0 items-start gap-2.5 border-b border-bc-coral/40 bg-bc-coral/10 px-3 py-2 font-mono text-[11px]"
+		>
+			<Icon
+				icon="mingcute:warning-line"
+				width="14"
+				height="14"
+				class="mt-px shrink-0 text-bc-coral"
+			/>
+			<div class="min-w-0 flex-1">
+				<p class="font-medium text-bc-text">Couldn't start the project</p>
+				<p class="mt-0.5 break-words text-bc-text-muted">{session.failure}</p>
+				<p class="mt-0.5 text-bc-text-muted">
+					{shell.terminal ? 'See Output for details. ' : ''}Reload the page to try again.
+				</p>
+			</div>
+			<button
+				onclick={() => location.reload()}
+				class="shrink-0 rounded px-2 py-1 text-bc-text transition hover:bg-bc-tint/5"
+			>
+				Reload
+			</button>
+		</div>
 	{/if}
 
 	<!-- ── Body ────────────────────────────────────────────────────────────── -->
