@@ -57,6 +57,8 @@ function parseShell(url: URL): ShellOptions {
 		terminal: shown.has('terminal'),
 		preview: shown.has('preview'),
 		tools: false,
+		// The host page has none of our chrome, so the embed carries the attribution itself.
+		brand: true,
 		leaveGuard: false
 	};
 }

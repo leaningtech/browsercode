@@ -5,6 +5,7 @@
 	import Portal from '$lib/components/Portal.svelte';
 	import Terminal from '$lib/components/Terminal.svelte';
 	import ZenToggle from '$lib/components/ZenToggle.svelte';
+	import EmbedBadge from '$lib/components/EmbedBadge.svelte';
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { PortalState } from '$lib/stores/portals.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
@@ -115,6 +116,12 @@
 	>
 		<Terminal bind:consoleEl />
 	</div>
+
+	<!-- Attribution: an agent shell is all terminal, so the badge floats. It takes the corner the
+	     zen toggle holds in the playground, the two never rendering together. -->
+	{#if shell.brand}
+		<EmbedBadge floating class="absolute right-4 bottom-4 z-30" />
+	{/if}
 
 	<!-- Zen toggle: the agents view has no icon rail, so this floating control is the
 	     always-visible way in and out. Desktop only. -->
