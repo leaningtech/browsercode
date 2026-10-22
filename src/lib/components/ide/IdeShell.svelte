@@ -149,20 +149,10 @@
 
 	let outputEl = $state<HTMLElement | null>(null);
 
-	/** Watched only while it can still raise the cue, so a busy terminal costs nothing. */
-	$effect(() => {
-		if (!outputEl || !isMobile || activeMobileView === 'terminal' || unseen.terminal) return;
-		// Crossing the breakpoint refits xterm, which rewrites every row it holds. That lands here
-		// as a burst of mutations with nothing new said, so the first beat after arming is spent
-		// letting the reflow pass; a terminal with something to report says it again right after.
-		const settled = performance.now() + 500;
-		const observer = new MutationObserver(() => {
-			if (performance.now() >= settled) unseen.terminal = true;
-		});
-		// Writes land as row content; attributes are left out so the blinking cursor is not output.
-		observer.observe(outputEl, { childList: true, characterData: true, subtree: true });
-		return () => observer.disconnect();
-	});
+	// Fed by the terminal's data stream, not its DOM: a hidden xterm stops rendering altogether.
+	function noteTerminalOutput(): void {
+		if (isMobile && activeMobileView !== 'terminal') unseen.terminal = true;
+	}
 
 	function fitTerminals() {
 		window.dispatchEvent(new Event('resize'));
@@ -239,7 +229,7 @@
 		await tick();
 		if (!outputEl) throw new Error('Terminal container is not ready yet');
 		try {
-			await session.boot(outputEl, portal.apply);
+			await session.boot(outputEl, portal.apply, noteTerminalOutput);
 		} catch (error) {
 			console.error('Failed initializing the runtime:', error);
 			session.loading = false;

@@ -93,7 +93,8 @@ export class IdeSession {
 	/** The source and runtime fill in each step; the pipeline itself is the same for all of them. */
 	async boot(
 		terminalEl: HTMLElement,
-		onPortalUpdate: (update: PortalUpdate) => void
+		onPortalUpdate: (update: PortalUpdate) => void,
+		onOutput: () => void
 	): Promise<void> {
 		if (this.booting || this.booted) return;
 		this.booting = true;
@@ -106,6 +107,7 @@ export class IdeSession {
 			const ctx = await this.runtime.boot({
 				outputEl: terminalEl,
 				onPortal: onPortalUpdate,
+				onOutput,
 				onSavable: () => (this.canSave = true),
 				onStage: (index) => (this.bootStage = index),
 				cancelled: () => this.cancelled(token)
