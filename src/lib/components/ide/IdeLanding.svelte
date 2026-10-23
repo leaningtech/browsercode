@@ -6,6 +6,20 @@
 	function openFramework(id: string) {
 		window.location.href = `/ide?framework=${id}`;
 	}
+
+	/** Set when ?framework= carried something we couldn't resolve, so the picker can say so. */
+	let { unknownFramework }: { unknownFramework?: string } = $props();
+
+	// Spelled out rather than left to the buttons below: whoever (or whatever) built the bad URL
+	// needs the accepted vocabulary, not just a grid of labels that don't match the ids.
+	const templateIds = frameworkRailItems.map((fw) => fw.id).join(', ');
+
+	// A hand-built query string can carry anything; keep a long one from stretching the callout.
+	let shownId = $derived(
+		unknownFramework && unknownFramework.length > 32
+			? `${unknownFramework.slice(0, 32)}…`
+			: unknownFramework
+	);
 </script>
 
 <div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
@@ -14,6 +28,23 @@
 		<p class="mb-4 text-[13px] text-bc-text-muted">
 			Start from a framework template or clone a GitHub repo.
 		</p>
+
+		{#if unknownFramework}
+			<div
+				class="mb-4 flex items-start gap-2.5 rounded-lg border border-bc-gold/25 bg-bc-gold/6 px-3 py-2.5 text-left"
+			>
+				<span
+					class="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-bc-gold/12 text-bc-gold"
+				>
+					<Icon icon="mingcute:alert-line" width="14" height="14" />
+				</span>
+				<span class="text-[12px] leading-relaxed text-bc-text-muted">
+					There's no template called <span class="font-mono text-bc-text">{shownId}</span>. Pick one
+					below, or use <span class="font-mono text-bc-text">?framework=</span> with one of:
+					<span class="font-mono text-bc-text">{templateIds}</span>.
+				</span>
+			</div>
+		{/if}
 
 		<!-- Info callout: lilac is the palette's "info" accent (also used for badges and Codex CLI),
 		     so this is tinted distinctly from the plain framework/clone buttons below instead of
