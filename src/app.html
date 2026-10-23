@@ -5,7 +5,40 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="theme-color" content="#000000" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-		<!-- Description and OG/twitter tags come from +layout.svelte, per route. -->
+		<!-- Static fallbacks for every client that never runs our JavaScript: social unfurlers
+		     (Slack, Discord, X, LinkedIn, iMessage) and crawlers that don't render. `ssr = false` in
+		     +layout.ts means +layout.svelte's <svelte:head> only ever executes in the browser, so
+		     without these the served HTML carries no title, description or card image at all.
+		     +layout.svelte still overrides them per route once the app boots — that leaves duplicate
+		     meta elements in the live DOM, which is deliberate: the clients these exist for never get
+		     far enough to see the second copy. Keep the copy here in sync with the home-page branch of
+		     pageTitle/pageDescription in +layout.svelte. -->
+		<title>BrowserCode: Start coding on your browser tab</title>
+		<meta
+			name="description"
+			content="BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute."
+		/>
+		<meta property="og:site_name" content="BrowserCode" />
+		<meta property="og:title" content="BrowserCode: Start coding on your browser tab" />
+		<meta
+			property="og:description"
+			content="BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute."
+		/>
+		<meta property="og:image" content="https://browsercode.io/og.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="675" />
+		<meta property="og:image:alt" content="BrowserCode" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://browsercode.io/" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="BrowserCode: Start coding on your browser tab" />
+		<meta
+			name="twitter:description"
+			content="BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute."
+		/>
+		<meta name="twitter:image" content="https://browsercode.io/og.png" />
+		<meta property="twitter:domain" content="browsercode.io" />
+		<meta property="twitter:url" content="https://browsercode.io/" />
 		%sveltekit.head%
 		<script
 			defer
