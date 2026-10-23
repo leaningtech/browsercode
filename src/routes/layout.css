@@ -151,6 +151,19 @@ body {
 	height: 100dvh;
 }
 
+/* Tailwind v4's preflight dropped v3's `button, [role='button'] { cursor: pointer }` in favour of
+   the UA default (an arrow), which left most of the app's buttons without a pointer — only a
+   handful carry `cursor-pointer` of their own. Restored as a base-layer rule so the
+   `cursor-not-allowed` / `disabled:cursor-not-allowed` utilities already in use still win over it
+   (utilities layer after base), and `:not(:disabled)` keeps a plain disabled button from claiming
+   to be clickable in the spots that set no cursor utility at all. */
+@layer base {
+	button:not(:disabled),
+	[role='button']:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
 /* Frosted-glass surface: a neutral translucent card (no color tint) — used for the sidebar,
    flyout buttons and picker cards. */
 .glass-panel {
