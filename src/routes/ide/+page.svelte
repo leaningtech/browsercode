@@ -5,12 +5,16 @@
 	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
-	import { defaultFrameworkId, isFrameworkId, type FrameworkId } from '$lib/config/frameworks';
+	import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
 
-	// Bare /ide (no ?framework=) shows the landing instead of auto-booting a template.
+	// Bare /ide (no ?framework=) shows the landing instead of auto-booting a template, and so does
+	// an id we don't recognise. Falling back to the default template silently handed anyone who
+	// asked for, say, `sveltekit` an Express app with nothing on screen saying so — the worst
+	// outcome for a URL somebody generated rather than clicked.
 	const requested = $page.url.searchParams.get('framework');
-	const showLanding = !requested;
-	const framework: FrameworkId = isFrameworkId(requested) ? requested : defaultFrameworkId;
+	const resolved = resolveFrameworkId(requested);
+	const showLanding = !resolved;
+	const framework: FrameworkId = resolved ?? defaultFrameworkId;
 
 	const session = new IdeSession(templateSource(framework));
 
@@ -30,7 +34,7 @@
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 			style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 		>
-			<IdeLanding />
+			<IdeLanding unknownFramework={requested ?? undefined} />
 		</div>
 	</div>
 {:else}

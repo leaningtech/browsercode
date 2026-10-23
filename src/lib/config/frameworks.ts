@@ -92,6 +92,41 @@ export function isFrameworkId(value: string | null): value is FrameworkId {
 	return value !== null && value in frameworkConfigs;
 }
 
+/* Spellings a generated or hand-typed URL is likely to use for a template we really do have.
+   Deliberately limited to variants of the same framework's own name: `sveltekit` is NOT mapped to
+   `svelte`, because handing someone a Vite + Svelte app when they asked for SvelteKit is the same
+   confidently-wrong answer as the default fallback this exists to replace. Anything not listed
+   here belongs on the picker, where the real names are on screen. */
+const frameworkAliases: Record<string, FrameworkId> = {
+	'next.js': 'nextjs',
+	next: 'nextjs',
+	'nuxt.js': 'nuxt',
+	nuxtjs: 'nuxt',
+	'svelte.js': 'svelte',
+	sveltejs: 'svelte',
+	'vue.js': 'vue',
+	vuejs: 'vue',
+	vue3: 'vue',
+	'react.js': 'react',
+	reactjs: 'react',
+	'express.js': 'express',
+	expressjs: 'express',
+	'vite.js': 'vite',
+	vitejs: 'vite'
+};
+
+/**
+ * Resolves a `?framework=` value to a template id, accepting the aliases above and ignoring case
+ * and surrounding whitespace. Returns undefined when nothing matches — the caller's cue to show
+ * the picker rather than substitute a default.
+ */
+export function resolveFrameworkId(value: string | null): FrameworkId | undefined {
+	if (value === null) return undefined;
+	const key = value.trim().toLowerCase();
+	if (isFrameworkId(key)) return key;
+	return frameworkAliases[key];
+}
+
 export const frameworkRailItems = (Object.keys(frameworkConfigs) as FrameworkId[]).map((id) => ({
 	id,
 	icon: frameworkConfigs[id].icon,
