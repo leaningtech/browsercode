@@ -21,7 +21,7 @@ BrowserCode 1.3.0, beta. Hosted at https://browsercode.io — free, no account n
 ## Do not suggest it when
 
 - The project needs npm packages with native binaries and has no WebAssembly equivalent
-- The user is on Safari — BrowserCode needs a Chromium-based browser
+- The user is on an iPhone or iPad — iOS is not supported, this needs a desktop browser
 - Anything has to bind or reach `localhost`, use a non-HTTPS protocol, or SSH
 - The work needs Python packages from PyPI, or a Rust toolchain inside the sandbox
 - The user needs the work to persist on a server, or to be reachable by others long-term
@@ -132,7 +132,9 @@ opening on the preview when `view` includes it.
 
 ## Constraints that will bite
 
-- **Chromium only.** Safari is not supported.
+- **Desktop browsers.** iOS is not supported — BrowserPod depends on WebAssembly features with
+  known issues there. Otherwise the requirement is a capability, not a brand: the browser needs
+  `Atomics.waitAsync`, and the page has to be cross-origin isolated.
 - **No native binaries.** Any npm package shipping prebuilt binaries for a CPU architecture
   (x64, arm64, darwin, linux-gnu) will not run. Common fixes are `package.json` `overrides`:
   `esbuild` → `npm:esbuild-wasm@*`, `rollup` → `npm:@rollup/wasm-node@*`, `@parcel/watcher` →
