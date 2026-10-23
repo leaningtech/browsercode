@@ -65,6 +65,11 @@ export class JavaConsole {
 		this.resizeObserver.observe(el);
 	}
 
+	/** Calls `listener` whenever the console prints, including while it is hidden. */
+	onOutput(listener: () => void): void {
+		this.terminal.onWriteParsed(listener);
+	}
+
 	dispose(): void {
 		this.resizeObserver?.disconnect();
 		this.terminal.dispose();
