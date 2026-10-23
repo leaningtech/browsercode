@@ -7,7 +7,7 @@
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
-import { JavaConsole } from '$lib/cheerpj/console';
+import type { JavaConsole } from '$lib/cheerpj/console';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
@@ -17,8 +17,9 @@ const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
-	readonly console = new JavaConsole();
 
+	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
+	private console: JavaConsole | null = null;
 	private env: RuntimeEnv | null = null;
 	/** Build output stays in IndexedDB, so a random root keeps sessions apart. */
 	private readonly buildRoot = `/files/browsercode-${crypto.randomUUID()}`;
@@ -36,6 +37,9 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
 		this.env = env;
+		const { JavaConsole } = await import('$lib/cheerpj/console');
+		if (env.cancelled()) return null;
+		this.console = new JavaConsole();
 		this.console.open(env.outputEl);
 		this.console.write(
 			'BrowserCode: running Java with CheerpJ. Type here to feed System.in; Ctrl+D ends it.\n',
@@ -72,7 +76,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		// A Java process takes no environment, so `start.env` goes unused.
 		const [command, mainClass, ...args] = start.command;
 		if (command !== 'java' || !mainClass) {
-			this.console.write(
+			this.console!.write(
 				`CheerpJ only runs \`java <main class>\`, not: ${start.command.join(' ')}\n`,
 				'error'
 			);
@@ -83,24 +87,24 @@ export class CheerpjRuntime implements IdeRuntime {
 		const out = `${this.buildRoot}/run-${++this.runs}`;
 		const exit = await this.exec('javac', ['-d', out, ...sources]);
 		if (exit !== 0) {
-			this.console.write(`javac exited with code ${exit}\n`, 'error');
+			this.console!.write(`javac exited with code ${exit}\n`, 'error');
 			return;
 		}
 		env.onStage(STARTING);
 		void this.exec('java', ['-cp', out, mainClass, ...args]).then((code) => {
-			this.console.write(`${mainClass} exited with code ${code}\n`, 'info');
+			this.console!.write(`${mainClass} exited with code ${code}\n`, 'info');
 		});
 	}
 
 	shutdown(): void {
-		this.console.dispose();
+		this.console?.dispose();
 	}
 
 	private context(): BootContext {
 		return {
 			fs: this.fs,
 			workdir: this.source.workdir,
-			write: (data) => this.console.write(data),
+			write: (data) => this.console!.write(data),
 			// No working directory or color environment here, so `run`'s options go unused.
 			run: async (command, args) => {
 				await this.exec(command, args);
@@ -114,14 +118,14 @@ export class CheerpjRuntime implements IdeRuntime {
 	 * its exit code; there is no other program to run.
 	 */
 	private exec(command: string, args: string[]): Promise<number> {
-		this.console.write(`❯ ${[command, ...args].join(' ')}\n`, 'info');
+		this.console!.write(`❯ ${[command, ...args].join(' ')}\n`, 'info');
 		if (command === 'javac') return cheerpjRunMain(JAVAC_MAIN, '', ...args);
 		if (command === 'java') {
 			const [classPath, mainClass, ...programArgs] =
 				args[0] === '-cp' ? args.slice(1) : ['', ...args];
 			return cheerpjRunMain(mainClass, classPath, ...programArgs);
 		}
-		this.console.write(`${command}: not available on CheerpJ\n`, 'error');
+		this.console!.write(`${command}: not available on CheerpJ\n`, 'error');
 		return Promise.resolve(127);
 	}
 
@@ -138,7 +142,7 @@ export class CheerpjRuntime implements IdeRuntime {
 			const clash = byName.get(name);
 			if (clash) {
 				const rel = (p: string) => p.slice(workdir.length + 1);
-				this.console.write(
+				this.console!.write(
 					`${rel(clash)} and ${rel(path)} share a file name; CheerpJ needs every .java file to have its own.\n`,
 					'error'
 				);
@@ -147,7 +151,7 @@ export class CheerpjRuntime implements IdeRuntime {
 			byName.set(name, path);
 		}
 		if (byName.size === 0) {
-			this.console.write('No .java files to compile.\n', 'error');
+			this.console!.write('No .java files to compile.\n', 'error');
 			return null;
 		}
 		for (const name of this.pushed) if (!byName.has(name)) cheerpOSRemoveStringFile(`/str/${name}`);
