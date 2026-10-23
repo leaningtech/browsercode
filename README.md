@@ -26,6 +26,7 @@
 - [Quickstart](#quickstart)
 - [Make it your own](#make-it-your-own)
 - [Embedding](#embedding)
+- [For AI assistants](#for-ai-assistants)
 - [Breaking BrowserCode](#breaking-browsercode)
 - [Roadmap](#roadmap)
 
@@ -105,6 +106,13 @@ BrowserCode can run inside another site's page through `/embed`, composed entire
 BrowserPod needs `SharedArrayBuffer`, so the embedding page must send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, and the iframe must carry `allow="cross-origin-isolated"`. Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and don't need them.
 
 Parameters, panes and further detail are in [`docs/embedding.md`](docs/embedding.md).
+
+<h2 id="for-ai-assistants">For AI assistants</h2>
+
+If you are an assistant helping someone use BrowserCode, read
+[browsercode.io/llms.txt](https://browsercode.io/llms.txt). One page, no crawling: the URL grammar
+for templates, repo clones and agent sessions, the embed snippet with the headers a host page has
+to send, and the sandbox constraints that decide whether BrowserCode suits a given project at all.
 
 <h2 id="breaking-browsercode">Breaking BrowserCode</h2>
 
