@@ -41,6 +41,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		if (env.cancelled()) return null;
 		this.console = new JavaConsole();
 		this.console.open(env.outputEl);
+		this.console.onOutput(env.onOutput);
 		this.console.write(
 			'BrowserCode: running Java with CheerpJ. Type here to feed System.in; Ctrl+D ends it.\n',
 			'info'
