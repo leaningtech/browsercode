@@ -85,7 +85,7 @@
 	onMount(() => {
 		const unwatchIsMobile = watchIsMobile((mobile) => (isMobile = mobile));
 
-		// Booting without SharedArrayBuffer fails deep inside the pod, leaving a blank terminal.
+		// A pod that cannot run here fails deep inside the boot, leaving a blank terminal.
 		blocker = podBlocker();
 		if (!blocker) {
 			if (consoleEl) session.boot(consoleEl, portal.apply);

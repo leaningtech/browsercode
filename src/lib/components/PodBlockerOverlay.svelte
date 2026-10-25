@@ -33,6 +33,11 @@
 				rel="noopener noreferrer"
 				class="mt-3 inline-block text-[12px] text-bc-mist hover:text-bc-link-hover">Learn more</a
 			>
+		{:else if blocker === 'unsupported-platform'}
+			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">iOS is not supported yet</h3>
+			<p class="text-[12px] leading-relaxed text-bc-text-muted">
+				Agents and Node.js projects need a desktop browser. Java projects run here.
+			</p>
 		{:else}
 			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Incompatible Browser</h3>
 			<p class="text-[12px] leading-relaxed text-bc-text-muted">

@@ -113,7 +113,7 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 - Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
 - BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/working-around-native-npm-dependencies)
 - Outbound connections are HTTPS-only (port 443) and limited to the allowlist: plain HTTP, SSH (so `git@github.com` remotes) and other ports are refused, and so is `localhost` from inside a pod. Portals still expose servers you start in a pod
-- Agents and Node.js projects require WebAssembly JSPI: Chrome and Edge 137+, Firefox 153+ or Safari 27+. Java projects run on CheerpJ and don't need it. For maximum compatibility, please use a Chromium browser
+- Agents and Node.js projects require WebAssembly JSPI: Chrome and Edge 137+, Firefox 153+ or Safari 27+. They also don't run on iOS or iPadOS yet, on any browser. Java projects run on CheerpJ and need neither. For maximum compatibility, please use a Chromium browser on the desktop
 
 <h2 id="roadmap">Roadmap</h2>
 
