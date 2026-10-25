@@ -21,6 +21,8 @@ Cross-Origin-Embedder-Policy: require-corp
 
 The iframe must carry `allow="cross-origin-isolated"`. Without all three the embed reports that the headers are missing.
 
+Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need none of this.
+
 `require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS.
 
 ## Parameters
