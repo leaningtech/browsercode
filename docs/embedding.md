@@ -29,7 +29,7 @@ The iframe must carry `allow="cross-origin-isolated"`. Without all three the emb
 | ----------- | ----------------------------------------------------------------------------- |
 | `repo`      | Any GitHub URL or `owner/repo`, optionally `.../tree/<ref>/<dir>`             |
 | `framework` | A template id (`vite`, `react`, `svelte`, `vue`, `nextjs`, `nuxt`, `express`) |
-| `agent`     | A CLI agent id (`claude`, `codex`)                                            |
+| `agent`     | A CLI agent id (`claude`, `codex`, `pi`)                                      |
 | `runtime`   | `cheerpj`, for a Java project compiled and run in the browser by CheerpJ      |
 | `view`      | Comma separated: `files`, `search`, `editor`, `terminal`, `preview`           |
 
@@ -41,6 +41,7 @@ The iframe must carry `allow="cross-origin-isolated"`. Without all three the emb
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.
 - `codex` asks for an OpenAI API key inside the frame.
 - `claude` opens a new tab for OAuth sign-in.
+- `pi` installs from npm on its first launch and signs in through its own `/login`.
 - Controls without meaning are omitted: a preview-only embed has no hide button and no port badge.
 - Narrower than 768px — which a column in a blog post often is, desktop or not — the panes become tabs. An embed opens on the preview whenever `view` includes it, since a running app says what this is better than an editor does.
 - A tab marks itself when its own pane does something you cannot see from the one you are on: the terminal on new output, the preview once a dev server answers. Opening that tab clears the mark.

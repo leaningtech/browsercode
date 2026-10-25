@@ -39,7 +39,8 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 - Browser sandbox isolation from the user's operating system
 - Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
-- Support for Express.js, Svelte, Next, Nuxt and React (with Wasm overrides)
+- Support for Vite, Express.js, Svelte, Next, Nuxt, React and Vue (with Wasm overrides)
+- Java projects compiled and run in the browser by [CheerpJ](https://cheerpj.com/), available through embeds
 
 BrowserCode started out as a way to run AI coding CLIs entirely client-side. It's since grown into a full IDE: alongside the CLIs, it can boot and preview web frameworks directly in the browser, so you can prototype an agent's output without ever leaving the tab.
 
