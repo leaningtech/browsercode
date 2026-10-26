@@ -109,20 +109,25 @@
 				{/snippet}
 
 				<div class="flex flex-col gap-3">
+					<!-- One card per row on a phone. The column count is the tool count, so it has to ride
+					     on a custom property: an inline grid-template-columns carries no breakpoint and
+					     outranks any class, which is what squeezed three cards into 69px each and pushed
+					     Claude Code's caption outside its card. -->
 					{#if availableTools.length > 0}
 						<div
-							class="grid gap-3"
-							style="grid-template-columns: repeat({availableTools.length}, minmax(0, 1fr))"
+							class="grid grid-cols-1 gap-3 sm:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
+							style="--cols: {availableTools.length}"
 						>
 							{#each availableTools as item (item.id)}
 								{@render toolButton(item)}
 							{/each}
 						</div>
 					{/if}
+					<!-- These carry a label and a badge rather than a caption, so two fit a phone fine. -->
 					{#if soonTools.length > 0}
 						<div
-							class="grid gap-3"
-							style="grid-template-columns: repeat({soonTools.length}, minmax(0, 1fr))"
+							class="grid grid-cols-2 gap-3 sm:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
+							style="--cols: {soonTools.length}"
 						>
 							{#each soonTools as item (item.id)}
 								{@render toolButton(item)}
