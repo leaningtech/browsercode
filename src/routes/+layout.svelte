@@ -127,7 +127,9 @@
 		{/if}
 
 		<!-- GitHub Ribbon — landing surfaces only (Home, /agents, bare /ide — see showRibbon above);
-		     the sidebar carries the GitHub link on the app surfaces. -->
+		     the sidebar carries the GitHub link on the app surfaces. Fixed, so it doesn't move down
+		     with the announcement bar on its own: top-[52px] is the bar's ~36px height plus the
+		     usual top-4, and needs revisiting if the bar's copy or padding changes. -->
 		{#if showRibbon}
 			<a
 				href="https://github.com/leaningtech/browsercode"
