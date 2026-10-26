@@ -163,8 +163,9 @@
 	     tone behind the sidebar's margins and behind the panel are the exact same pixels, not two
 	     separately-computed colors that can drift apart. Low z-index (and no stacking context of
 	     its own) means the sidebar card (z-30), ribbon (z-40), footer and announcement bar (z-10)
-	     and the panel itself (z-20, inside <main>) all still render above it, undimmed — only the plain background
-	     between them shows the overlay. Clicking anywhere on it closes the panel. -->
+	     and the panel itself (z-20, inside <main>) all still render above it, undimmed — only the
+	     plain background between them shows the overlay. Clicking anywhere on it closes the
+	     panel. -->
 	<div
 		class="fixed inset-0 z-[5] transition-opacity duration-500 ease-out"
 		style="background: rgba(4,5,6,0.35); opacity: {aboutPanelState.open
