@@ -73,10 +73,12 @@ product but not yet enabled.
 
 Sign-in differs per tool, and this trips people up:
 
-- **Claude Code**: choose **"Copy code login"** in `/login`. The default browser login redirects
-  to a `localhost` callback that cannot reach the sandbox.
+- **Claude Code**: pick a login method, open the sign-in URL it prints (press `c` to copy it),
+  then paste the code from that page back at the `Paste code here` prompt.
 - **Codex CLI**: asks for an OpenAI API key, stored in the user's own browser.
-- **Pi**: signs in to Anthropic, OpenAI, Gemini or OpenRouter through its own `/login`.
+- **Pi**: signs in to Anthropic, OpenAI, Gemini or OpenRouter through its own `/login`. For an
+  account sign-in, choose **"Copy code login (headless)"**, not the default browser login, which
+  redirects to a `localhost` callback that cannot reach the sandbox. An API key also works.
 
 Only one agent session runs per browser. A second tab of the same agent shows a duplicate-session
 dialog.
@@ -116,9 +118,9 @@ needed; with any missing, the embed reports that the headers are absent. Note th
 | `agent` | `claude`, `codex` or `pi` |
 | `view` | Comma-separated: `files`, `search`, `editor`, `terminal`, `preview` |
 
-Pass one of `agent`, `repo` or `framework`. With none, a default template boots. `view` defaults
-to every pane. A value that cannot be resolved is reported as an error rather than silently
-replaced. Agents are terminal-first, so for them `view` only decides whether the preview comes
+Pass one of `agent`, `repo` or `framework`. With none, a default template boots.
+`view` defaults to every pane, and names it does not know are ignored. Any other value that
+cannot be resolved is reported as an error rather than silently replaced. Agents are terminal-first, so for them `view` only decides whether the preview comes
 along. Below 768px wide, which a blog column often is, the panes become tabs,
 opening on the preview when `view` includes it.
 
