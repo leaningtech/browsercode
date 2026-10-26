@@ -24,7 +24,7 @@ function readDismissed(): boolean {
 export const announcementState = $state({ dismissed: readDismissed() });
 
 /** Persisting is best-effort: same storage-blocked cases as readDismissed() above. */
-export function dismissAnnouncement() {
+export function dismissAnnouncement(): void {
 	announcementState.dismissed = true;
 	try {
 		localStorage.setItem(STORAGE_KEY, ANNOUNCEMENT_ID);
