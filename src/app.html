@@ -5,6 +5,17 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="theme-color" content="#000000" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<!-- Machine-readable counterpart to this page, the way Cloudflare, Anthropic and Vercel
+		     declare theirs. Docs sites point at a per-page .md; ours is one site-wide file. This has
+		     to live here rather than in the footer that also links it: ssr = false, so nothing the
+		     app renders reaches a client that does not run JavaScript. Absolute, like the og:* URLs
+		     below. -->
+		<link
+			rel="alternate"
+			type="text/markdown"
+			title="BrowserCode for AI assistants"
+			href="https://browsercode.io/llms.txt"
+		/>
 		<!-- Static fallbacks for every client that never runs our JavaScript: social unfurlers
 		     (Slack, Discord, X, LinkedIn, iMessage) and crawlers that don't render. `ssr = false` in
 		     +layout.ts means +layout.svelte's <svelte:head> only ever executes in the browser, so
