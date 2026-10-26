@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { resolve } from '$app/paths';
+	import { asset, resolve } from '$app/paths';
 	import pkg from '@leaningtech/browserpod/package.json';
 	import appPkg from '../../../package.json';
 	import favicon from '$lib/assets/favicon.svg';
@@ -35,6 +35,20 @@
 			class="ml-1 text-bc-text-muted no-underline transition-colors duration-150 hover:text-bc-link-hover"
 			>Privacy Policy</a
 		>
+
+		<!-- Agent-facing entry point, surfaced the way Stripe and Cloudflare surface theirs. Opens in
+		     a new tab because /llms.txt is a static file rather than a route: navigating in place
+		     would tear down a running pod, and this footer is on screen in the IDE too. -->
+		<span class="flex items-center gap-1">
+			<span>LLM?</span>
+			<a
+				href={asset('/llms.txt')}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-bc-text-muted no-underline transition-colors duration-150 hover:text-bc-link-hover"
+				>Read llms.txt</a
+			>
+		</span>
 	</span>
 
 	<a
