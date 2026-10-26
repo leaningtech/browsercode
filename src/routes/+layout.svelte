@@ -71,13 +71,13 @@
 	<meta name="description" content={pageDescription} />
 	<meta property="og:title" content={pageTitle} />
 	<meta property="og:description" content={pageDescription} />
-	<meta property="og:image" content="https://browsercode.io/og.png" />
+	<meta property="og:image" content="https://browsercode.io/og-v2.png" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content={pageUrl} />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={pageTitle} />
 	<meta name="twitter:description" content={pageDescription} />
-	<meta name="twitter:image" content="https://browsercode.io/og.png" />
+	<meta name="twitter:image" content="https://browsercode.io/og-v2.png" />
 	<meta property="twitter:domain" content="browsercode.io" />
 	<meta property="twitter:url" content={pageUrl} />
 </svelte:head>
