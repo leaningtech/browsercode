@@ -61,6 +61,16 @@
 	--color-bc-text: #f2f4f7;
 	--color-bc-text-muted: #848e9c;
 
+	/* Announcement stripe (AnnouncementBar.svelte): a solid lilac fill with near-black ink, so
+	   both halves are their own tokens rather than reuses. The fill follows the same light-pair
+	   -on-dark / regular-on-light convention as the accents above (lilac-light #ddd0f7 pops off
+	   the near-black ground; regular #a78bfa has presence against the light one), and the ink
+	   stays dark in both themes because it sits on the lilac, not on the page: --color-bc-abyss
+	   and --color-bc-text both flip to near-white on light and would vanish into the stripe.
+	   Contrast of ink on fill: 15.8:1 dark, 7.3:1 light. */
+	--color-bc-stripe: #ddd0f7;
+	--color-bc-stripe-ink: #07090e;
+
 	/* Inline text-link hover: the light pair on dark (pops against the near-black ground), the
 	   base accent on light (see the override below) — the opposite pairing from most tokens
 	   above, which go the other way for AA text contrast. */
@@ -122,6 +132,11 @@
 	--color-bc-icon: #5f6e83;
 	--color-bc-text: #0f172a;
 	--color-bc-text-muted: #5f6e83;
+
+	/* Regular lilac: a pastel stripe would barely separate from this near-white page, and the
+	   near-black ink above clears AA on it either way (7.3:1). Not --color-bc-orchid's #7a4ff7,
+	   which is darkened for use *as* text and only holds 3.7:1 *under* it. */
+	--color-bc-stripe: #a78bfa;
 
 	--color-bc-link-hover: #7a4ff7;
 	/* Not complained about on light — the ribbon hover stays as bright as --color-bc-text there. */
