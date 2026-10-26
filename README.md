@@ -78,7 +78,7 @@ Want to run your own copy, customize the CLIs, or contribute? Clone the repo and
    npm run dev
    ```
 
-4. Open the printed local URL in a Chromium-based browser
+4. Open the printed local URL in a [supported browser](#breaking-browsercode)
 
 Other useful scripts:
 
@@ -101,7 +101,7 @@ BrowserCode can run inside another site's page through `/embed`, composed entire
 ></iframe>
 ```
 
-BrowserPod needs `SharedArrayBuffer`, so the embedding page must send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, and the iframe must carry `allow="cross-origin-isolated"`.
+BrowserPod needs `SharedArrayBuffer`, so the embedding page must send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, and the iframe must carry `allow="cross-origin-isolated"`. Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and don't need them.
 
 Parameters, panes and further detail are in [`docs/embedding.md`](docs/embedding.md).
 
@@ -113,7 +113,7 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 - Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
 - BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/working-around-native-npm-dependencies)
 - Outbound connections are HTTPS-only (port 443) and limited to the allowlist: plain HTTP, SSH (so `git@github.com` remotes) and other ports are refused, and so is `localhost` from inside a pod. Portals still expose servers you start in a pod
-- For maximum compatibility, please use a Chromium browser. Safari currently isn't supported
+- Agents and Node.js projects require WebAssembly JSPI: Chrome and Edge 137+, Firefox 153+ or Safari 27+. They also don't run on iOS or iPadOS yet, on any browser. Java projects run on CheerpJ and need neither. For maximum compatibility, please use a Chromium browser on the desktop
 
 <h2 id="roadmap">Roadmap</h2>
 

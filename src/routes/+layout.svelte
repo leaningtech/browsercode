@@ -6,7 +6,6 @@
 	import UtilityBar from '$lib/components/UtilityBar.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
 	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
-	import IosUnsupportedModal from '$lib/components/IosUnsupportedModal.svelte';
 	import { page } from '$app/stores';
 	import { isEnabledTool, toolItems } from '$lib/config/tools';
 	import { stepperState } from '$lib/stores/stepper.svelte';
@@ -88,8 +87,6 @@
 		if (zenState.on && e.key === 'Escape') zenState.on = false;
 	}}
 />
-
-<IosUnsupportedModal />
 
 <div class="flex h-dvh w-screen overflow-hidden bg-bc-abyss">
 	<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but the sidebar's

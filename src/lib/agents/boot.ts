@@ -2,7 +2,6 @@ import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { cliConfigs, toolItems } from '$lib/config/tools';
 import { writePodBinaryFile, writeToTerminal } from '$lib/pod/fs';
 import type { PortalUpdate } from '$lib/pod/portals';
-import { isIos } from '$lib/utils/platform';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 
 export type CLIBootHooks = {
@@ -33,11 +32,6 @@ export async function bootCLI(
 
 		const config = cliConfigs[tool] ?? cliConfigs.claude;
 		const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
-
-		if (isIos()) {
-			terminalEl.textContent = 'unsupported';
-			return;
-		}
 
 		const pod = await BrowserPod.boot({
 			apiKey: import.meta.env.VITE_API_KEY as string,
