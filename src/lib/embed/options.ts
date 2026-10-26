@@ -1,5 +1,5 @@
 /** Parses the `/embed` query string, so a host page composes an embed entirely from the URL. */
-import { defaultFrameworkId, isFrameworkId, type FrameworkId } from '$lib/config/frameworks';
+import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
 import { defaultJavaExample, isJavaExample, type JavaExample } from '$lib/ide/java-source';
@@ -52,7 +52,8 @@ function parseSource(url: URL): EmbedSource | null {
 	}
 	const framework = url.searchParams.get('framework');
 	if (framework === null) return { kind: 'framework', id: defaultFrameworkId };
-	return isFrameworkId(framework) ? { kind: 'framework', id: framework } : null;
+	const id = resolveFrameworkId(framework);
+	return id ? { kind: 'framework', id } : null;
 }
 
 /**
