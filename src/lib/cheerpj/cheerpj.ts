@@ -9,7 +9,7 @@
  */
 const LOADER_URL =
 	(import.meta.env.VITE_CHEERPJ_LOADER as string | undefined) ??
-	'https://cjrtnc.leaningtech.com/20261016_3707/loader.js';
+	'https://cjrtnc.leaningtech.com/5.0/loader.js';
 
 /** One console write or read; `cb` takes the byte count, 0 meaning end of input. */
 type ConCallback = (bytes: number) => void;
