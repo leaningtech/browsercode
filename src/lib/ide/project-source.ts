@@ -20,6 +20,8 @@ export type BootContext = {
 	) => Promise<void>;
 	/** True once the boot was superseded or the session unmounted; a hook must return early. */
 	cancelled: () => boolean;
+	/** The workdir-relative file in front of the user when a run started from the editor. */
+	focus?: string;
 };
 
 /**

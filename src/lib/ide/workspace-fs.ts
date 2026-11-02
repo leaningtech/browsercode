@@ -22,4 +22,6 @@ export interface WorkspaceFs {
 	renameEntry(from: string, to: string): Promise<void>;
 	/** Recursive for directories. */
 	deleteEntry(path: string): Promise<void>;
+	/** Every file under `dir`, as absolute paths; absent where, as in a pod, nothing can list them. */
+	filesUnder?(dir: string): string[];
 }

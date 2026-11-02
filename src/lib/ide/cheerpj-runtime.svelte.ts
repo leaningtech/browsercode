@@ -68,11 +68,11 @@ export class CheerpjRuntime implements IdeRuntime {
 	 * output on its classpath. Compiling is this runtime's build step, so the command must be
 	 * `java <main class> [args]`.
 	 */
-	async run(): Promise<void> {
+	async run(focus?: string): Promise<void> {
 		const env = this.env;
 		if (!env || env.cancelled()) return;
 		env.onStage(SETUP);
-		const start = await this.source.startCommand(this.context());
+		const start = await this.source.startCommand(this.context(focus));
 		if (!start) return;
 		// A Java process takes no environment, so `start.env` goes unused.
 		const [command, mainClass, ...args] = start.command;
@@ -101,8 +101,9 @@ export class CheerpjRuntime implements IdeRuntime {
 		this.console?.dispose();
 	}
 
-	private context(): BootContext {
+	private context(focus?: string): BootContext {
 		return {
+			focus,
 			fs: this.fs,
 			workdir: this.source.workdir,
 			write: (data) => this.console!.write(data),

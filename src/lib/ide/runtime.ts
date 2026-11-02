@@ -54,9 +54,10 @@ export interface IdeRuntime {
 	/**
 	 * Builds and starts the project again from its current files, resolving once it has started
 	 * or failed to; absent where a dev server picks up saved files by itself. The session never
-	 * calls it before `launch` resolves or while another run is under way.
+	 * calls it before `launch` resolves or while another run is under way. `focus` is the
+	 * workdir-relative path of the file in front of the user.
 	 */
-	run?(): Promise<void>;
+	run?(focus?: string): Promise<void>;
 	/** Attaches an interactive shell to `el`; absent on runtimes without one. */
 	startBash?(el: HTMLElement): Promise<void>;
 	/** Tears the machine down; safe to call before or during `boot`. */

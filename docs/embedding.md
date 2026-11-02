@@ -48,7 +48,7 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 - Narrower than 768px — which a column in a blog post often is, desktop or not — the panes become tabs. An embed opens on the preview whenever `view` includes it, since a running app says what this is better than an editor does.
 - A tab marks itself when its own pane does something you cannot see from the one you are on: the terminal on new output, the preview once a dev server answers. Opening that tab clears the mark.
 - Every embed carries a BrowserCode badge linking back to browsercode.io. It sits in the top bar when the embed shows the editor, and floats in the bottom-right corner otherwise.
-- `runtime=cheerpj` compiles every `.java` file with `javac` and runs the `Main` class. The Output tab is the program's console: typing feeds `System.in` and Ctrl+D ends it, and its Run button builds and runs again. There is no preview, so `view=preview` is ignored, and no shell.
+- `runtime=cheerpj` compiles every `.java` file with `javac` and runs a class that declares `main`, with its package: the one in the file open in the editor if it has one, otherwise the first in file order. With no `main` anywhere, it runs the class named after the open file, or the first file. The Output tab is the program's console: typing feeds `System.in` and Ctrl+D ends it, and its Run button builds and runs again. There is no preview, so `view=preview` is ignored, and no shell.
 - Each run starts a new program, while earlier ones may still be running.
 
 ## Examples

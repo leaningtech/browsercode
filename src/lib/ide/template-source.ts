@@ -56,6 +56,22 @@ export async function copyTemplate(
 	}
 }
 
+/**
+ * The project's files as text, paths relative to the workdir. Empty on a filesystem that cannot
+ * list them.
+ */
+export async function readProjectFiles(
+	ctx: BootContext
+): Promise<{ path: string; content: string }[]> {
+	const paths = ctx.fs.filesUnder?.(ctx.workdir) ?? [];
+	return Promise.all(
+		paths.map(async (path) => ({
+			path: path.slice(ctx.workdir.length + 1),
+			content: await ctx.fs.readFile(path)
+		}))
+	);
+}
+
 async function fetchTemplateFile(sourceRoot: string, fileName: string): Promise<ArrayBuffer> {
 	const response = await fetch(`${sourceRoot}/${fileName}`);
 	if (!response.ok) {

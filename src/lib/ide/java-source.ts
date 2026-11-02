@@ -4,9 +4,10 @@
  * fetching, and should fold into it once a template can say which runtime it boots on and spell
  * out its own commands.
  */
+import { findMainClass } from '$lib/cheerpj/main-class';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { ProjectSource } from './project-source';
-import { copyTemplate, fetchManifest } from './template-source';
+import { copyTemplate, fetchManifest, readProjectFiles } from './template-source';
 
 const JAVA_EXAMPLES = ['helloworld'] as const;
 export type JavaExample = (typeof JAVA_EXAMPLES)[number];
@@ -16,9 +17,7 @@ export function isJavaExample(value: string): value is JavaExample {
 	return (JAVA_EXAMPLES as readonly string[]).includes(value);
 }
 
-/** The class a run starts, fixed for every example until templates carry their own. */
-const MAIN_CLASS = 'Main';
-const MAIN_FILE = `${MAIN_CLASS}.java`;
+const MAIN_FILE = 'Main.java';
 
 export function javaSource(example: JavaExample): ProjectSource {
 	const sourceRoot = `/templates/java-${example}`;
@@ -33,7 +32,12 @@ export function javaSource(example: JavaExample): ProjectSource {
 		hydrate: (ctx, files) => copyTemplate(ctx, sourceRoot, files),
 		initialFile: (files) => (files.includes(MAIN_FILE) ? MAIN_FILE : files[0]),
 		installCommands: () => [],
-		startCommand: async () => ({ command: ['java', MAIN_CLASS] }),
+		startCommand: async (ctx) => {
+			const mainClass = findMainClass(await readProjectFiles(ctx), ctx.focus);
+			if (mainClass) return { command: ['java', mainClass] };
+			ctx.write('No .java file to run.\n');
+			return null;
+		},
 		trackBoot: () => trackEvent('Booted Playground', { framework: 'Java' })
 	};
 }
