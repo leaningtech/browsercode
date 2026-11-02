@@ -42,6 +42,8 @@ export interface IdeRuntime {
 	 * runs, `HYDRATING` while the source hydrates. `launch` and `run` report the rest.
 	 */
 	readonly stages: readonly string[];
+	/** False when the project has nothing to preview, so the routes leave that pane out. */
+	readonly preview: boolean;
 	/** Why this runtime cannot run in this browser, or null when it can. */
 	blocker(): PodBlocker | null;
 	/**

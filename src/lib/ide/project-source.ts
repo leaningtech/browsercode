@@ -1,6 +1,7 @@
 /**
  * How a project gets onto its runtime. `IdeSession` runs one boot pipeline over these hooks.
  */
+import type { RuntimeId } from '$lib/config/frameworks';
 import type { WorkspaceFs } from './workspace-fs';
 
 /** Runtime-side handles the hooks work against; the session owns the boot token. */
@@ -31,8 +32,8 @@ export type BootContext = {
 export type ProjectCommand = { command: string[]; env?: string[] };
 
 export type ProjectSource = {
-	/** The runtime the project boots on: a BrowserPod, or CheerpJ for Java. */
-	runtime: 'pod' | 'cheerpj';
+	/** The runtime the project boots on. */
+	runtime: RuntimeId;
 	/** Carried into analytics and bug reports as the boot mode. */
 	id: string;
 	/** Doubles as the filename the project downloads under. */

@@ -17,6 +17,8 @@ const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
+	/** Java prints to the Output tab and serves nothing. */
+	readonly preview = false;
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;

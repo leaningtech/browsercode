@@ -37,7 +37,7 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 
 ## Behaviour
 
-- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names a Java example instead: `helloworld`, the default.
+- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` that is the Java example `helloworld`, also known by its id `java`.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.

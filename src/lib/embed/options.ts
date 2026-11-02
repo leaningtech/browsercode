@@ -1,48 +1,40 @@
 /** Parses the `/embed` query string, so a host page composes an embed entirely from the URL. */
-import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
+import {
+	defaultFrameworkId,
+	resolveFrameworkId,
+	resolveRuntimeTemplate,
+	type FrameworkId
+} from '$lib/config/frameworks';
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
-import { defaultJavaExample, isJavaExample, type JavaExample } from '$lib/ide/java-source';
 import type { ShellOptions } from '$lib/ide/shell-options';
 
 export type EmbedSource =
 	| { kind: 'framework'; id: FrameworkId }
 	| { kind: 'repo'; ref: ParsedRepo }
-	| { kind: 'agent'; id: ToolId }
-	| { kind: 'java'; example: JavaExample };
-
-export type EmbedOptions = { source: EmbedSource; shell: ShellOptions };
+	| { kind: 'agent'; id: ToolId };
 
 const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
 type View = (typeof VIEWS)[number];
-/** Java prints to the Output tab and has nothing to preview. */
-const JAVA_VIEWS = VIEWS.filter((view) => view !== 'preview');
 
 /** Narrows a raw `view=` entry, so unknown names fall out of the list rather than throwing. */
 function isView(value: string): value is View {
 	return (VIEWS as readonly string[]).includes(value);
 }
 
-/** Null when the URL names a project we cannot boot, so the route can report the bad parameter. */
-export function parseEmbedOptions(url: URL): EmbedOptions | null {
-	const source = parseSource(url);
-	return source && { source, shell: parseShell(url, source.kind === 'java' ? JAVA_VIEWS : VIEWS) };
-}
-
 /**
+ * Null when the URL names a project we cannot boot, so the route can report the bad parameter.
  * `agent` then `runtime` then `repo` then `framework`; a bad value of any is an error, not a
  * silent fallback.
  */
-function parseSource(url: URL): EmbedSource | null {
+export function parseEmbedSource(url: URL): EmbedSource | null {
 	const agent = url.searchParams.get('agent');
 	if (agent !== null) return isEnabledTool(agent) ? { kind: 'agent', id: agent } : null;
 
-	// CheerpJ is the only runtime to pick so far; `framework` then names one of its Java examples.
 	const runtime = url.searchParams.get('runtime');
 	if (runtime !== null) {
-		if (runtime !== 'cheerpj') return null;
-		const example = url.searchParams.get('framework') ?? defaultJavaExample;
-		return isJavaExample(example) ? { kind: 'java', example } : null;
+		const id = resolveRuntimeTemplate(runtime, url.searchParams.get('framework'));
+		return id ? { kind: 'framework', id } : null;
 	}
 
 	const repo = url.searchParams.get('repo');
@@ -57,10 +49,11 @@ function parseSource(url: URL): EmbedSource | null {
 }
 
 /**
- * Turns `view=` into the shell's panes, out of those `available` to the project, leaving the
- * playground-only chrome off throughout.
+ * Turns `view=` into the shell's panes, leaving the playground-only chrome off throughout.
+ * `preview` is false when the project has nothing to preview, which takes the pane out of `view=`.
  */
-function parseShell(url: URL, available: readonly View[]): ShellOptions {
+export function parseEmbedShell(url: URL, preview: boolean): ShellOptions {
+	const available: readonly View[] = preview ? VIEWS : VIEWS.filter((view) => view !== 'preview');
 	const requested = url.searchParams.get('view');
 	const views = requested ? requested.split(',').map((view) => view.trim()) : [...available];
 	const shown = new Set<View>(views.filter(isView).filter((view) => available.includes(view)));

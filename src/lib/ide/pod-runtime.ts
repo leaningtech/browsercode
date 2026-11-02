@@ -16,6 +16,7 @@ const COLOR_ENV = ['FORCE_COLOR=3', 'COLORTERM=truecolor'];
 
 export class PodRuntime implements IdeRuntime {
 	readonly stages: readonly string[];
+	readonly preview = true;
 
 	private pod: BrowserPod | null = null;
 	/** Created with the pod, so it never sees a pod that is not there. */
