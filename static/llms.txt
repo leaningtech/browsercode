@@ -37,6 +37,7 @@ Build these directly; they are stable.
 | `https://browsercode.io/ide?framework=<id>` | Boots that template straight into the IDE |
 | `https://browsercode.io/java` | Java Playground: picker for the Java examples |
 | `https://browsercode.io/java?example=<name>` | Boots a Java example: `helloworld` or `swing` |
+| `https://browsercode.io/java#<fiddle>` | Opens a JavaFiddle share link; the hash is JavaFiddle's own format |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/` | Clones a repo and boots it |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/<dir>` | As above, scoped to a subdirectory |
 | `https://browsercode.io/agents` | Picker for the coding CLIs |

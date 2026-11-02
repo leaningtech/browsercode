@@ -1,4 +1,5 @@
 import { findMainClass } from '$lib/cheerpj/main-class';
+import { fiddleLink } from '$lib/fiddle/codec';
 
 export type FrameworkId =
 	| 'vite'
@@ -46,6 +47,8 @@ export type FrameworkConfig = {
 	 * predates the registry, so the ids alone would break the URL the blog embeds.
 	 */
 	example?: string;
+	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
+	share?: (files: { path: string; content: string }[]) => string;
 };
 
 function javaStartCommand(
@@ -135,7 +138,8 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		// Compiling is CheerpJ's build step, so nothing runs ahead of the program.
 		setupCommandArgs: [],
 		startCommand: javaStartCommand,
-		example: 'helloworld'
+		example: 'helloworld',
+		share: (files) => fiddleLink('', files)
 	},
 	'java-swing': {
 		id: 'java-swing',
@@ -147,7 +151,8 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		section: 'java',
 		setupCommandArgs: [],
 		startCommand: javaStartCommand,
-		example: 'swing'
+		example: 'swing',
+		share: (files) => fiddleLink('', files)
 	}
 };
 

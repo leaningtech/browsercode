@@ -37,7 +37,7 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 
 ## Behaviour
 
-- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`.
+- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A JavaFiddle link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<fiddle>` boots that fiddle.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.
@@ -63,4 +63,5 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 /embed?runtime=cheerpj&framework=helloworld
 /embed?runtime=cheerpj&view=editor,terminal
 /embed?runtime=cheerpj&framework=swing
+/embed?runtime=cheerpj#N4IgLglmA2CmIC4QgDQgGYTgZ0QbVAAcBDMAC0RAFliIA7AOgCtiA3Y1EAYwHs6xY-SiS4BrYgHNYAAkwATOXADcAHTpqu0YtmzSa9acDUqwhAK4AjaBC7TsYUjemseEOdIC2tOgAoAymAATvQSeAC60sSBEtgAlIbGYCZ+AJ72sB4MPGZgDITB-NC+KiAAErDQ0Dwo0gDqPIHQcgCEJbGq6mAAvmo9dCBdYV1AA
 ```

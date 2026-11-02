@@ -6,8 +6,15 @@
 		window.location.href = `/java?example=${example}`;
 	}
 
-	/** Set when ?example= carried something we couldn't resolve, so the picker can say so. */
-	let { unknownExample }: { unknownExample?: string } = $props();
+	let {
+		unknownExample,
+		unreadableFiddle = false
+	}: {
+		/** Set when ?example= carried something we couldn't resolve, so the picker can say so. */
+		unknownExample?: string;
+		/** Set when the hash held no fiddle we could read, often a link cut short in copying. */
+		unreadableFiddle?: boolean;
+	} = $props();
 
 	const exampleNames = javaRailItems.map((item) => item.example).join(', ');
 
@@ -22,9 +29,11 @@
 <div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
 	<div class="w-full max-w-lg">
 		<h1 class="mb-1 font-display text-[18px] font-semibold text-bc-text">Java Playground</h1>
-		<p class="mb-4 text-[13px] text-bc-text-muted">Start from an example.</p>
+		<p class="mb-4 text-[13px] text-bc-text-muted">
+			Start from an example, or open a JavaFiddle link here unchanged.
+		</p>
 
-		{#if unknownExample}
+		{#if unreadableFiddle || unknownExample}
 			<div
 				class="mb-4 flex items-start gap-2.5 rounded-lg border border-bc-gold/25 bg-bc-gold/6 px-3 py-2.5 text-left"
 			>
@@ -34,9 +43,14 @@
 					<Icon icon="mingcute:alert-line" width="14" height="14" />
 				</span>
 				<span class="text-[12px] leading-relaxed text-bc-text-muted">
-					There's no example called <span class="font-mono text-bc-text">{shownExample}</span>. Pick
-					one below, or use <span class="font-mono text-bc-text">?example=</span> with one of:
-					<span class="font-mono text-bc-text">{exampleNames}</span>.
+					{#if unreadableFiddle}
+						This link's fiddle couldn't be read. It may have been cut short when it was copied. Pick
+						an example below instead.
+					{:else}
+						There's no example called <span class="font-mono text-bc-text">{shownExample}</span>.
+						Pick one below, or use <span class="font-mono text-bc-text">?example=</span> with one
+						of: <span class="font-mono text-bc-text">{exampleNames}</span>.
+					{/if}
 				</span>
 			</div>
 		{/if}

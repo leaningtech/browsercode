@@ -61,4 +61,6 @@ export type ProjectSource = {
 	startCommand: (ctx: BootContext) => Promise<ProjectCommand | null>;
 	/** Called once the files are readable, so a boot that dies earlier is not counted. */
 	trackBoot: () => void;
+	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
+	share?: (files: { path: string; content: string }[]) => string;
 };

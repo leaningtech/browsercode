@@ -31,7 +31,8 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 			ctx.write('Found nothing in the project to start.\n');
 			return null;
 		},
-		trackBoot: () => trackEvent('Booted Playground', { framework: config.label })
+		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
+		share: config.share
 	};
 }
 

@@ -4,15 +4,23 @@
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import JavaLanding from '$lib/components/java/JavaLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
+	import { fiddleSource } from '$lib/ide/fiddle-source';
 	import { templateSource } from '$lib/ide/template-source';
 	import { resolveExample } from '$lib/config/frameworks';
+	import { decodeFiddle } from '$lib/fiddle/codec';
 
-	// As on /ide, an unknown name lands on the picker rather than booting something the URL didn't
-	// ask for.
+	// A JavaFiddle link carries its fiddle in the hash, and wins over `?example=`. As on /ide, an
+	// unknown name lands on the picker rather than booting something the URL didn't ask for.
 	const requested = $page.url.searchParams.get('example');
 	const example = requested === null ? undefined : resolveExample('java', requested);
+	const hash = $page.url.hash.slice(1);
+	const fiddle = hash ? decodeFiddle(hash) : null;
 
-	const session = example ? new IdeSession(templateSource(example)) : null;
+	const session = fiddle
+		? new IdeSession(fiddleSource(fiddle))
+		: !hash && example
+			? new IdeSession(templateSource(example))
+			: null;
 
 	// Same entrances as /ide: the landing fades in, a booted session slides up.
 	let entered = $state(false);
@@ -38,7 +46,10 @@
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 			style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 		>
-			<JavaLanding unknownExample={example ? undefined : (requested ?? undefined)} />
+			<JavaLanding
+				unknownExample={hash || example ? undefined : (requested ?? undefined)}
+				unreadableFiddle={!!hash}
+			/>
 		</div>
 	</div>
 {/if}
