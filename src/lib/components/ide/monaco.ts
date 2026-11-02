@@ -30,6 +30,7 @@ import vue from '@shikijs/langs/vue';
 import xml from '@shikijs/langs/xml';
 import yaml from '@shikijs/langs/yaml';
 import type { EditorThemeId } from '$lib/config/editor-themes';
+import type { Diagnostic } from '$lib/ide/runtime';
 import { THEME_DATA } from './themes/theme-data';
 
 /**
@@ -114,6 +115,37 @@ export function applyTheme(id: EditorThemeId): void {
 		monaco.editor.setTheme(id);
 	} catch (error) {
 		console.error(`Failed to apply the ${id} editor theme:`, error);
+	}
+}
+
+/** Owns the markers `showDiagnostics` sets, so a new build replaces only its own. */
+const BUILD_MARKERS = 'build';
+
+/**
+ * Marks every open model with the diagnostics for its file, clearing those with none. Each mark
+ * spans the word at its column, or one character where there is none, such as a missing `;`.
+ */
+export function showDiagnostics(diagnostics: readonly Diagnostic[]): void {
+	for (const model of monaco.editor.getModels()) {
+		const path = model.uri.path.slice(1);
+		const markers = diagnostics
+			.filter((diagnostic) => diagnostic.path === path && diagnostic.line <= model.getLineCount())
+			.map((diagnostic) => {
+				const position = { lineNumber: diagnostic.line, column: diagnostic.column };
+				const word = model.getWordAtPosition(position);
+				return {
+					severity:
+						diagnostic.severity === 'error'
+							? monaco.MarkerSeverity.Error
+							: monaco.MarkerSeverity.Warning,
+					message: diagnostic.message,
+					startLineNumber: diagnostic.line,
+					startColumn: word?.startColumn ?? diagnostic.column,
+					endLineNumber: diagnostic.line,
+					endColumn: word?.endColumn ?? diagnostic.column + 1
+				};
+			});
+		monaco.editor.setModelMarkers(model, BUILD_MARKERS, markers);
 	}
 }
 

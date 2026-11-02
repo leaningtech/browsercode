@@ -8,9 +8,10 @@
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
+import { parseJavacOutput } from '$lib/cheerpj/javac-diagnostics';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
-import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
+import { SETUP, STARTING, type Diagnostic, type IdeRuntime, type RuntimeEnv } from './runtime';
 
 const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 /** What CheerpJ draws each window into; it has no API to list or close them. */
@@ -19,6 +20,7 @@ const WINDOW = '.cjWindow';
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
+	diagnostics = $state.raw<readonly Diagnostic[]>([]);
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
@@ -112,7 +114,20 @@ export class CheerpjRuntime implements IdeRuntime {
 		const sources = await this.pushSources();
 		if (!sources) return;
 		const out = `${this.buildRoot}/run-${++this.runs}`;
-		const exit = await this.exec('javac', ['-d', out, ...sources]);
+		let log = '';
+		const stopListening = this.console!.listen((text) => (log += text));
+		// `-Xlint`, as JavaFiddle passes it: without it warnings shrink to a `Note:` with no line.
+		const exit = await this.exec('javac', [
+			'-d',
+			out,
+			'-Xlint',
+			...[...sources.keys()].map((name) => `/str/${name}`)
+		]);
+		stopListening();
+		this.diagnostics = parseJavacOutput(log).flatMap((diagnostic) => {
+			const path = sources.get(diagnostic.path);
+			return path ? [{ ...diagnostic, path: path.slice(this.source.workdir.length + 1) }] : [];
+		});
 		if (exit !== 0) {
 			this.console!.write(`javac exited with code ${exit}\n`, 'error');
 			return;
@@ -159,11 +174,12 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	/**
-	 * Copies every `.java` file to `/str/` and returns their paths there, or null after saying
-	 * why it could not. `/str/` has no directories, and `javac` wants a public class in a file of
-	 * its own name, so sources keep their file name and two of a name cannot coexist.
+	 * Copies every `.java` file to `/str/` and returns each one's path by its file name,
+	 * or null after saying why it could not. `/str/` has no directories, and `javac` wants a
+	 * public class in a file of its own name, so sources keep their file name and two of a name
+	 * cannot coexist.
 	 */
-	private async pushSources(): Promise<string[] | null> {
+	private async pushSources(): Promise<SvelteMap<string, string> | null> {
 		const { workdir } = this.source;
 		const byName = new SvelteMap<string, string>();
 		for (const path of this.fs.filesUnder(workdir).filter((p) => p.endsWith('.java'))) {
@@ -188,6 +204,6 @@ export class CheerpjRuntime implements IdeRuntime {
 			cheerpOSAddStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
 		}
 		this.pushed = new SvelteSet(byName.keys());
-		return [...byName.keys()].map((name) => `/str/${name}`);
+		return byName;
 	}
 }

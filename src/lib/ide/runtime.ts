@@ -19,6 +19,15 @@ export const HYDRATING = 1;
 export const SETUP = 2;
 export const STARTING = 3;
 
+/** A build message pinned to a project file, by its workdir-relative path; counts from 1. */
+export type Diagnostic = {
+	path: string;
+	line: number;
+	column: number;
+	severity: 'error' | 'warning';
+	message: string;
+};
+
 /** What the session hands a runtime for one boot. */
 export type RuntimeEnv = {
 	/** Where the runtime mounts its output view. */
@@ -42,6 +51,8 @@ export interface IdeRuntime {
 	 * runs, `HYDRATING` while the source hydrates. `launch` and `run` report the rest.
 	 */
 	readonly stages: readonly string[];
+	/** What the last build reported against the sources; absent where nothing reports any. */
+	readonly diagnostics?: readonly Diagnostic[];
 	/** Why this runtime cannot run in this browser, or null when it can. */
 	blocker(): PodBlocker | null;
 	/**
