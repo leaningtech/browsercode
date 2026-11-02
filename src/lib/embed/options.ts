@@ -14,6 +14,8 @@ export type EmbedSource =
 	| { kind: 'repo'; ref: ParsedRepo }
 	| { kind: 'agent'; id: ToolId };
 
+export type EmbedOptions = { source: EmbedSource; shell: ShellOptions };
+
 const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
 type View = (typeof VIEWS)[number];
 
@@ -22,12 +24,17 @@ function isView(value: string): value is View {
 	return (VIEWS as readonly string[]).includes(value);
 }
 
+/** Null when the URL names a project we cannot boot, so the route can report the bad parameter. */
+export function parseEmbedOptions(url: URL): EmbedOptions | null {
+	const source = parseSource(url);
+	return source && { source, shell: parseShell(url) };
+}
+
 /**
- * Null when the URL names a project we cannot boot, so the route can report the bad parameter.
  * `agent` then `runtime` then `repo` then `framework`; a bad value of any is an error, not a
  * silent fallback.
  */
-export function parseEmbedSource(url: URL): EmbedSource | null {
+function parseSource(url: URL): EmbedSource | null {
 	const agent = url.searchParams.get('agent');
 	if (agent !== null) return isEnabledTool(agent) ? { kind: 'agent', id: agent } : null;
 
@@ -48,17 +55,13 @@ export function parseEmbedSource(url: URL): EmbedSource | null {
 	return id ? { kind: 'framework', id } : null;
 }
 
-/**
- * Turns `view=` into the shell's panes, leaving the playground-only chrome off throughout.
- * `preview` is false when the project has nothing to preview, which takes the pane out of `view=`.
- */
-export function parseEmbedShell(url: URL, preview: boolean): ShellOptions {
-	const available: readonly View[] = preview ? VIEWS : VIEWS.filter((view) => view !== 'preview');
+/** Turns `view=` into the shell's panes, leaving the playground-only chrome off throughout. */
+function parseShell(url: URL): ShellOptions {
 	const requested = url.searchParams.get('view');
-	const views = requested ? requested.split(',').map((view) => view.trim()) : [...available];
-	const shown = new Set<View>(views.filter(isView).filter((view) => available.includes(view)));
-	// An unrecognised or unavailable `view` would otherwise render an empty shell.
-	if (shown.size === 0) available.forEach((view) => shown.add(view));
+	const views = requested ? requested.split(',').map((view) => view.trim()) : [...VIEWS];
+	const shown = new Set<View>(views.filter(isView));
+	// An unrecognised `view` would otherwise render an empty shell.
+	if (shown.size === 0) VIEWS.forEach((view) => shown.add(view));
 
 	return {
 		// Names the project and open file, which is chrome without an editor.

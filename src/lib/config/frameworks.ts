@@ -8,7 +8,8 @@ export type FrameworkId =
 	| 'nextjs'
 	| 'nuxt'
 	| 'express'
-	| 'java';
+	| 'java'
+	| 'java-swing';
 
 /** A BrowserPod, or CheerpJ for Java. */
 export type RuntimeId = 'pod' | 'cheerpj';
@@ -135,6 +136,18 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		setupCommandArgs: [],
 		startCommand: javaStartCommand,
 		example: 'helloworld'
+	},
+	'java-swing': {
+		id: 'java-swing',
+		label: 'Java Swing',
+		sourceRoot: '/templates/java-swing',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		setupCommandArgs: [],
+		startCommand: javaStartCommand,
+		example: 'swing'
 	}
 };
 

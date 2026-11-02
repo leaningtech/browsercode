@@ -8,11 +8,12 @@
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { repoSource } from '$lib/ide/repo-source';
-	import { parseEmbedShell, parseEmbedSource } from '$lib/embed/options';
+	import { parseEmbedOptions } from '$lib/embed/options';
 
 	// The host page composes the embed through the query string; nothing here is navigable, so the
 	// options are read once for this page's lifetime.
-	const source = parseEmbedSource($page.url);
+	const options = parseEmbedOptions($page.url);
+	const source = options?.source;
 
 	const agentSession =
 		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false }) : null;
@@ -22,19 +23,17 @@
 					source.kind === 'framework' ? templateSource(source.id) : repoSource(source.ref)
 				)
 			: null;
-	// Whether there is anything to preview is the runtime's to say, so the panes wait on the session.
-	const shell = parseEmbedShell($page.url, ideSession?.runtime.preview ?? true);
 </script>
 
-{#if agentSession}
+{#if options && agentSession}
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		{#if agentSession.lock === 'taken'}
 			<DuplicateTabDialog />
 		{/if}
-		<AgentShell session={agentSession} {shell} />
+		<AgentShell session={agentSession} shell={options.shell} />
 	</div>
-{:else if ideSession}
-	<IdeShell session={ideSession} {shell} />
+{:else if options && ideSession}
+	<IdeShell session={ideSession} shell={options.shell} />
 {:else}
 	<div class="bc-page-bg flex h-full w-full items-center justify-center p-4 text-bc-mist">
 		<div

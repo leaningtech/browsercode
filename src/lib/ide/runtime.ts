@@ -42,8 +42,6 @@ export interface IdeRuntime {
 	 * runs, `HYDRATING` while the source hydrates. `launch` and `run` report the rest.
 	 */
 	readonly stages: readonly string[];
-	/** False when the project has nothing to preview, so the routes leave that pane out. */
-	readonly preview: boolean;
 	/** Why this runtime cannot run in this browser, or null when it can. */
 	blocker(): PodBlocker | null;
 	/**
@@ -60,6 +58,12 @@ export interface IdeRuntime {
 	 * workdir-relative path of the file in front of the user.
 	 */
 	run?(focus?: string): Promise<void>;
+	/**
+	 * Hands the program's own windows `el` to draw into, which the shell shows in place of a
+	 * preview; absent where the preview is a served app. `onWindows` hears whether any window is
+	 * open, as programs open them and runs clear them.
+	 */
+	mountDisplay?(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void>;
 	/** Attaches an interactive shell to `el`; absent on runtimes without one. */
 	startBash?(el: HTMLElement): Promise<void>;
 	/** Tears the machine down; safe to call before or during `boot`. */

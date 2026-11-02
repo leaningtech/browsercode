@@ -4,7 +4,6 @@
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import JavaLanding from '$lib/components/java/JavaLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
-	import { FULL_SHELL } from '$lib/ide/shell-options';
 	import { templateSource } from '$lib/ide/template-source';
 	import { resolveExample } from '$lib/config/frameworks';
 
@@ -31,7 +30,7 @@
 			? '0%'
 			: '101%'}); transition: transform 0.62s cubic-bezier(0.22,1,0.36,1);"
 	>
-		<IdeShell {session} shell={{ ...FULL_SHELL, preview: session.runtime.preview }} />
+		<IdeShell {session} />
 	</div>
 {:else}
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">

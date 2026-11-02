@@ -13,15 +13,18 @@ import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
 
 const JAVAC_MAIN = 'com.sun.tools.javac.Main';
+/** What CheerpJ draws each window into; it has no API to list or close them. */
+const WINDOW = '.cjWindow';
 
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
-	/** Java prints to the Output tab and serves nothing. */
-	readonly preview = false;
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
+	/** Holds the windows of every program run so far. */
+	private display: HTMLElement | null = null;
+	private displayObserver: MutationObserver | null = null;
 	private env: RuntimeEnv | null = null;
 	/** Build output stays in IndexedDB, so a random root keeps sessions apart. */
 	private readonly buildRoot = `/files/browsercode-${crypto.randomUUID()}`;
@@ -59,6 +62,24 @@ export class CheerpjRuntime implements IdeRuntime {
 		return this.context();
 	}
 
+	async mountDisplay(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void> {
+		await loadCheerpj();
+		if (this.display) return;
+		const display = cheerpjCreateDisplay(-1, -1, el);
+		// CheerpJ's splash stays until a window opens, so a program that only prints never clears it.
+		display.classList.remove('cheerpjLoading');
+		this.displayObserver = new MutationObserver(() =>
+			onWindows(display.querySelector(WINDOW) !== null)
+		);
+		// CheerpJ adds a window's element before it gives it the class, so the class has to be watched.
+		this.displayObserver.observe(display, {
+			childList: true,
+			subtree: true,
+			attributeFilter: ['class']
+		});
+		this.display = display;
+	}
+
 	async launch(): Promise<void> {
 		// Without a dev server to wait for, saves are safe as soon as the files are in.
 		this.env?.onSavable();
@@ -74,6 +95,9 @@ export class CheerpjRuntime implements IdeRuntime {
 		const env = this.env;
 		if (!env || env.cancelled()) return;
 		env.onStage(SETUP);
+		// CheerpJ cannot stop a program, so the last run's keeps going and only its windows are
+		// cleared.
+		this.display?.querySelectorAll(WINDOW).forEach((el) => el.remove());
 		const start = await this.source.startCommand(this.context(focus));
 		if (!start) return;
 		// A Java process takes no environment, so `start.env` goes unused.
@@ -100,6 +124,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	shutdown(): void {
+		this.displayObserver?.disconnect();
 		this.console?.dispose();
 	}
 
