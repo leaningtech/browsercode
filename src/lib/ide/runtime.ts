@@ -55,8 +55,11 @@ export interface IdeRuntime {
 	readonly loaderMark: string;
 	/** What the last build reported against the sources; absent where nothing reports any. */
 	readonly diagnostics?: readonly Diagnostic[];
-	/** Why this runtime cannot run in this browser, or null when it can. */
-	blocker(): PodBlocker | null;
+	/**
+	 * Why this runtime cannot run in this browser, or null when it can; absent where any browser
+	 * that loads the page can run it.
+	 */
+	blocker?(): PodBlocker | null;
 	/**
 	 * Brings the machine up and returns the context the source hooks run against; null when the
 	 * boot was cancelled in flight.

@@ -39,10 +39,6 @@ export class CheerpjRuntime implements IdeRuntime {
 		this.stages = ['loading CheerpJ', source.hydrateLabel, 'compiling', 'running'];
 	}
 
-	blocker(): null {
-		return null;
-	}
-
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
 		this.env = env;
 		const { JavaConsole } = await import('$lib/cheerpj/console');
