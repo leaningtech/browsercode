@@ -1,6 +1,7 @@
 /**
  * How a project gets onto its runtime. `IdeSession` runs one boot pipeline over these hooks.
  */
+import type { RuntimeId } from '$lib/config/frameworks';
 import type { WorkspaceFs } from './workspace-fs';
 
 /** Runtime-side handles the hooks work against; the session owns the boot token. */
@@ -20,6 +21,8 @@ export type BootContext = {
 	) => Promise<void>;
 	/** True once the boot was superseded or the session unmounted; a hook must return early. */
 	cancelled: () => boolean;
+	/** The workdir-relative file in front of the user when a run started from the editor. */
+	focus?: string;
 };
 
 /**
@@ -29,8 +32,8 @@ export type BootContext = {
 export type ProjectCommand = { command: string[]; env?: string[] };
 
 export type ProjectSource = {
-	/** The runtime the project boots on: a BrowserPod, or CheerpJ for Java. */
-	runtime: 'pod' | 'cheerpj';
+	/** The runtime the project boots on. */
+	runtime: RuntimeId;
 	/** Carried into analytics and bug reports as the boot mode. */
 	id: string;
 	/** Doubles as the filename the project downloads under. */
@@ -58,4 +61,6 @@ export type ProjectSource = {
 	startCommand: (ctx: BootContext) => Promise<ProjectCommand | null>;
 	/** Called once the files are readable, so a boot that dies earlier is not counted. */
 	trackBoot: () => void;
+	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
+	share?: (files: { path: string; content: string }[]) => string;
 };

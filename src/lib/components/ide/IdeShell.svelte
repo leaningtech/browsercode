@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
+	import { replaceState } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import Portal from '$lib/components/Portal.svelte';
+	import DisplayPane from '$lib/components/ide/DisplayPane.svelte';
 	import EditorPane from '$lib/components/ide/EditorPane.svelte';
 	import FileTreePanel from '$lib/components/ide/FileTreePanel.svelte';
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
@@ -11,6 +13,7 @@
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
+	import { shareLink } from '$lib/ide/share';
 	import { PortalState } from '$lib/stores/portals.svelte';
 	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 	import { startDrag } from '$lib/utils/drag';
@@ -54,6 +57,27 @@
 		}
 	}
 
+	let shareStatus = $state<'idle' | 'copied' | 'failed'>('idle');
+	let shareTimer: ReturnType<typeof setTimeout>;
+
+	async function handleShare(): Promise<void> {
+		try {
+			const url = await shareLink(session);
+			if (!url) return;
+			// Only where the link opens this same page; an embed keeps the URL its host gave it. The
+			// source builds the link from the site root, so resolve() has no route id to map.
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			if (new URL(url).pathname === location.pathname) replaceState(url, {});
+			await navigator.clipboard.writeText(url);
+			shareStatus = 'copied';
+		} catch (error) {
+			console.error('Failed to share project:', error);
+			shareStatus = 'failed';
+		}
+		clearTimeout(shareTimer);
+		shareTimer = setTimeout(() => (shareStatus = 'idle'), 1500);
+	}
+
 	// Seeded once, deliberately: the route builds `shell` before mount and never swaps it.
 	let activePanel = $state<'files' | 'search' | null>(
 		untrack(() => (shell.fileTree ? 'files' : shell.search ? 'search' : null))
@@ -64,12 +88,17 @@
 	type Pane = 'editor' | 'terminal' | 'preview';
 
 	let isMobile = $state(false);
+	// A display stays blank for a program that only prints, so a narrow layout opens on Output,
+	// which always shows the run.
+	const initialPane = untrack(() =>
+		shell.initialPane === 'preview' && session.runtime.mountDisplay ? 'terminal' : shell.initialPane
+	);
 	// Seeded once, deliberately: `shell` is built before mount and never swapped. The requested
 	// pane wins when the shell renders it; otherwise the first one that is actually there does.
 	let activeMobileView = $state<Pane>(
 		untrack(() =>
-			shell[shell.initialPane]
-				? shell.initialPane
+			shell[initialPane]
+				? initialPane
 				: shell.editor
 					? 'editor'
 					: shell.terminal
@@ -88,7 +117,12 @@
 					icon: 'mingcute:terminal-line',
 					shown: shell.terminal
 				},
-				{ id: 'preview', label: 'Preview', icon: 'mingcute:eye-2-line', shown: shell.preview }
+				{
+					id: 'preview',
+					label: session.runtime.mountDisplay ? 'Display' : 'Preview',
+					icon: session.runtime.mountDisplay ? 'mingcute:display-line' : 'mingcute:eye-2-line',
+					shown: shell.preview
+				}
 			] satisfies { id: Pane; label: string; icon: string; shown: boolean }[]
 		).filter((tab) => tab.shown)
 	);
@@ -127,7 +161,12 @@
 	let bugReportHref = $derived(bugReportUrl({ repo: session.source.repo, previewUrl: portal.url }));
 
 	// Live once the framed document loaded, so the loader covers the server's start and first paint.
-	let previewLive = $derived(portal.frameStatus === 'ready');
+	// A display has no document to wait for, only the first run.
+	let previewLive = $derived(
+		session.runtime.mountDisplay
+			? session.phase === 'ready' || session.phase === 'building'
+			: portal.frameStatus === 'ready'
+	);
 	let loaderVisible = $state(true);
 	$effect(() => {
 		if (!previewLive) loaderVisible = true;
@@ -237,6 +276,7 @@
 	});
 
 	onDestroy(() => {
+		clearTimeout(shareTimer);
 		// Never leave the global chrome hidden after navigating away from /ide.
 		zenState.on = false;
 		portal.dispose();
@@ -267,6 +307,28 @@
 				{#if session.selectedFile}
 					<span class="text-bc-icon">/</span>
 					<span class="truncate text-bc-text">{session.selectedFile}</span>
+				{/if}
+				<!-- On the left: the fixed promo ribbon keeps the right corner. -->
+				{#if session.source.share}
+					<button
+						onclick={handleShare}
+						disabled={!session.fsReady}
+						title="Copy a link that reopens this project"
+						class="ml-1 flex shrink-0 items-center gap-1.5 rounded px-2 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+					>
+						<Icon
+							icon={shareStatus === 'copied'
+								? 'mingcute:check-line'
+								: 'mingcute:share-forward-line'}
+							width="13"
+							height="13"
+						/>
+						{shareStatus === 'copied'
+							? 'Link copied'
+							: shareStatus === 'failed'
+								? 'Copy failed'
+								: 'Share'}
+					</button>
 				{/if}
 				{#if session.isSaving}
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
@@ -524,7 +586,12 @@
 			{#if shell.preview}
 				<div
 					class="relative flex min-h-0 min-w-0 flex-col"
-					class:pane-hidden={isMobile && activeMobileView !== 'preview'}
+					class:pane-hidden={isMobile &&
+						activeMobileView !== 'preview' &&
+						!session.runtime.mountDisplay}
+					class:pane-parked={isMobile &&
+						activeMobileView !== 'preview' &&
+						!!session.runtime.mountDisplay}
 					class:pointer-events-none={dragging !== null}
 					style={isMobile
 						? 'width: 100%; height: 100%;'
@@ -550,7 +617,12 @@
 					{/if}
 
 					<div class="relative flex min-h-0 flex-1 flex-col" class:pane-hidden={previewCollapsed}>
-						{#if portal.portals.length > 0}
+						{#if session.runtime.mountDisplay}
+							<!-- No collapse: see .pane-parked. -->
+							<DisplayPane
+								mount={(el, onWindows) => session.runtime.mountDisplay!(el, onWindows)}
+							/>
+						{:else if portal.portals.length > 0}
 							<Portal
 								{portal}
 								onBeforeReload={() => session.saveAll()}
@@ -654,6 +726,14 @@
 	   take them out of layout so the visible panes fill the space. */
 	.pane-hidden {
 		display: none !important;
+	}
+	/* For a display instead: CheerpJ lays a window out against the display's size when it opens,
+	   and one that opens in a display: none pane stays 0×0 for good. */
+	.pane-parked {
+		position: absolute;
+		inset: 0;
+		visibility: hidden;
+		pointer-events: none;
 	}
 
 	.mobile-tab-btn {

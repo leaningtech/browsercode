@@ -24,24 +24,31 @@
 	// Embeds render inside a host page, where none of the app chrome belongs.
 	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
 
-	// Show on the landing surfaces (Home, /agents, bare /ide) and during tour step 6.
+	// A JavaFiddle link boots /java from its hash alone.
+	let isJavaLanding = $derived(
+		$page.route.id === '/java' && !$page.url.searchParams.has('example') && !$page.url.hash
+	);
+
+	// Show on the landing surfaces (Home, /agents, bare /ide and /java) and during tour step 6.
 	let showRibbon = $derived(
 		!zenState.on &&
 			!isEmbed &&
 			(ribbonAboveTour ||
 				$page.route.id === '/' ||
 				$page.route.id === '/agents' ||
+				isJavaLanding ||
 				($page.route.id === '/ide' && !$page.url.searchParams.has('framework')))
 	);
 
 	// A booted session, i.e. something live in a pod: a running agent, or an IDE session backed by
 	// a framework template or a cloned repo. The bare pickers (/agents, /ide with no framework)
-	// aren't booted yet. Mirrors Sidebar.svelte's isActiveAgentSession / isActiveIdeSession, which
-	// gate the leave-session warning off the same distinction.
+	// aren't booted yet. Mirrors Sidebar.svelte's isActiveAgentSession / isActiveIdeSession /
+	// isActiveJavaSession, which gate the leave-session warning off the same distinction.
 	let isBootedSession = $derived(
 		$page.route.id === '/agents/[tool]' ||
 			($page.route.id === '/ide' && $page.url.searchParams.has('framework')) ||
-			($page.route.id?.startsWith('/ide/') ?? false)
+			($page.route.id?.startsWith('/ide/') ?? false) ||
+			($page.route.id === '/java' && !isJavaLanding)
 	);
 
 	// Everywhere but a booted session (whose vertical space belongs to the terminal and editor),
@@ -61,11 +68,13 @@
 			? `${activeTool.label} — BrowserCode`
 			: $page.route.id?.startsWith('/ide')
 				? 'Playground IDE — BrowserCode'
-				: $page.route.id === '/agents'
-					? 'Agents — BrowserCode'
-					: $page.route.id === '/privacy'
-						? 'Privacy Policy — BrowserCode'
-						: 'BrowserCode: Start coding on your browser tab'
+				: $page.route.id === '/java'
+					? 'Java Playground — BrowserCode'
+					: $page.route.id === '/agents'
+						? 'Agents — BrowserCode'
+						: $page.route.id === '/privacy'
+							? 'Privacy Policy — BrowserCode'
+							: 'BrowserCode: Start coding on your browser tab'
 	);
 
 	let pageDescription = $derived(
@@ -73,11 +82,13 @@
 			? `Run ${activeTool.label} in your browser, on BrowserCode.`
 			: $page.route.id?.startsWith('/ide')
 				? 'Build and preview web apps right in your browser, on BrowserCode.'
-				: $page.route.id === '/agents'
-					? 'Use your favorite CLI agents without any installations, sandboxed.'
-					: $page.route.id === '/privacy'
-						? 'How Leaning Technologies handles your data when you use BrowserCode.'
-						: 'BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute.'
+				: $page.route.id === '/java'
+					? 'Compile and run Java, Swing included, right in your browser, on BrowserCode.'
+					: $page.route.id === '/agents'
+						? 'Use your favorite CLI agents without any installations, sandboxed.'
+						: $page.route.id === '/privacy'
+							? 'How Leaning Technologies handles your data when you use BrowserCode.'
+							: 'BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute.'
 	);
 
 	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);

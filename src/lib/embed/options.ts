@@ -1,22 +1,25 @@
 /** Parses the `/embed` query string, so a host page composes an embed entirely from the URL. */
-import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
+import {
+	defaultFrameworkId,
+	resolveFrameworkId,
+	resolveRuntimeTemplate,
+	type FrameworkId
+} from '$lib/config/frameworks';
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
+import { decodeFiddle, type Fiddle } from '$lib/fiddle/codec';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
-import { defaultJavaExample, isJavaExample, type JavaExample } from '$lib/ide/java-source';
 import type { ShellOptions } from '$lib/ide/shell-options';
 
 export type EmbedSource =
 	| { kind: 'framework'; id: FrameworkId }
 	| { kind: 'repo'; ref: ParsedRepo }
 	| { kind: 'agent'; id: ToolId }
-	| { kind: 'java'; example: JavaExample };
+	| { kind: 'fiddle'; fiddle: Fiddle };
 
 export type EmbedOptions = { source: EmbedSource; shell: ShellOptions };
 
 const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
 type View = (typeof VIEWS)[number];
-/** Java prints to the Output tab and has nothing to preview. */
-const JAVA_VIEWS = VIEWS.filter((view) => view !== 'preview');
 
 /** Narrows a raw `view=` entry, so unknown names fall out of the list rather than throwing. */
 function isView(value: string): value is View {
@@ -26,7 +29,7 @@ function isView(value: string): value is View {
 /** Null when the URL names a project we cannot boot, so the route can report the bad parameter. */
 export function parseEmbedOptions(url: URL): EmbedOptions | null {
 	const source = parseSource(url);
-	return source && { source, shell: parseShell(url, source.kind === 'java' ? JAVA_VIEWS : VIEWS) };
+	return source && { source, shell: parseShell(url) };
 }
 
 /**
@@ -37,12 +40,15 @@ function parseSource(url: URL): EmbedSource | null {
 	const agent = url.searchParams.get('agent');
 	if (agent !== null) return isEnabledTool(agent) ? { kind: 'agent', id: agent } : null;
 
-	// CheerpJ is the only runtime to pick so far; `framework` then names one of its Java examples.
 	const runtime = url.searchParams.get('runtime');
 	if (runtime !== null) {
-		if (runtime !== 'cheerpj') return null;
-		const example = url.searchParams.get('framework') ?? defaultJavaExample;
-		return isJavaExample(example) ? { kind: 'java', example } : null;
+		// A JavaFiddle link carries its fiddle in the hash, in place of a template.
+		if (url.hash.length > 1) {
+			const fiddle = decodeFiddle(url.hash.slice(1));
+			return fiddle && { kind: 'fiddle', fiddle };
+		}
+		const id = resolveRuntimeTemplate(runtime, url.searchParams.get('framework'));
+		return id ? { kind: 'framework', id } : null;
 	}
 
 	const repo = url.searchParams.get('repo');
@@ -56,16 +62,13 @@ function parseSource(url: URL): EmbedSource | null {
 	return id ? { kind: 'framework', id } : null;
 }
 
-/**
- * Turns `view=` into the shell's panes, out of those `available` to the project, leaving the
- * playground-only chrome off throughout.
- */
-function parseShell(url: URL, available: readonly View[]): ShellOptions {
+/** Turns `view=` into the shell's panes, leaving the playground-only chrome off throughout. */
+function parseShell(url: URL): ShellOptions {
 	const requested = url.searchParams.get('view');
-	const views = requested ? requested.split(',').map((view) => view.trim()) : [...available];
-	const shown = new Set<View>(views.filter(isView).filter((view) => available.includes(view)));
-	// An unrecognised or unavailable `view` would otherwise render an empty shell.
-	if (shown.size === 0) available.forEach((view) => shown.add(view));
+	const views = requested ? requested.split(',').map((view) => view.trim()) : [...VIEWS];
+	const shown = new Set<View>(views.filter(isView));
+	// An unrecognised `view` would otherwise render an empty shell.
+	if (shown.size === 0) VIEWS.forEach((view) => shown.add(view));
 
 	return {
 		// Names the project and open file, which is chrome without an editor.

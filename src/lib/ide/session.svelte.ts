@@ -355,7 +355,7 @@ export class IdeSession {
 		this.phase = 'building';
 		try {
 			await this.saveAll();
-			await this.runtime.run?.();
+			await this.runtime.run?.(this.selectedFile || undefined);
 		} finally {
 			this.phase = 'ready';
 		}

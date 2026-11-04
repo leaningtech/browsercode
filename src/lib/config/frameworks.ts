@@ -1,4 +1,22 @@
-export type FrameworkId = 'vite' | 'svelte' | 'react' | 'vue' | 'nextjs' | 'nuxt' | 'express';
+import { findMainClass } from '$lib/cheerpj/main-class';
+import { fiddleLink } from '$lib/fiddle/codec';
+
+export type FrameworkId =
+	| 'vite'
+	| 'svelte'
+	| 'react'
+	| 'vue'
+	| 'nextjs'
+	| 'nuxt'
+	| 'express'
+	| 'java'
+	| 'java-swing';
+
+/** A BrowserPod, or CheerpJ for Java. */
+export type RuntimeId = 'pod' | 'cheerpj';
+
+/** The part of the app a template is offered in: the Playground IDE, or the Java playground. */
+export type SectionId = 'ide' | 'java';
 
 export type FrameworkConfig = {
 	id: FrameworkId;
@@ -14,7 +32,32 @@ export type FrameworkConfig = {
 	devCommandArgs?: string[];
 	/** When set, only a portal on this port is auto-selected for the preview. */
 	appPort?: number;
+	/** Defaults to `pod`. */
+	runtime?: RuntimeId;
+	/** Defaults to `ide`. */
+	section?: SectionId;
+	/**
+	 * Builds the start command from the project's files, for a language that names its entry
+	 * point in the code; `devCommandArgs` goes unused then. `focus` is the file in front of the
+	 * user, if any. Null when no file can start it.
+	 */
+	startCommand?: (files: { path: string; content: string }[], focus?: string) => string[] | null;
+	/**
+	 * The name `/java?example=` and `/embed?runtime=` know it by. The embed's `helloworld`
+	 * predates the registry, so the ids alone would break the URL the blog embeds.
+	 */
+	example?: string;
+	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
+	share?: (files: { path: string; content: string }[]) => string;
 };
+
+function javaStartCommand(
+	files: { path: string; content: string }[],
+	focus?: string
+): string[] | null {
+	const mainClass = findMainClass(files, focus);
+	return mainClass ? ['java', mainClass] : null;
+}
 
 export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	vite: {
@@ -83,8 +126,42 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		setupCommandArgs: [['install']],
 		devCommandArgs: ['run', 'dev'],
 		appPort: 4000
+	},
+	java: {
+		id: 'java',
+		label: 'Java',
+		sourceRoot: '/templates/java-helloworld',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		// Compiling is CheerpJ's build step, so nothing runs ahead of the program.
+		setupCommandArgs: [],
+		startCommand: javaStartCommand,
+		example: 'helloworld',
+		share: (files) => fiddleLink('', files)
+	},
+	'java-swing': {
+		id: 'java-swing',
+		label: 'Java Swing',
+		sourceRoot: '/templates/java-swing',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		setupCommandArgs: [],
+		startCommand: javaStartCommand,
+		example: 'swing',
+		share: (files) => fiddleLink('', files)
 	}
 };
+
+/** In registry order, which is the order every menu lists them in. */
+function sectionIds(section: SectionId): FrameworkId[] {
+	return (Object.keys(frameworkConfigs) as FrameworkId[]).filter(
+		(id) => (frameworkConfigs[id].section ?? 'ide') === section
+	);
+}
 
 export const defaultFrameworkId: FrameworkId = 'express';
 
@@ -116,19 +193,49 @@ const frameworkAliases: Record<string, FrameworkId> = {
 };
 
 /**
- * Resolves a `?framework=` value to a template id, accepting the aliases above and ignoring case
- * and surrounding whitespace. Returns undefined when nothing matches — the caller's cue to show
- * the picker rather than substitute a default.
+ * Resolves a `?framework=` value to one of the IDE's template ids, accepting the aliases above and
+ * ignoring case and surrounding whitespace. Returns undefined when nothing matches — the caller's
+ * cue to show the picker rather than substitute a default.
  */
 export function resolveFrameworkId(value: string | null): FrameworkId | undefined {
 	if (value === null) return undefined;
 	const key = value.trim().toLowerCase();
-	if (isFrameworkId(key)) return key;
-	return frameworkAliases[key];
+	const id = isFrameworkId(key) ? key : frameworkAliases[key];
+	return id && sectionIds('ide').includes(id) ? id : undefined;
 }
 
-export const frameworkRailItems = (Object.keys(frameworkConfigs) as FrameworkId[]).map((id) => ({
-	id,
-	icon: frameworkConfigs[id].icon,
-	label: frameworkConfigs[id].label
-}));
+/** Resolves a `?example=` value to one of `section`'s templates, by example name or id. */
+export function resolveExample(section: SectionId, value: string): FrameworkId | undefined {
+	const key = value.trim().toLowerCase();
+	return sectionIds(section).find((id) => id === key || frameworkConfigs[id].example === key);
+}
+
+/**
+ * Resolves `/embed?runtime=<runtime>&framework=<value>` to one of that runtime's templates, by id
+ * or alias, or to its first when `value` is null.
+ */
+export function resolveRuntimeTemplate(
+	runtime: string,
+	value: string | null
+): FrameworkId | undefined {
+	const ids = (Object.keys(frameworkConfigs) as FrameworkId[]).filter(
+		(id) => (frameworkConfigs[id].runtime ?? 'pod') === runtime
+	);
+	if (value === null) return ids[0];
+	const key = value.trim().toLowerCase();
+	return ids.find((id) => id === key || frameworkConfigs[id].example === key);
+}
+
+function railItems(
+	section: SectionId
+): { id: FrameworkId; icon: string; label: string; example: string }[] {
+	return sectionIds(section).map((id) => ({
+		id,
+		icon: frameworkConfigs[id].icon,
+		label: frameworkConfigs[id].label,
+		example: frameworkConfigs[id].example ?? id
+	}));
+}
+
+export const frameworkRailItems = railItems('ide');
+export const javaRailItems = railItems('java');

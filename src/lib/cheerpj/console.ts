@@ -51,6 +51,8 @@ export class JavaConsole {
 	 * would fix it, once CheerpJ ties each `fileData` to the `cheerpjRunMain` that started it.
 	 */
 	private pendingRead: PendingRead | null = null;
+	/** Set while the runtime reads a program's output back, as it does `javac`'s. */
+	private listener: ((text: string) => void) | null = null;
 
 	constructor() {
 		this.terminal.loadAddon(this.fit);
@@ -75,6 +77,14 @@ export class JavaConsole {
 		this.terminal.dispose();
 	}
 
+	/** Hands `listener` the program output printed from now until the returned function is called. */
+	listen(listener: (text: string) => void): () => void {
+		this.listener = listener;
+		return () => {
+			if (this.listener === listener) this.listener = null;
+		};
+	}
+
 	write(text: string, kind: ConsoleKind = 'output'): void {
 		this.terminal.write(STYLE[kind] ? `${STYLE[kind]}${text}${RESET}` : text);
 	}
@@ -85,7 +95,9 @@ export class JavaConsole {
 			let decoder = this.decoders.get(fileData);
 			if (!decoder) this.decoders.set(fileData, (decoder = new TextDecoder()));
 			const bytes = new Uint8Array(buf.buffer, buf.byteOffset + off, len);
-			this.write(decoder.decode(bytes, { stream: true }));
+			const text = decoder.decode(bytes, { stream: true });
+			this.listener?.(text);
+			this.write(text);
 			cb(len);
 		};
 		ConInodeOps.readAsync = (_fileData, _offset, buf, off, len, _flags, cb) => {
