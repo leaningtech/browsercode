@@ -14,19 +14,16 @@ const LOADER_URL =
 /** One console write or read; `cb` takes the byte count, 0 meaning end of input. */
 type ConCallback = (bytes: number) => void;
 
-declare global {
-	function cheerpjInit(options: {
-		version: number;
-		status?: 'default' | 'splash' | 'none';
-	}): Promise<void>;
+type CheerpjGlobals = {
+	cheerpjInit(options: { version: number; status?: 'default' | 'splash' | 'none' }): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
-	function cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
-	function cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
-	function cheerpOSRemoveStringFile(path: string): void;
+	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
+	cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
+	cheerpOSRemoveStringFile(path: string): void;
 	/** Where AWT and Swing windows draw; -1 for both sizes fills `parent`. */
-	function cheerpjCreateDisplay(width: number, height: number, parent: HTMLElement): HTMLElement;
+	cheerpjCreateDisplay(width: number, height: number, parent: HTMLElement): HTMLElement;
 	/** Backs every Java process's console; `fileData` is one per process, shared by out and err. */
-	var ConInodeOps: {
+	ConInodeOps: {
 		readAsync: (
 			fileData: object,
 			fileOffset: number,
@@ -45,7 +42,13 @@ declare global {
 			cb: ConCallback
 		) => void;
 	};
-}
+};
+
+/**
+ * What the loader defines on the page, for the rest of this layer. Typed here rather than declared
+ * global, so code outside `src/lib/cheerpj/` can't reach CheerpJ without importing this.
+ */
+export const cheerpj = globalThis as unknown as CheerpjGlobals;
 
 let loading: Promise<void> | null = null;
 
@@ -60,7 +63,7 @@ export function loadCheerpj(): Promise<void> {
 			document.head.appendChild(script);
 		});
 		// The status line sits over the display and, for a program that opens no window, never goes.
-		await cheerpjInit({ version: 25, status: 'none' });
+		await cheerpj.cheerpjInit({ version: 25, status: 'none' });
 	})();
 	return loading;
 }

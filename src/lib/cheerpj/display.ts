@@ -2,6 +2,7 @@
  * Where AWT and Swing windows draw. CheerpJ has no API to list or close a window, so this finds
  * them by the class CheerpJ gives their elements.
  */
+import { cheerpj } from './cheerpj';
 
 const WINDOW = '.cjWindow';
 
@@ -19,7 +20,7 @@ export function createDisplay(
 	parent: HTMLElement,
 	onWindows: (open: boolean) => void
 ): CheerpjDisplay {
-	const display = cheerpjCreateDisplay(-1, -1, parent);
+	const display = cheerpj.cheerpjCreateDisplay(-1, -1, parent);
 	// CheerpJ's splash stays until a window opens, so a program that only prints never clears it.
 	display.classList.remove('cheerpjLoading');
 	const observer = new MutationObserver(() => onWindows(display.querySelector(WINDOW) !== null));
