@@ -1,22 +1,19 @@
 /**
  * The CheerpJ runtime: a JVM in the page. The project lives in a `MemoryFs`, since the page can
  * only hand files to Java through CheerpJ's flat `/str/` mount; each run copies the sources there,
- * compiles them with `javac` and runs the source's start command, `java <main class>`. Every
- * `cheerpjRunMain` is its own process, so a run never waits for the previous program, which may
- * keep running for good.
+ * compiles them with `javac` and runs the source's start command, `java <main class>`.
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
+import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
+import { addStringFile, removeStringFile } from '$lib/cheerpj/fs';
 import { parseJavacOutput } from '$lib/cheerpj/javac-diagnostics';
+import { runJava, runJavac } from '$lib/cheerpj/process';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type Diagnostic, type IdeRuntime, type RuntimeEnv } from './runtime';
-
-const JAVAC_MAIN = 'com.sun.tools.javac.Main';
-/** What CheerpJ draws each window into; it has no API to list or close them. */
-const WINDOW = '.cjWindow';
 
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
@@ -27,8 +24,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
 	/** Holds the windows of every program run so far. */
-	private display: HTMLElement | null = null;
-	private displayObserver: MutationObserver | null = null;
+	private display: CheerpjDisplay | null = null;
 	private env: RuntimeEnv | null = null;
 	/** Build output stays in IndexedDB, so a random root keeps sessions apart. */
 	private readonly buildRoot = `/files/browsercode-${crypto.randomUUID()}`;
@@ -68,20 +64,7 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	async mountDisplay(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void> {
 		await loadCheerpj();
-		if (this.display) return;
-		const display = cheerpjCreateDisplay(-1, -1, el);
-		// CheerpJ's splash stays until a window opens, so a program that only prints never clears it.
-		display.classList.remove('cheerpjLoading');
-		this.displayObserver = new MutationObserver(() =>
-			onWindows(display.querySelector(WINDOW) !== null)
-		);
-		// CheerpJ adds a window's element before it gives it the class, so the class has to be watched.
-		this.displayObserver.observe(display, {
-			childList: true,
-			subtree: true,
-			attributeFilter: ['class']
-		});
-		this.display = display;
+		this.display ??= createDisplay(el, onWindows);
 	}
 
 	async launch(): Promise<void> {
@@ -101,7 +84,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		env.onStage(SETUP);
 		// CheerpJ cannot stop a program, so the last run's keeps going and only its windows are
 		// cleared.
-		this.display?.querySelectorAll(WINDOW).forEach((el) => el.remove());
+		this.display?.clearWindows();
 		const start = await this.source.startCommand(this.context(focus));
 		if (!start) return;
 		// A Java process takes no environment, so `start.env` goes unused.
@@ -141,7 +124,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	shutdown(): void {
-		this.displayObserver?.disconnect();
+		this.display?.dispose();
 		this.console?.dispose();
 	}
 
@@ -165,11 +148,11 @@ export class CheerpjRuntime implements IdeRuntime {
 	 */
 	private exec(command: string, args: string[]): Promise<number> {
 		this.console!.write(`❯ ${[command, ...args].join(' ')}\n`, 'info');
-		if (command === 'javac') return cheerpjRunMain(JAVAC_MAIN, '', ...args);
+		if (command === 'javac') return runJavac(args);
 		if (command === 'java') {
 			const [classPath, mainClass, ...programArgs] =
 				args[0] === '-cp' ? args.slice(1) : ['', ...args];
-			return cheerpjRunMain(mainClass, classPath, ...programArgs);
+			return runJava(mainClass, classPath, programArgs);
 		}
 		this.console!.write(`${command}: not available on CheerpJ\n`, 'error');
 		return Promise.resolve(127);
@@ -201,9 +184,9 @@ export class CheerpjRuntime implements IdeRuntime {
 			this.console!.write('No .java files to compile.\n', 'error');
 			return null;
 		}
-		for (const name of this.pushed) if (!byName.has(name)) cheerpOSRemoveStringFile(`/str/${name}`);
+		for (const name of this.pushed) if (!byName.has(name)) removeStringFile(`/str/${name}`);
 		for (const [name, path] of byName) {
-			cheerpOSAddStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
+			addStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
 		}
 		this.pushed = new SvelteSet(byName.keys());
 		return byName;

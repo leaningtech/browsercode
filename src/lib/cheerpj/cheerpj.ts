@@ -21,7 +21,6 @@ declare global {
 	}): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
 	function cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
-	/** `path` must sit directly under `/str/`: that mount has no directories. */
 	function cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
 	function cheerpOSRemoveStringFile(path: string): void;
 	/** Where AWT and Swing windows draw; -1 for both sizes fills `parent`. */
