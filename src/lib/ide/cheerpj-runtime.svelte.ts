@@ -6,6 +6,7 @@
  * keep running for good.
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { parseJavacOutput } from '$lib/cheerpj/javac-diagnostics';
@@ -20,6 +21,7 @@ const WINDOW = '.cjWindow';
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
+	readonly loaderMark = cheerpjMark;
 	diagnostics = $state.raw<readonly Diagnostic[]>([]);
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
