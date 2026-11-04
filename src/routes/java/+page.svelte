@@ -4,20 +4,20 @@
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import JavaLanding from '$lib/components/java/JavaLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
-	import { fiddleSource } from '$lib/ide/fiddle-source';
+	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { templateSource } from '$lib/ide/template-source';
 	import { resolveExample } from '$lib/config/frameworks';
-	import { decodeFiddle } from '$lib/fiddle/codec';
+	import { decodeSharedProject } from '$lib/cheerpj/shared-project';
 
-	// A JavaFiddle link carries its fiddle in the hash, and wins over `?example=`. As on /ide, an
+	// A shared project link carries the project in the hash, and wins over `?example=`. As on /ide, an
 	// unknown name lands on the picker rather than booting something the URL didn't ask for.
 	const requested = $page.url.searchParams.get('example');
 	const example = requested === null ? undefined : resolveExample('java', requested);
 	const hash = $page.url.hash.slice(1);
-	const fiddle = hash ? decodeFiddle(hash) : null;
+	const shared = hash ? decodeSharedProject(hash) : null;
 
-	const session = fiddle
-		? new IdeSession(fiddleSource(fiddle))
+	const session = shared
+		? new IdeSession(sharedProjectSource(shared))
 		: !hash && example
 			? new IdeSession(templateSource(example))
 			: null;
@@ -48,7 +48,7 @@
 		>
 			<JavaLanding
 				unknownExample={hash || example ? undefined : (requested ?? undefined)}
-				unreadableFiddle={!!hash}
+				unreadableLink={!!hash}
 			/>
 		</div>
 	</div>

@@ -13,7 +13,7 @@ export type JavacDiagnostic = {
 	message: string;
 };
 
-/** Unlike JavaFiddle's, the message may hold colons, as `incompatible types: …` does. */
+/** The message may hold colons of its own, as `incompatible types: …` does. */
 const HEADER = /^\/str\/(.+?):(\d+): (error|warning): (.*)$/;
 /** javac pads the caret with the source line's own tabs, so its index is the column. */
 const CARET = /^[ \t]*\^$/;

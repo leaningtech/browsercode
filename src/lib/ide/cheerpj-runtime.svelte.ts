@@ -116,7 +116,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		const out = `${this.buildRoot}/run-${++this.runs}`;
 		let log = '';
 		const stopListening = this.console!.listen((text) => (log += text));
-		// `-Xlint`, as JavaFiddle passes it: without it warnings shrink to a `Note:` with no line.
+		// Without `-Xlint`, warnings shrink to a `Note:` with no line to mark.
 		const exit = await this.exec('javac', [
 			'-d',
 			out,

@@ -8,7 +8,7 @@
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { repoSource } from '$lib/ide/repo-source';
-	import { fiddleSource } from '$lib/ide/fiddle-source';
+	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { parseEmbedOptions } from '$lib/embed/options';
 
 	// The host page composes the embed through the query string; nothing here is navigable, so the
@@ -23,8 +23,8 @@
 			? new IdeSession(
 					source.kind === 'framework'
 						? templateSource(source.id)
-						: source.kind === 'fiddle'
-							? fiddleSource(source.fiddle)
+						: source.kind === 'shared-project'
+							? sharedProjectSource(source.project)
 							: repoSource(source.ref)
 				)
 			: null;
