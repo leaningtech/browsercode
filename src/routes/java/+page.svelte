@@ -7,7 +7,7 @@
 	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { templateSource } from '$lib/ide/template-source';
 	import { resolveExample } from '$lib/config/frameworks';
-	import { decodeSharedProject } from '$lib/cheerpj/shared-project';
+	import { decodeSharedProject } from '$lib/java/shared-project';
 
 	// A shared project link carries the project in the hash, and wins over `?example=`. As on /ide, an
 	// unknown name lands on the picker rather than booting something the URL didn't ask for.

@@ -265,7 +265,7 @@
 	onMount(() => (shell.leaveGuard ? installLeaveGuard() : undefined));
 
 	onMount(async () => {
-		blocker = session.runtime.blocker();
+		blocker = session.runtime.blocker?.() ?? null;
 		if (blocker) {
 			session.loading = false;
 			return;

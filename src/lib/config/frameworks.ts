@@ -1,5 +1,5 @@
-import { findMainClass } from '$lib/cheerpj/main-class';
-import { sharedProjectLink } from '$lib/cheerpj/shared-project';
+import { findMainClass } from '$lib/java/main-class';
+import { sharedProjectLink } from '$lib/java/shared-project';
 
 export type FrameworkId =
 	| 'vite'
@@ -26,7 +26,7 @@ export type FrameworkConfig = {
 	/** File opened in the editor after boot. */
 	defaultFile: string;
 	icon: string;
-	/** npm invocations run before the dev server, e.g. [['install']]. */
+	/** npm invocations run before the dev server, e.g. [['install']]. Only a pod runs them. */
 	setupCommandArgs?: string[][];
 	/** npm invocation that starts the dev server. Defaults to ['run', 'dev']. */
 	devCommandArgs?: string[];
@@ -135,8 +135,6 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		icon: 'simple-icons:openjdk',
 		runtime: 'cheerpj',
 		section: 'java',
-		// Compiling is CheerpJ's build step, so nothing runs ahead of the program.
-		setupCommandArgs: [],
 		startCommand: javaStartCommand,
 		example: 'helloworld',
 		share: (files) => sharedProjectLink('', files)
@@ -149,7 +147,6 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		icon: 'simple-icons:openjdk',
 		runtime: 'cheerpj',
 		section: 'java',
-		setupCommandArgs: [],
 		startCommand: javaStartCommand,
 		example: 'swing',
 		share: (files) => sharedProjectLink('', files)

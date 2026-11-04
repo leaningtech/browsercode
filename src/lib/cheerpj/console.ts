@@ -7,6 +7,7 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
+import { cheerpj } from './cheerpj';
 
 /** `output` is the program's; the rest is what the IDE adds around it. */
 export type ConsoleKind = 'output' | 'info' | 'error';
@@ -91,7 +92,7 @@ export class JavaConsole {
 
 	/** Routes every Java process's console through this one. */
 	attach(): void {
-		ConInodeOps.writeAsync = (fileData, _offset, buf, off, len, cb) => {
+		cheerpj.ConInodeOps.writeAsync = (fileData, _offset, buf, off, len, cb) => {
 			let decoder = this.decoders.get(fileData);
 			if (!decoder) this.decoders.set(fileData, (decoder = new TextDecoder()));
 			const bytes = new Uint8Array(buf.buffer, buf.byteOffset + off, len);
@@ -100,7 +101,7 @@ export class JavaConsole {
 			this.write(text);
 			cb(len);
 		};
-		ConInodeOps.readAsync = (_fileData, _offset, buf, off, len, _flags, cb) => {
+		cheerpj.ConInodeOps.readAsync = (_fileData, _offset, buf, off, len, _flags, cb) => {
 			const target = new Uint8Array(buf.buffer, buf.byteOffset + off, len);
 			this.pendingRead = { target, cb };
 			this.serveRead();

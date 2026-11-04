@@ -1,10 +1,9 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { PortalUpdate } from '$lib/pod/portals';
 import { isBinaryContent, isImagePath, loadImage, releaseImage, type ImagePayload } from './media';
-import { CheerpjRuntime } from './cheerpj-runtime.svelte';
-import { PodRuntime } from './pod-runtime';
 import type { ProjectSource } from './project-source';
 import { BOOTING, HYDRATING, type IdeRuntime } from './runtime';
+import { RUNTIMES } from './runtimes';
 import type { WorkspaceFs } from './workspace-fs';
 
 /**
@@ -74,8 +73,7 @@ export class IdeSession {
 	constructor(source: ProjectSource) {
 		this.source = source;
 		this.workdir = source.workdir;
-		this.runtime =
-			source.runtime === 'cheerpj' ? new CheerpjRuntime(source) : new PodRuntime(source);
+		this.runtime = RUNTIMES[source.runtime](source);
 	}
 
 	/**

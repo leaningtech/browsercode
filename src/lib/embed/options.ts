@@ -6,7 +6,7 @@ import {
 	type FrameworkId
 } from '$lib/config/frameworks';
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
-import { decodeSharedProject, type SharedProject } from '$lib/cheerpj/shared-project';
+import { decodeSharedProject, type SharedProject } from '$lib/java/shared-project';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
 import type { ShellOptions } from '$lib/ide/shell-options';
 
