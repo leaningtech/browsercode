@@ -35,7 +35,7 @@
 	let isIdeLandingOnly = $derived(
 		$page.route.id === '/ide' && !$page.url.searchParams.has('framework')
 	);
-	// A JavaFiddle link boots from its hash alone.
+	// A shared project link boots from its hash alone.
 	let isJavaLandingOnly = $derived(
 		isJavaSection && !$page.url.searchParams.has('example') && !$page.url.hash
 	);

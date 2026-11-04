@@ -1,5 +1,5 @@
 import { findMainClass } from '$lib/cheerpj/main-class';
-import { fiddleLink } from '$lib/fiddle/codec';
+import { sharedProjectLink } from '$lib/cheerpj/shared-project';
 
 export type FrameworkId =
 	| 'vite'
@@ -139,7 +139,7 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		setupCommandArgs: [],
 		startCommand: javaStartCommand,
 		example: 'helloworld',
-		share: (files) => fiddleLink('', files)
+		share: (files) => sharedProjectLink('', files)
 	},
 	'java-swing': {
 		id: 'java-swing',
@@ -152,7 +152,7 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		setupCommandArgs: [],
 		startCommand: javaStartCommand,
 		example: 'swing',
-		share: (files) => fiddleLink('', files)
+		share: (files) => sharedProjectLink('', files)
 	}
 };
 

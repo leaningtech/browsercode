@@ -1,25 +1,25 @@
 /**
- * JavaFiddle's share format, byte for byte, so its links open here unchanged and ours open there:
- * the fiddle as JSON, compressed by lz-string into the URL hash.
+ * The format a Java project travels in when it is shared: JSON, compressed by lz-string into the
+ * URL hash. The format is fixed, byte for byte, so every link already shared keeps opening.
  */
 import LZString from 'lz-string';
 
-export type Fiddle = {
+export type SharedProject = {
 	title: string;
-	/** An ISO date; JavaFiddle sets it on every edit and sorts favourites by it. */
+	/** An ISO date, stamped on every edit. */
 	updated?: string;
 	files: { path: string; content: string }[];
 };
 
-/** Keys go in the order JavaFiddle writes them, so the same fiddle encodes to the same hash. */
-export function encodeFiddle({ title, updated, files }: Fiddle): string {
+/** Keys go in a fixed order, so the same project always encodes to the same hash. */
+export function encodeSharedProject({ title, updated, files }: SharedProject): string {
 	return LZString.compressToEncodedURIComponent(
 		JSON.stringify({ title, updated, files: files.map(({ path, content }) => ({ path, content })) })
 	);
 }
 
-/** Null when `hash` is not a fiddle, or names a file outside the project. */
-export function decodeFiddle(hash: string): Fiddle | null {
+/** Null when `hash` is not a shared project, or names a file outside the project. */
+export function decodeSharedProject(hash: string): SharedProject | null {
 	let data: unknown;
 	try {
 		data = JSON.parse(LZString.decompressFromEncodedURIComponent(hash) ?? '');
@@ -49,7 +49,7 @@ function isFile(value: unknown): value is { path: string; content: string } {
 	);
 }
 
-/** The `/java` link that reopens `files`, stamped as edited now, as JavaFiddle stamps every edit. */
-export function fiddleLink(title: string, files: Fiddle['files']): string {
-	return `/java#${encodeFiddle({ title, updated: new Date().toISOString(), files })}`;
+/** The `/java` link that reopens `files`, stamped as edited now. */
+export function sharedProjectLink(title: string, files: SharedProject['files']): string {
+	return `/java#${encodeSharedProject({ title, updated: new Date().toISOString(), files })}`;
 }

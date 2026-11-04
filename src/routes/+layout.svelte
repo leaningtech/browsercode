@@ -24,7 +24,7 @@
 	// Embeds render inside a host page, where none of the app chrome belongs.
 	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
 
-	// A JavaFiddle link boots /java from its hash alone.
+	// A shared project link boots /java from its hash alone.
 	let isJavaLanding = $derived(
 		$page.route.id === '/java' && !$page.url.searchParams.has('example') && !$page.url.hash
 	);

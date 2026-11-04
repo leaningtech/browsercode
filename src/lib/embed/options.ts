@@ -6,7 +6,7 @@ import {
 	type FrameworkId
 } from '$lib/config/frameworks';
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
-import { decodeFiddle, type Fiddle } from '$lib/fiddle/codec';
+import { decodeSharedProject, type SharedProject } from '$lib/cheerpj/shared-project';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
 import type { ShellOptions } from '$lib/ide/shell-options';
 
@@ -14,7 +14,7 @@ export type EmbedSource =
 	| { kind: 'framework'; id: FrameworkId }
 	| { kind: 'repo'; ref: ParsedRepo }
 	| { kind: 'agent'; id: ToolId }
-	| { kind: 'fiddle'; fiddle: Fiddle };
+	| { kind: 'shared-project'; project: SharedProject };
 
 export type EmbedOptions = { source: EmbedSource; shell: ShellOptions };
 
@@ -42,10 +42,10 @@ function parseSource(url: URL): EmbedSource | null {
 
 	const runtime = url.searchParams.get('runtime');
 	if (runtime !== null) {
-		// A JavaFiddle link carries its fiddle in the hash, in place of a template.
+		// A shared project link carries the project in the hash, in place of a template.
 		if (url.hash.length > 1) {
-			const fiddle = decodeFiddle(url.hash.slice(1));
-			return fiddle && { kind: 'fiddle', fiddle };
+			const project = decodeSharedProject(url.hash.slice(1));
+			return project && { kind: 'shared-project', project };
 		}
 		const id = resolveRuntimeTemplate(runtime, url.searchParams.get('framework'));
 		return id ? { kind: 'framework', id } : null;

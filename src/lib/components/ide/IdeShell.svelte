@@ -634,6 +634,7 @@
 						{#if loaderVisible}
 							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
 								<LoadingScene
+									mark={session.runtime.loaderMark}
 									lines={bootLines}
 									{activeLine}
 									flash={previewLive}

@@ -2,15 +2,25 @@
 
 BrowserCode runs entirely in the browser. An embed is our page inside your iframe.
 
+What your page has to do depends on what the embed runs on:
+
+| Embed                          | Runs on    | Your page must send             | The iframe must carry           |
+| ------------------------------ | ---------- | ------------------------------- | ------------------------------- |
+| `runtime=cheerpj` (Java)       | CheerpJ    | nothing                         | nothing                         |
+| `framework`, `repo` or `agent` | BrowserPod | the two isolation headers below | `allow="cross-origin-isolated"` |
+
+## Java embeds: any page, no headers
+
+CheerpJ does not need cross-origin isolation, so a Java embed is a plain iframe. It runs on any page: a hosted blog or CMS where you cannot set response headers, an ordinary page that loads third-party scripts and images, or a cross-origin isolated page alongside BrowserPod embeds.
+
 ```html
 <iframe
-	src="https://browsercode.io/embed?repo=github.com/sveltejs/kit&view=preview"
-	allow="cross-origin-isolated"
+	src="https://browsercode.io/embed?runtime=cheerpj"
 	style="width: 100%; height: 600px; border: 0"
 ></iframe>
 ```
 
-## Required headers
+## BrowserPod embeds: cross-origin isolation required
 
 BrowserPod needs `SharedArrayBuffer`, which browsers expose only on cross-origin isolated pages. Isolation is inherited from the top-level document, so the embedding page must send both headers itself:
 
@@ -21,9 +31,15 @@ Cross-Origin-Embedder-Policy: require-corp
 
 The iframe must carry `allow="cross-origin-isolated"`. Without all three the embed reports that the headers are missing.
 
-Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need none of this.
+```html
+<iframe
+	src="https://browsercode.io/embed?repo=github.com/sveltejs/kit&view=preview"
+	allow="cross-origin-isolated"
+	style="width: 100%; height: 600px; border: 0"
+></iframe>
+```
 
-`require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS.
+`require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS. If your page cannot accept that, or cannot set headers at all, only Java embeds will run on it.
 
 ## Parameters
 
@@ -37,7 +53,7 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 
 ## Behaviour
 
-- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A JavaFiddle link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<fiddle>` boots that fiddle.
+- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.
@@ -63,5 +79,5 @@ Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need no
 /embed?runtime=cheerpj&framework=helloworld
 /embed?runtime=cheerpj&view=editor,terminal
 /embed?runtime=cheerpj&framework=swing
-/embed?runtime=cheerpj#N4IgLglmA2CmIC4QgDQgGYTgZ0QbVAAcBDMAC0RAFliIA7AOgCtiA3Y1EAYwHs6xY-SiS4BrYgHNYAAkwATOXADcAHTpqu0YtmzSa9acDUqwhAK4AjaBC7TsYUjemseEOdIC2tOgAoAymAATvQSeAC60sSBEtgAlIbGYCZ+AJ72sB4MPGZgDITB-NC+KiAAErDQ0Dwo0gDqPIHQcgCEJbGq6mAAvmo9dCBdYV1AA
+/embed?runtime=cheerpj#N4IgLglmA2CmIC4QgDQgGYTgZ0QbVAAcBDMAC0RAFliIA7AOgCtiA3Y1EAYwHs6xY-SiS4BrYgHNYAAgAmsALY8A3AB066rtGLZs0mvWnB1qsIQCuAI2gQu07GFK3prHhFnSFtOgAoAymAATvQSeAC60sSBEtgAlEYmYKZ+AJ4Oigw85mAMhMH80L6qIAASsNDQPCjSAOo8gdCyAITFsWoaYAC+6t10IJ1hnUA
 ```

@@ -11,8 +11,8 @@ const TOKEN = /(?<![\w.@])(?:class|interface|enum|record)\s+(\w+)|\bvoid\s+main\
 
 /**
  * The binary name of the first class that declares a `main` method, qualified by its package.
- * `preferred` goes first, then the rest in file order. With none, JavaFiddle's rule: the first
- * `.java` file's name. Null when there are no `.java` files at all.
+ * `preferred` goes first, then the rest in file order. With none, the first `.java` file's
+ * name. Null when there are no `.java` files at all.
  */
 export function findMainClass(
 	files: readonly { path: string; content: string }[],
