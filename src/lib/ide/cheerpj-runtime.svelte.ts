@@ -9,11 +9,14 @@ import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
 import { addStringFile, removeStringFile } from '$lib/cheerpj/fs';
-import { parseJavacOutput } from '$lib/cheerpj/javac-diagnostics';
 import { runJava, runJavac } from '$lib/cheerpj/process';
+import { parseJavacOutput } from '$lib/java/javac-diagnostics';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type Diagnostic, type IdeRuntime, type RuntimeEnv } from './runtime';
+
+/** The mount the sources are copied to for `javac`; only paths under it are the project's. */
+const STR_MOUNT = '/str/';
 
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
@@ -106,11 +109,13 @@ export class CheerpjRuntime implements IdeRuntime {
 			'-d',
 			out,
 			'-Xlint',
-			...[...sources.keys()].map((name) => `/str/${name}`)
+			...[...sources.keys()].map((name) => `${STR_MOUNT}${name}`)
 		]);
 		stopListening();
 		this.diagnostics = parseJavacOutput(log).flatMap((diagnostic) => {
-			const path = sources.get(diagnostic.path);
+			const path = diagnostic.path.startsWith(STR_MOUNT)
+				? sources.get(diagnostic.path.slice(STR_MOUNT.length))
+				: undefined;
 			return path ? [{ ...diagnostic, path: path.slice(this.source.workdir.length + 1) }] : [];
 		});
 		if (exit !== 0) {
@@ -184,9 +189,9 @@ export class CheerpjRuntime implements IdeRuntime {
 			this.console!.write('No .java files to compile.\n', 'error');
 			return null;
 		}
-		for (const name of this.pushed) if (!byName.has(name)) removeStringFile(`/str/${name}`);
+		for (const name of this.pushed) if (!byName.has(name)) removeStringFile(`${STR_MOUNT}${name}`);
 		for (const [name, path] of byName) {
-			addStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
+			addStringFile(`${STR_MOUNT}${name}`, await this.fs.readBinaryFile(path));
 		}
 		this.pushed = new SvelteSet(byName.keys());
 		return byName;

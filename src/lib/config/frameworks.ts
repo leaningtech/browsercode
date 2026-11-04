@@ -1,5 +1,5 @@
-import { findMainClass } from '$lib/cheerpj/main-class';
-import { sharedProjectLink } from '$lib/cheerpj/shared-project';
+import { findMainClass } from '$lib/java/main-class';
+import { sharedProjectLink } from '$lib/java/shared-project';
 
 export type FrameworkId =
 	| 'vite'

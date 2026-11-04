@@ -2,7 +2,7 @@
  * Project source for a shared Java project link: the link's files, run exactly as the Java
  * template runs its own.
  */
-import { sharedProjectLink, type SharedProject } from '$lib/cheerpj/shared-project';
+import { sharedProjectLink, type SharedProject } from '$lib/java/shared-project';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { ProjectSource } from './project-source';
 import { templateSource } from './template-source';

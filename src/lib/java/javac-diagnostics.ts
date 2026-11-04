@@ -4,7 +4,7 @@
  * offending source line, a caret under the column, then any detail lines, indented.
  */
 
-/** `path` is the file's name under `/str/`; lines and columns count from 1. */
+/** `path` is the file as javac was given it; lines and columns count from 1. */
 export type JavacDiagnostic = {
 	path: string;
 	line: number;
@@ -14,7 +14,7 @@ export type JavacDiagnostic = {
 };
 
 /** The message may hold colons of its own, as `incompatible types: …` does. */
-const HEADER = /^\/str\/(.+?):(\d+): (error|warning): (.*)$/;
+const HEADER = /^(.+?\.java):(\d+): (error|warning): (.*)$/;
 /** javac pads the caret with the source line's own tabs, so its index is the column. */
 const CARET = /^[ \t]*\^$/;
 const DETAIL = /^ {2,}\S/;
