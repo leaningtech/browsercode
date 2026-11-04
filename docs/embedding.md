@@ -2,15 +2,25 @@
 
 BrowserCode runs entirely in the browser. An embed is our page inside your iframe.
 
+What your page has to do depends on what the embed runs on:
+
+| Embed                          | Runs on    | Your page must send             | The iframe must carry           |
+| ------------------------------ | ---------- | ------------------------------- | ------------------------------- |
+| `runtime=cheerpj` (Java)       | CheerpJ    | nothing                         | nothing                         |
+| `framework`, `repo` or `agent` | BrowserPod | the two isolation headers below | `allow="cross-origin-isolated"` |
+
+## Java embeds: any page, no headers
+
+CheerpJ does not need cross-origin isolation, so a Java embed is a plain iframe. It runs on any page: a hosted blog or CMS where you cannot set response headers, an ordinary page that loads third-party scripts and images, or a cross-origin isolated page alongside BrowserPod embeds.
+
 ```html
 <iframe
-	src="https://browsercode.io/embed?repo=github.com/sveltejs/kit&view=preview"
-	allow="cross-origin-isolated"
+	src="https://browsercode.io/embed?runtime=cheerpj"
 	style="width: 100%; height: 600px; border: 0"
 ></iframe>
 ```
 
-## Required headers
+## BrowserPod embeds: cross-origin isolation required
 
 BrowserPod needs `SharedArrayBuffer`, which browsers expose only on cross-origin isolated pages. Isolation is inherited from the top-level document, so the embedding page must send both headers itself:
 
@@ -21,9 +31,15 @@ Cross-Origin-Embedder-Policy: require-corp
 
 The iframe must carry `allow="cross-origin-isolated"`. Without all three the embed reports that the headers are missing.
 
-Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and need none of this.
+```html
+<iframe
+	src="https://browsercode.io/embed?repo=github.com/sveltejs/kit&view=preview"
+	allow="cross-origin-isolated"
+	style="width: 100%; height: 600px; border: 0"
+></iframe>
+```
 
-`require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS.
+`require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS. If your page cannot accept that, or cannot set headers at all, only Java embeds will run on it.
 
 ## Parameters
 
