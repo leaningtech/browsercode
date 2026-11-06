@@ -32,6 +32,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 			return null;
 		},
 		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
+		javaVersion: config.javaVersion,
 		share: config.share
 	};
 }
