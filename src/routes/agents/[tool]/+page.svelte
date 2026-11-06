@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import AgentShell from '$lib/components/agents/AgentShell.svelte';
-	import DuplicateTabDialog from '$lib/components/agents/DuplicateTabDialog.svelte';
+	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 
 	const session = new AgentSession($page.params.tool);
 

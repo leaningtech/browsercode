@@ -61,6 +61,11 @@ export interface IdeRuntime {
 	 */
 	blocker?(): PodBlocker | null;
 	/**
+	 * What to tell the user once another tab or embed turns out to hold this runtime; `boot` then
+	 * returns null. Absent where tabs never conflict.
+	 */
+	readonly inUseElsewhere?: string | null;
+	/**
 	 * Brings the machine up and returns the context the source hooks run against; null when the
 	 * boot was cancelled in flight.
 	 */

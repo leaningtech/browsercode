@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
 	import AgentShell from '$lib/components/agents/AgentShell.svelte';
-	import DuplicateTabDialog from '$lib/components/agents/DuplicateTabDialog.svelte';
+	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
