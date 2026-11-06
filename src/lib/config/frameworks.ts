@@ -1,5 +1,6 @@
 import { findMainClass } from '$lib/java/main-class';
 import { sharedProjectLink } from '$lib/java/shared-project';
+import type { JavaVersion } from '$lib/java/versions';
 
 export type FrameworkId =
 	| 'vite'
@@ -47,8 +48,10 @@ export type FrameworkConfig = {
 	 * predates the registry, so the ids alone would break the URL the blog embeds.
 	 */
 	example?: string;
+	/** The Java a CheerpJ template boots on. */
+	javaVersion?: JavaVersion;
 	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
-	share?: (files: { path: string; content: string }[]) => string;
+	share?: (files: { path: string; content: string }[], javaVersion?: JavaVersion) => string;
 };
 
 function javaStartCommand(
@@ -137,7 +140,8 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		section: 'java',
 		startCommand: javaStartCommand,
 		example: 'helloworld',
-		share: (files) => sharedProjectLink('', files)
+		javaVersion: 25,
+		share: (files, java) => sharedProjectLink('', files, java)
 	},
 	'java-swing': {
 		id: 'java-swing',
@@ -149,7 +153,8 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		section: 'java',
 		startCommand: javaStartCommand,
 		example: 'swing',
-		share: (files) => sharedProjectLink('', files)
+		javaVersion: 25,
+		share: (files, java) => sharedProjectLink('', files, java)
 	}
 };
 

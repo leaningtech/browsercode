@@ -19,7 +19,8 @@ export function sharedProjectSource(project: SharedProject): ProjectSource {
 				await ctx.fs.writeFile(`${ctx.workdir}/${file.path}`, file.content);
 			}
 		},
-		share: (files) => sharedProjectLink(project.title, files),
+		javaVersion: project.java ?? 8,
+		share: (files, java) => sharedProjectLink(project.title, files, java),
 		trackBoot: () => trackEvent('Booted Playground', { framework: 'Shared Java project' })
 	};
 }

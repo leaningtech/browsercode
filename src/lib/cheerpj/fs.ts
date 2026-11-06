@@ -58,6 +58,12 @@ async function removeFile(file: JavaFile): Promise<void> {
 	}
 }
 
+export function makeDirectory(dir: string): Promise<void> {
+	return serial(async () => {
+		await (await javaFile(dir)).mkdirs();
+	});
+}
+
 /** Creates missing parent directories. */
 export function writeFiles(files: { path: string; bytes: Uint8Array }[]): Promise<void> {
 	return serial(async () => {
