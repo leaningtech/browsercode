@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { frameworkRailItems } from '$lib/config/frameworks';
+	import JavaExamples from '$lib/components/java/JavaExamples.svelte';
 	import CloneRepoForm from './CloneRepoForm.svelte';
 
 	function openFramework(id: string) {
@@ -22,11 +23,13 @@
 	);
 </script>
 
-<div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
-	<div class="w-full max-w-lg">
+<!-- `m-auto` rather than centring the flex row: the page outgrows short screens, and a centred
+     child that overflows can't scroll back to its top. -->
+<div class="flex h-full w-full overflow-auto p-6 text-bc-mist">
+	<div class="m-auto w-full max-w-lg py-4">
 		<h1 class="mb-1 font-display text-[18px] font-semibold text-bc-text">IDE Playground</h1>
-		<p class="mb-4 text-[13px] text-bc-text-muted">
-			Start from a framework template or clone a GitHub repo.
+		<p class="mb-6 text-[13px] text-bc-text-muted">
+			Start a web app from a framework or GitHub repo, or Java from an example.
 		</p>
 
 		{#if unknownFramework}
@@ -45,6 +48,8 @@
 				</span>
 			</div>
 		{/if}
+
+		{@render sectionHeading('Web apps', 'simple-icons:nodedotjs')}
 
 		<!-- Info callout: lilac is the palette's "info" accent (also used for badges and Codex CLI),
 		     so this is tinted distinctly from the plain framework/clone buttons below instead of
@@ -121,5 +126,19 @@
 			</div>
 			<CloneRepoForm />
 		</div>
+
+		<div class="mt-10">
+			{@render sectionHeading('Java', 'simple-icons:openjdk')}
+			<JavaExamples />
+		</div>
 	</div>
 </div>
+
+<!-- The runtimes need different things to start a project, so each gets its own section. -->
+{#snippet sectionHeading(title: string, icon: string)}
+	<h2 class="mb-3 flex items-center gap-2 text-[13px] font-semibold text-bc-text">
+		<Icon {icon} width="14" height="14" class="shrink-0 text-bc-mist" />
+		{title}
+		<span class="h-px flex-1 bg-bc-border"></span>
+	</h2>
+{/snippet}
