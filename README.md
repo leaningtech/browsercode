@@ -41,7 +41,7 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 - Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
 - Support for Vite, Express.js, Svelte, Next, Nuxt, React and Vue (with Wasm overrides)
-- Java projects compiled and run in the browser by [CheerpJ](https://cheerpj.com/), available through embeds
+- Java projects compiled and run in the browser by [CheerpJ](https://cheerpj.com/), in their own Java playground and through embeds
 
 BrowserCode started out as a way to run AI coding CLIs entirely client-side. It's since grown into a full IDE: alongside the CLIs, it can boot and preview web frameworks directly in the browser, so you can prototype an agent's output without ever leaving the tab.
 
@@ -95,6 +95,17 @@ CLI availability and behavior are configured in [`src/lib/config/tools.ts`](src/
 
 BrowserCode can run inside another site's page through `/embed`, composed entirely from the query string.
 
+Java embeds (`runtime=cheerpj`) run on CheerpJ, which does not need cross-origin isolation. They are a plain iframe and can be embedded in any page, with no headers to set:
+
+```html
+<iframe
+	src="https://browsercode.io/embed?runtime=cheerpj"
+	style="width: 100%; height: 600px; border: 0"
+></iframe>
+```
+
+Node.js projects, repo clones and agents run on BrowserPod, which needs `SharedArrayBuffer` and therefore cross-origin isolation. For those, the embedding page must send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, and the iframe must carry `allow="cross-origin-isolated"`:
+
 ```html
 <iframe
 	src="https://browsercode.io/embed?framework=vite&view=preview"
@@ -103,16 +114,14 @@ BrowserCode can run inside another site's page through `/embed`, composed entire
 ></iframe>
 ```
 
-BrowserPod needs `SharedArrayBuffer`, so the embedding page must send `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`, and the iframe must carry `allow="cross-origin-isolated"`. Java embeds (`runtime=cheerpj`) run on CheerpJ instead of BrowserPod and don't need them.
-
 Parameters, panes and further detail are in [`docs/embedding.md`](docs/embedding.md).
 
 <h2 id="for-ai-assistants">For AI assistants</h2>
 
 If you are an assistant helping someone use BrowserCode, read
 [browsercode.io/llms.txt](https://browsercode.io/llms.txt). One page, no crawling: the URL grammar
-for templates, repo clones and agent sessions, the embed snippet with the headers a host page has
-to send, and the sandbox constraints that decide whether BrowserCode suits a given project at all.
+for templates, repo clones, Java and agent sessions, the embed snippets and which of them need the
+host page to send isolation headers, and the sandbox constraints that decide whether BrowserCode suits a given project at all.
 
 <h2 id="breaking-browsercode">Breaking BrowserCode</h2>
 
