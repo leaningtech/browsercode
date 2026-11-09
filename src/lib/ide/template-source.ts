@@ -1,7 +1,8 @@
 /**
  * Project source for the curated framework templates served out of `static/templates/<id>/`.
  */
-import { frameworkConfigs, type FrameworkId } from '$lib/config/frameworks';
+import { frameworkConfigs, type FrameworkConfig, type FrameworkId } from '$lib/config/frameworks';
+import type { JavaVersion } from '$lib/java/versions';
 import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import type { BootContext, ProjectSource } from './project-source';
@@ -28,7 +29,24 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
 		javaVersion: config.javaVersion,
 		mainClass: config.mainClass,
+		starterFiles: config.olderJava && starterFiles(config.sourceRoot, config.olderJava),
 		share: config.share
+	};
+}
+
+function starterFiles(
+	sourceRoot: string,
+	older: NonNullable<FrameworkConfig['olderJava']>
+): (java: JavaVersion) => Promise<{ path: string; content: string }[]> {
+	return async (java) => {
+		const root = java < older.below ? older.sourceRoot : sourceRoot;
+		const paths = await fetchManifest(root);
+		return Promise.all(
+			paths.map(async (path) => ({
+				path,
+				content: new TextDecoder().decode(await fetchTemplateFile(root, path))
+			}))
+		);
 	};
 }
 

@@ -45,6 +45,11 @@ export type FrameworkConfig = {
 	javaVersion?: JavaVersion;
 	/** The class a CheerpJ template starts from, as its binary name. */
 	mainClass?: string;
+	/**
+	 * The same starter for Javas older than `below`, for a template written with newer language
+	 * features. A version switch swaps an untouched starter for the one that compiles there.
+	 */
+	olderJava?: { below: JavaVersion; sourceRoot: string };
 	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
 	share?: (
 		files: { path: string; content: string }[],
@@ -132,6 +137,8 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		example: 'helloworld',
 		javaVersion: 25,
 		mainClass: 'Main',
+		// `void main()` and `IO` are Java 25.
+		olderJava: { below: 25, sourceRoot: '/templates/java-helloworld-classic' },
 		share: (files, java, main) => sharedProjectLink('', files, java, main)
 	},
 	'java-swing': {

@@ -64,6 +64,8 @@ export type ProjectSource = {
 	javaVersion?: JavaVersion;
 	/** The binary name of the class a Java project starts from; absent when it names none. */
 	mainClass?: string;
+	/** The untouched starter for `java`, where the starter differs between versions. */
+	starterFiles?: (java: JavaVersion) => Promise<{ path: string; content: string }[]>;
 	/**
 	 * A link, relative to the site, that reopens `files` with the Java version and main class;
 	 * absent where there is no format for one.
