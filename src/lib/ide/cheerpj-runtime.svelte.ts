@@ -5,7 +5,6 @@
  * `/files/` is IndexedDB, shared by every page on the origin and kept across reloads, and nothing
  * guarantees two sessions can use it at once, so Java runs in one tab or embed at a time.
  */
-import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
@@ -30,7 +29,6 @@ const IN_USE_ELSEWHERE =
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
-	readonly loaderMark = cheerpjMark;
 	diagnostics = $state.raw<readonly Diagnostic[]>([]);
 	inUseElsewhere = $state<string | null>(null);
 	mainClasses = $state.raw<readonly string[]>([]);

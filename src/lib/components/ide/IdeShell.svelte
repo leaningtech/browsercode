@@ -7,7 +7,7 @@
 	import FileTreePanel from '$lib/components/ide/FileTreePanel.svelte';
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
-	import LoadingScene from '$lib/components/ide/LoadingScene.svelte';
+	import { LOADING_SCENES } from '$lib/components/ide/loading-scenes';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
 	import { fade } from 'svelte/transition';
@@ -41,6 +41,7 @@
 
 	// The runtime names its own boot steps; the session tracks which one is under way.
 	let bootLines = $derived(session.runtime.stages);
+	const LoadingScene = LOADING_SCENES[untrack(() => session.source.runtime)];
 
 	let blocker = $state<PodBlocker | null>(null);
 	let downloading = $state(false);
@@ -596,7 +597,6 @@
 						{#if loaderVisible}
 							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
 								<LoadingScene
-									mark={session.runtime.loaderMark}
 									lines={bootLines}
 									{activeLine}
 									flash={previewLive}

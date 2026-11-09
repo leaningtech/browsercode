@@ -51,8 +51,6 @@ export interface IdeRuntime {
 	 * runs, `HYDRATING` while the source hydrates. `launch` and `run` report the rest.
 	 */
 	readonly stages: readonly string[];
-	/** The image URL of the mark the loader shows while this runtime boots: its own logo. */
-	readonly loaderMark: string;
 	/** What the last build reported against the sources; absent where nothing reports any. */
 	readonly diagnostics?: readonly Diagnostic[];
 	/**

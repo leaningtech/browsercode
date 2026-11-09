@@ -3,7 +3,6 @@
  * writing files or running git, then it installs and starts the project's dev server.
  */
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
-import browserpodMark from '$lib/assets/browserpod.svg';
 import { onTerminalOutput, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import { podBlocker, type PodBlocker } from '$lib/utils/platform';
 import { PodFs } from './pod-fs';
@@ -17,7 +16,6 @@ const COLOR_ENV = ['FORCE_COLOR=3', 'COLORTERM=truecolor'];
 
 export class PodRuntime implements IdeRuntime {
 	readonly stages: readonly string[];
-	readonly loaderMark = browserpodMark;
 
 	private pod: BrowserPod | null = null;
 	/** Created with the pod, so it never sees a pod that is not there. */
