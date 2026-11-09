@@ -6,6 +6,7 @@
  * keep running for good.
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { MemoryFs } from './memory-fs';
@@ -17,6 +18,7 @@ const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
+	readonly loaderMark = cheerpjMark;
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
@@ -29,10 +31,6 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	constructor(private readonly source: ProjectSource) {
 		this.stages = ['loading CheerpJ', source.hydrateLabel, 'compiling', 'running'];
-	}
-
-	blocker(): null {
-		return null;
 	}
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {

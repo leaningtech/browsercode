@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import markUrl from '$lib/assets/browserpod.svg';
 
 	let {
+		mark,
 		lines = [],
 		activeLine = -1,
 		flash = false,
 		onFlashComplete
 	}: {
+		/** The runtime's logo, which rides the road and blooms on arrival. */
+		mark: string;
 		/** Ordered boot-log messages, dmesg-style (lowercase). */
 		lines?: readonly string[];
 		/** Highest line index real progress justifies revealing (-1 before boot starts). */
@@ -24,8 +26,9 @@
 	const CAM_H = 30; // camera height above the road (world units)
 	const CELL = 34; // grid cell size (world units)
 	const Z_FAR = 2200; // furthest road row drawn
-	const MARK_W = 35; // mark width (world units)
-	const MARK_ASPECT = 2199 / 2000; // browserpod.svg intrinsic aspect (height / width)
+	// The mark fits this box (world units): a tall mark is capped by height, a wide wordmark by width.
+	const MARK_MAX_W = 80;
+	const MARK_MAX_H = 38.5;
 	const CRUISE_Z = 230; // how far ahead of the camera the mark rides
 	const NEAR_Z = 70; // closest the pod gets on arrival (smaller z = bigger, perspective growth)
 	const HORIZON_FRAC = 0.46; // horizon height as a fraction of the canvas
@@ -119,10 +122,14 @@
 		// Non-null const so the type survives into the frame() closure.
 		const scene: CanvasRenderingContext2D = ctx;
 
-		// The mark asset is a raster (a base64 PNG wrapped in SVG). Drawing the full-res bitmap
-		// heavily downscaled every frame makes its edges shimmer as it drifts, so bake a flat-white
-		// copy (source-in keeps the shape's alpha) at roughly its on-screen size and draw that ~1:1.
-		const mark = new Image();
+		// BrowserPod's mark is a raster (a base64 PNG wrapped in SVG). Drawing a bitmap rescaled every
+		// frame makes its edges shimmer as it drifts, so bake a flat-white copy (source-in keeps the
+		// shape's alpha) at roughly its on-screen size and draw that ~1:1. A vector mark gets the same
+		// bake, which also flattens its colours to the scene's white.
+		const markImage = new Image();
+		// Height over width, read from the image so each runtime's mark keeps its own shape.
+		let markAspect = 1;
+		const markWorldW = (): number => Math.min(MARK_MAX_W, MARK_MAX_H / markAspect);
 		let whiteMark: HTMLCanvasElement | null = null;
 		let whiteMarkPx = 0;
 
@@ -138,27 +145,30 @@
 		// Rebuild the white mark at the mark's cruise (resting) size in device pixels, so the
 		// per-frame blit is ~1:1 and translates smoothly instead of shimmering.
 		function buildWhiteMark() {
-			if (!mark.complete || !mark.naturalWidth || !w || !h) return;
+			if (!markImage.complete || !markImage.naturalWidth || !w || !h) return;
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const focal = Math.max(w, h) * FOCAL_FRAC;
-			const px = Math.max(1, Math.round(((focal * MARK_W) / CRUISE_Z) * dpr));
+			const px = Math.max(1, Math.round(((focal * markWorldW()) / CRUISE_Z) * dpr));
 			if (whiteMark && whiteMarkPx === px) return;
 			const oc = document.createElement('canvas');
 			oc.width = px;
-			oc.height = Math.max(1, Math.round(px * MARK_ASPECT));
+			oc.height = Math.max(1, Math.round(px * markAspect));
 			const octx = oc.getContext('2d');
 			if (!octx) return;
 			octx.imageSmoothingEnabled = true;
 			octx.imageSmoothingQuality = 'high';
-			octx.drawImage(mark, 0, 0, oc.width, oc.height);
+			octx.drawImage(markImage, 0, 0, oc.width, oc.height);
 			octx.globalCompositeOperation = 'source-in';
 			octx.fillStyle = '#ffffff';
 			octx.fillRect(0, 0, oc.width, oc.height);
 			whiteMark = oc;
 			whiteMarkPx = px;
 		}
-		mark.onload = buildWhiteMark;
-		mark.src = markUrl;
+		markImage.onload = () => {
+			markAspect = markImage.naturalHeight / markImage.naturalWidth;
+			buildWhiteMark();
+		};
+		markImage.src = mark;
 
 		const ro = new ResizeObserver(() => {
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -251,8 +261,8 @@
 			const sway = reduceMotion ? 0 : Math.sin(t * 0.6) * 5;
 			const arriveZoom = reduceMotion ? 0 : ease;
 			const z = Math.max(NEAR_Z, CRUISE_Z + bob - arriveZoom * (CRUISE_Z - NEAR_Z));
-			const size = (focal * MARK_W) / z;
-			const markH = size * MARK_ASPECT;
+			const size = (focal * markWorldW()) / z;
+			const markH = size * markAspect;
 			const markX = cx + (focal * sway * (1 - Math.min(1, arrive))) / z;
 			const roadY = horizon + (focal * CAM_H) / z;
 			const centerY = roadY - markH / 2;

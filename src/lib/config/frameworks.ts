@@ -1,5 +1,8 @@
 export type FrameworkId = 'vite' | 'svelte' | 'react' | 'vue' | 'nextjs' | 'nuxt' | 'express';
 
+/** A BrowserPod, or CheerpJ for Java. */
+export type RuntimeId = 'pod' | 'cheerpj';
+
 export type FrameworkConfig = {
 	id: FrameworkId;
 	label: string;
