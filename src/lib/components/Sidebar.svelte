@@ -17,8 +17,9 @@
 
 	let isHome = $derived($page.route.id === '/');
 	let isAgentsSection = $derived($page.route.id?.startsWith('/agents') ?? false);
-	let isIdeSection = $derived($page.route.id?.startsWith('/ide') ?? false);
 	let isJavaSection = $derived($page.route.id === '/java');
+	// Java is one of the IDE's two runtimes, so its pages light the IDE entry.
+	let isIdeSection = $derived(($page.route.id?.startsWith('/ide') ?? false) || isJavaSection);
 
 	// Which agent is currently booted, if any — drives the flyout's "active" row badge only;
 	// the main button's color stays the same regardless of which one (or whether any) is running.
@@ -43,7 +44,9 @@
 	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 	// A booted framework (/ide?framework=...) or cloned GitHub repo (/ide/github/...) — the bare
 	// landing picker has nothing running yet, so it's excluded.
-	let isActiveIdeSession = $derived(isIdeSection && !isIdeLandingOnly);
+	let isActiveIdeSession = $derived(
+		($page.route.id?.startsWith('/ide') ?? false) && !isIdeLandingOnly
+	);
 	let isActiveJavaSession = $derived(isJavaSection && !isJavaLandingOnly);
 
 	// Full reloads are deliberate here: they're the teardown mechanism for a running pod
@@ -58,10 +61,10 @@
 	// gap) so a brief, imperfect mouse path from the icon into a tall menu doesn't close it —
 	// mouseenter/mouseleave fire on this whole wrapper (button + menu together), and closing
 	// waits a beat in case the pointer re-enters.
-	let openFlyout = $state<'agents' | 'ide' | 'java' | 'help' | null>(null);
+	let openFlyout = $state<'agents' | 'ide' | 'help' | null>(null);
 	let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
-	function openFlyoutNow(id: 'agents' | 'ide' | 'java' | 'help') {
+	function openFlyoutNow(id: 'agents' | 'ide' | 'help') {
 		if (closeTimer) clearTimeout(closeTimer);
 		openFlyout = id;
 	}
@@ -106,8 +109,8 @@
 	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
-		<!-- Ide: expands on hover with the curated framework list; the flyout is suppressed on the
-		     bare /ide landing, which already shows the same choices inline -->
+		<!-- Ide: expands on hover with the frameworks and Java examples; the flyout is suppressed on
+		     the bare /ide landing, which already shows the same choices inline -->
 		<div
 			class="group relative flex items-center justify-center"
 			role="group"
@@ -156,6 +159,25 @@
 								<span class="flex-1 truncate">{fw.label}</span>
 							</button>
 						{/each}
+						<div
+							class="px-2 pt-2.5 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
+						>
+							Java
+						</div>
+						{#each javaRailItems as item (item.id)}
+							<button
+								type="button"
+								onclick={() => navigate(`/java?example=${item.example}`)}
+								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+							>
+								<span
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
+								>
+									<Icon icon={item.icon} width="14" height="14" />
+								</span>
+								<span class="flex-1 truncate">{item.label}</span>
+							</button>
+						{/each}
 						<div class="my-1 h-px bg-bc-border"></div>
 						<button
 							type="button"
@@ -178,72 +200,7 @@
 							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
 								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
 							</span>
-							<span class="flex-1 truncate">See all frameworks</span>
-						</button>
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Java: its own section, flyout suppressed on the bare /java landing like the IDE's -->
-		<div
-			class="group relative flex items-center justify-center"
-			role="group"
-			onmouseenter={() => openFlyoutNow('java')}
-			onmouseleave={scheduleCloseFlyout}
-		>
-			<button
-				onclick={() => navigate('/java')}
-				aria-label="Java Playground"
-				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
-					{isJavaSection
-					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
-			>
-				<Icon icon="simple-icons:openjdk" width="26" height="26" />
-			</button>
-
-			{#if isJavaLandingOnly}
-				{@render tooltip('Java Playground')}
-			{:else}
-				<div
-					class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
-					'java'
-						? 'visible opacity-100'
-						: 'invisible'}"
-				>
-					<div
-						class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
-					>
-						<div
-							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
-						>
-							Java
-						</div>
-						{#each javaRailItems as item (item.id)}
-							<button
-								type="button"
-								onclick={() => navigate(`/java?example=${item.example}`)}
-								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
-							>
-								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
-								>
-									<Icon icon={item.icon} width="14" height="14" />
-								</span>
-								<span class="flex-1 truncate">{item.label}</span>
-							</button>
-						{/each}
-						<div class="my-1 h-px bg-bc-border"></div>
-						<button
-							type="button"
-							onclick={() => navigate('/java')}
-							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
-						>
-							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
-								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
-							</span>
-							<span class="flex-1 truncate">See all examples</span>
+							<span class="flex-1 truncate">See all templates</span>
 						</button>
 					</div>
 				</div>

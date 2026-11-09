@@ -11,6 +11,9 @@ const LOADER_URL =
 	(import.meta.env.VITE_CHEERPJ_LOADER as string | undefined) ??
 	'https://cjrtnc.leaningtech.com/5.0/loader.js';
 
+/** Without one, CheerpJ runs as the Community Edition and bars the display with a notice. */
+const LICENSE_KEY = import.meta.env.VITE_CHEERPJ_LICENSE_KEY as string | undefined;
+
 /** Not iterable: `Array.from` and spreading fail, so read it by index. */
 type JavaArray<T> = { readonly length: number; readonly [index: number]: T };
 
@@ -56,6 +59,7 @@ type CheerpjGlobals = {
 		version: number;
 		status?: 'default' | 'splash' | 'none';
 		javaProperties?: string[];
+		licenseKey?: string;
 	}): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
 	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
@@ -116,7 +120,8 @@ export function loadCheerpj(workdir: string, version: number): Promise<void> {
 			// The status line sits over the display and, for a program that opens no window, never
 			// goes.
 			status: 'none',
-			javaProperties: [`user.dir=${workdir}`]
+			javaProperties: [`user.dir=${workdir}`],
+			...(LICENSE_KEY && { licenseKey: LICENSE_KEY })
 		});
 		rootRelativePaths(workdir);
 	})();
