@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
+	import { replaceState } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import Portal from '$lib/components/Portal.svelte';
 	import DisplayPane from '$lib/components/ide/DisplayPane.svelte';
@@ -12,8 +13,10 @@
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
+	import { javaVersionLink, shareLink } from '$lib/ide/share';
+	import { JAVA_VERSIONS, type JavaVersion } from '$lib/java/versions';
 	import { PortalState } from '$lib/stores/portals.svelte';
-	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { installLeaveGuard, markIntentionalNavigation } from '$lib/stores/leaveWarning.svelte';
 	import { startDrag } from '$lib/utils/drag';
 	import type { PodBlocker } from '$lib/utils/platform';
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
@@ -53,6 +56,44 @@
 			console.error('Failed to download project:', error);
 		} finally {
 			downloading = false;
+		}
+	}
+
+	let shareStatus = $state<'idle' | 'copied' | 'failed'>('idle');
+	let shareTimer: ReturnType<typeof setTimeout>;
+
+	async function handleShare(): Promise<void> {
+		try {
+			const url = await shareLink(session);
+			if (!url) return;
+			// Only where the link opens this same page; an embed keeps the URL its host gave it. The
+			// source builds the link from the site root, so resolve() has no route id to map.
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			if (new URL(url).pathname === location.pathname) replaceState(url, {});
+			await navigator.clipboard.writeText(url);
+			shareStatus = 'copied';
+		} catch (error) {
+			console.error('Failed to share project:', error);
+			shareStatus = 'failed';
+		}
+		clearTimeout(shareTimer);
+		shareTimer = setTimeout(() => (shareStatus = 'idle'), 1500);
+	}
+
+	/**
+	 * CheerpJ starts one Java per page, so switching reloads with the project in the hash. The
+	 * edits travel with it, so there is nothing to confirm.
+	 */
+	async function switchJava(version: JavaVersion): Promise<void> {
+		try {
+			const url = await javaVersionLink(session, version);
+			if (!url) return;
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			replaceState(url, {});
+			markIntentionalNavigation();
+			location.reload();
+		} catch (error) {
+			console.error('Failed to switch Java version:', error);
 		}
 	}
 
@@ -254,6 +295,7 @@
 	});
 
 	onDestroy(() => {
+		clearTimeout(shareTimer);
 		// Never leave the global chrome hidden after navigating away from /ide.
 		zenState.on = false;
 		portal.dispose();
@@ -286,6 +328,41 @@
 				{#if session.selectedFile}
 					<span class="text-bc-icon">/</span>
 					<span class="truncate text-bc-text">{session.selectedFile}</span>
+				{/if}
+				<!-- On the left: the fixed promo ribbon keeps the right corner. -->
+				{#if session.source.share}
+					<button
+						onclick={handleShare}
+						disabled={!session.fsReady}
+						title="Copy a link that reopens this project"
+						class="ml-1 flex shrink-0 items-center gap-1.5 rounded px-2 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+					>
+						<Icon
+							icon={shareStatus === 'copied'
+								? 'mingcute:check-line'
+								: 'mingcute:share-forward-line'}
+							width="13"
+							height="13"
+						/>
+						{shareStatus === 'copied'
+							? 'Link copied'
+							: shareStatus === 'failed'
+								? 'Copy failed'
+								: 'Share'}
+					</button>
+				{/if}
+				{#if session.source.javaVersion}
+					<select
+						value={session.source.javaVersion}
+						onchange={(event) => switchJava(Number(event.currentTarget.value) as JavaVersion)}
+						disabled={!session.fsReady}
+						title="Java version; switching reloads the project"
+						class="shrink-0 rounded bg-bc-navy px-1 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+					>
+						{#each JAVA_VERSIONS as version (version)}
+							<option value={version}>Java {version}</option>
+						{/each}
+					</select>
 				{/if}
 				{#if session.isSaving}
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
