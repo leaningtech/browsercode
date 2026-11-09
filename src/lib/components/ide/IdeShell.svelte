@@ -13,10 +13,9 @@
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
-	import { javaVersionLink, shareLink } from '$lib/ide/share';
-	import { JAVA_VERSIONS, type JavaVersion } from '$lib/java/versions';
+	import { shareLink } from '$lib/ide/share';
 	import { PortalState } from '$lib/stores/portals.svelte';
-	import { installLeaveGuard, markIntentionalNavigation } from '$lib/stores/leaveWarning.svelte';
+	import { installLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 	import { startDrag } from '$lib/utils/drag';
 	import type { PodBlocker } from '$lib/utils/platform';
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
@@ -78,23 +77,6 @@
 		}
 		clearTimeout(shareTimer);
 		shareTimer = setTimeout(() => (shareStatus = 'idle'), 1500);
-	}
-
-	/**
-	 * CheerpJ starts one Java per page, so switching reloads with the project in the hash. The
-	 * edits travel with it, so there is nothing to confirm.
-	 */
-	async function switchJava(version: JavaVersion): Promise<void> {
-		try {
-			const url = await javaVersionLink(session, version);
-			if (!url) return;
-			// eslint-disable-next-line svelte/no-navigation-without-resolve
-			replaceState(url, {});
-			markIntentionalNavigation();
-			location.reload();
-		} catch (error) {
-			console.error('Failed to switch Java version:', error);
-		}
 	}
 
 	// Seeded once, deliberately: the route builds `shell` before mount and never swaps it.
@@ -350,19 +332,6 @@
 								? 'Copy failed'
 								: 'Share'}
 					</button>
-				{/if}
-				{#if session.source.javaVersion}
-					<select
-						value={session.source.javaVersion}
-						onchange={(event) => switchJava(Number(event.currentTarget.value) as JavaVersion)}
-						disabled={!session.fsReady}
-						title="Java version; switching reloads the project"
-						class="shrink-0 rounded bg-bc-navy px-1 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
-					>
-						{#each JAVA_VERSIONS as version (version)}
-							<option value={version}>Java {version}</option>
-						{/each}
-					</select>
 				{/if}
 				{#if session.isSaving}
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>

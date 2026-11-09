@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { IdeSession } from '$lib/ide/session.svelte';
+	import JavaVersionPicker from './JavaVersionPicker.svelte';
 
 	let {
 		session,
@@ -85,7 +86,12 @@
 		{/if}
 		<!-- Only runtimes that build on demand run again; the rest pick up saves themselves. -->
 		{#if session.runtime.run}
-			<div class="ml-auto flex shrink-0 items-center">
+			<!-- One control, so the version reads as what Run runs on. -->
+			<div class="vrh-run-group shrink-0">
+				{#if session.source.javaVersion}
+					<JavaVersionPicker {session} current={session.source.javaVersion} />
+					<span class="vrh-run-sep"></span>
+				{/if}
 				<!-- Only once the build finds a choice to make: one class starts by itself. -->
 				{#if mainClasses.length > 1}
 					<select
@@ -103,6 +109,7 @@
 							<option value={name}>{name}</option>
 						{/each}
 					</select>
+					<span class="vrh-run-sep"></span>
 				{/if}
 				<button
 					onclick={() => session.run()}
@@ -133,14 +140,25 @@
 </div>
 
 <style>
+	.vrh-run-group {
+		display: flex;
+		align-items: stretch;
+		height: 24px;
+		/* Pushed to the far end of the bar, past the tabs. */
+		margin: 0 6px 0 auto;
+		/* The tint, not --color-bc-border, which all but vanishes on the light status bar. */
+		border: 1px solid rgb(var(--bc-tint) / 14%);
+		border-radius: 5px;
+	}
+	.vrh-run-sep {
+		width: 1px;
+		background: rgb(var(--bc-tint) / 14%);
+	}
 	.vrh-run {
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		height: 24px;
-		/* Pushed to the far end of the bar, past the tabs. */
-		margin: 0 6px 0 auto;
-		padding: 0 8px;
+		padding: 0 9px 0 8px;
 		border: none;
 		border-radius: 4px;
 		background: transparent;
