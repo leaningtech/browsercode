@@ -2,11 +2,54 @@
 	import Icon from '@iconify/svelte';
 	import { javaRailItems } from '$lib/config/frameworks';
 
+	let {
+		unknownExample,
+		unreadableLink = false
+	}: {
+		/** Set when ?example= carried something we couldn't resolve, so the picker can say so. */
+		unknownExample?: string;
+		/** Set when the hash held no project we could read, often a link cut short in copying. */
+		unreadableLink?: boolean;
+	} = $props();
+
 	function openExample(example: string) {
 		window.location.href = `/java?example=${example}`;
 	}
+
+	const exampleNames = javaRailItems.map((item) => item.example).join(', ');
+
+	// A hand-built query string can carry anything; keep a long one from stretching the callout.
+	let shownExample = $derived(
+		unknownExample && unknownExample.length > 32
+			? `${unknownExample.slice(0, 32)}…`
+			: unknownExample
+	);
 </script>
 
+{#if unreadableLink || unknownExample}
+	<div
+		class="mb-4 flex items-start gap-2.5 rounded-lg border border-bc-gold/25 bg-bc-gold/6 px-3 py-2.5 text-left"
+	>
+		<span
+			class="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-bc-gold/12 text-bc-gold"
+		>
+			<Icon icon="mingcute:alert-line" width="14" height="14" />
+		</span>
+		<span class="text-[12px] leading-relaxed text-bc-text-muted">
+			{#if unreadableLink}
+				This link's project couldn't be read. It may have been cut short when it was copied. Pick an
+				example below instead.
+			{:else}
+				There's no example called <span class="font-mono text-bc-text">{shownExample}</span>. Pick
+				one below, or use <span class="font-mono text-bc-text">?example=</span> with one of:
+				<span class="font-mono text-bc-text">{exampleNames}</span>.
+			{/if}
+		</span>
+	</div>
+{/if}
+
+<!-- Same lilac "info" tint as the JavaScript callout, and the same job: the last two sentences name
+     what this runtime does and doesn't give you, so the tabs read as different machines. -->
 <div
 	class="mb-6 flex items-start gap-2.5 rounded-lg border border-bc-orchid/18 bg-bc-orchid/6 px-3 py-2.5 text-left"
 >
@@ -23,7 +66,8 @@
 			class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 			>CheerpJ</a
 		>, a full JVM and <span class="font-mono">javac</span> in WebAssembly. Swing and AWT windows draw
-		in the Display. Nothing installs on your machine.
+		in the Display. There's no shell or package manager here, and Share copies a link holding a snapshot
+		of the project. Nothing installs on your machine.
 	</span>
 </div>
 

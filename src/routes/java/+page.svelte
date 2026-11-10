@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import IdeShell from '$lib/components/ide/IdeShell.svelte';
-	import JavaLanding from '$lib/components/java/JavaLanding.svelte';
+	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { templateSource } from '$lib/ide/template-source';
@@ -22,9 +22,19 @@
 			? new IdeSession(templateSource(example))
 			: null;
 
+	// Bare /java has nothing of its own to say: the IDE picker's Java tab is the same page, so send
+	// people there rather than keeping a second landing in step with it. A URL that asked for
+	// something we couldn't resolve keeps its address and explains itself on the picker in place.
+	const askedForSomething = requested !== null || !!hash;
+	const redirecting = !session && !askedForSomething;
+
 	// Same entrances as /ide: the landing fades in, a booted session slides up.
 	let entered = $state(false);
 	onMount(() => {
+		if (redirecting) {
+			location.replace('/ide?lang=java');
+			return;
+		}
 		requestAnimationFrame(() => {
 			entered = true;
 		});
@@ -40,13 +50,14 @@
 	>
 		<IdeShell {session} />
 	</div>
-{:else}
+{:else if !redirecting}
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">
 		<div
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 			style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 		>
-			<JavaLanding
+			<IdeLanding
+				lang="java"
 				unknownExample={hash || example ? undefined : (requested ?? undefined)}
 				unreadableLink={!!hash}
 			/>

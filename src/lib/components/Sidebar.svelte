@@ -109,8 +109,9 @@
 	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
-		<!-- Ide: expands on hover with the frameworks and Java examples; the flyout is suppressed on
-		     the bare /ide landing, which already shows the same choices inline -->
+		<!-- Ide: expands on hover with both languages' templates, grouped and named as /ide's two tabs
+		     are; the flyout is suppressed on the bare /ide landing, which shows the same choices
+		     inline. Bare /java redirects there, so it never needs suppressing on its own. -->
 		<div
 			class="group relative flex items-center justify-center"
 			role="group"
@@ -143,7 +144,7 @@
 						<div
 							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
 						>
-							Frameworks
+							JavaScript
 						</div>
 						{#each frameworkRailItems as fw (fw.id)}
 							<button
