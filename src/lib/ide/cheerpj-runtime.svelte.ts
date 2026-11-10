@@ -4,24 +4,36 @@
  * compiles them with `javac` and runs the source's start command, `java <main class>`. Every
  * `cheerpjRunMain` is its own process, so a run never waits for the previous program, which may
  * keep running for good.
+ *
+ * `/files/` is IndexedDB, shared by every page on the origin and kept across reloads, and nothing
+ * guarantees two sessions can use it at once, so Java runs in one tab or embed at a time.
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { cheerpj, loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { runJava, runJavac } from '$lib/cheerpj/process';
+import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
+
+const ROOT = '/files/browsercode';
+
+const IN_USE_ELSEWHERE =
+	'Java runs in one BrowserCode tab or embed at a time, and another one has it.';
 
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
 	readonly loaderMark = cheerpjMark;
+	inUseElsewhere = $state<string | null>(null);
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
 	private env: RuntimeEnv | null = null;
+	/** Held for the tab's life, so only one tab or embed at a time uses `/files/`. */
+	private lock: TabLock | null = null;
 	/** Build output stays in IndexedDB, so a random root keeps sessions apart. */
 	private readonly buildRoot = `/files/browsercode-${crypto.randomUUID()}`;
 	private runs = 0;
@@ -34,6 +46,7 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
 		this.env = env;
+		if (!(await this.claim()) || env.cancelled()) return null;
 		const { JavaConsole } = await import('$lib/cheerpj/console');
 		if (env.cancelled()) return null;
 		this.console = new JavaConsole();
@@ -96,6 +109,15 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	shutdown(): void {
 		this.console?.dispose();
+		this.lock?.release();
+	}
+
+	/** Asked before CheerpJ loads, so a tab that can't run never starts a JVM. */
+	private async claim(): Promise<boolean> {
+		this.lock ??= requestSingleTabLock(`cheerpj:${ROOT}`);
+		const held = await this.lock.acquired;
+		if (!held) this.inUseElsewhere = IN_USE_ELSEWHERE;
+		return held;
 	}
 
 	private context(): BootContext {

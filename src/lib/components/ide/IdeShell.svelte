@@ -16,6 +16,7 @@
 	import { startDrag } from '$lib/utils/drag';
 	import type { PodBlocker } from '$lib/utils/platform';
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
+	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
@@ -250,6 +251,8 @@
 	<!-- Covers the shell, not the preview pane, which an embed may not render. -->
 	{#if blocker}
 		<PodBlockerOverlay {blocker} />
+	{:else if session.runtime.inUseElsewhere}
+		<DuplicateTabDialog message={session.runtime.inUseElsewhere} />
 	{/if}
 
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
