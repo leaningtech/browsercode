@@ -3,5 +3,6 @@ app/layout.jsx
 app/page.jsx
 manifest.txt
 next.config.js
-package-lock.json
 package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
