@@ -53,7 +53,7 @@ export class CheerpjRuntime implements IdeRuntime {
 			'info'
 		);
 		try {
-			await loadCheerpj();
+			await loadCheerpj(PROJECT_DIR);
 		} catch (error) {
 			this.console.write(`${error instanceof Error ? error.message : String(error)}\n`, 'error');
 			throw error;
@@ -166,7 +166,8 @@ export class CheerpjRuntime implements IdeRuntime {
 			fs: this.fs,
 			workdir: this.source.workdir,
 			write: (data) => this.console!.write(data),
-			// No working directory or color environment here, so `run`'s options go unused.
+			// The working directory is fixed at `PROJECT_DIR` and there is no color environment,
+			// so `run`'s options go unused.
 			run: async (command, args) => {
 				await this.exec(command, args);
 			},

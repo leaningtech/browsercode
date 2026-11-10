@@ -51,11 +51,16 @@ export type JavaLibrary = {
 type ConCallback = (bytes: number) => void;
 
 type CheerpjGlobals = {
-	cheerpjInit(options: { version: number }): Promise<void>;
+	cheerpjInit(options: { version: number; javaProperties?: string[] }): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
 	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
 	/** `''` gives the standard library alone. */
 	cheerpjRunLibrary(classPath: string): Promise<JavaLibrary>;
+	/**
+	 * Undocumented, so typed optional in case a release drops it. Roots every relative path at
+	 * `/files/`, whatever `user.dir` says.
+	 */
+	cheerpjNormalizePath?: (path: string) => string;
 	/** Backs every Java process's console; `fileData` is one per process, shared by out and err. */
 	ConInodeOps: {
 		readAsync: (
@@ -86,8 +91,11 @@ export const cheerpj = globalThis as unknown as CheerpjGlobals;
 
 let loading: Promise<void> | null = null;
 
-/** Injects the loader and initializes CheerpJ, once per page. */
-export function loadCheerpj(): Promise<void> {
+/**
+ * Injects the loader and initializes CheerpJ, once per page. CheerpJ can't be initialized twice,
+ * so the first caller's `workdir` holds for the page.
+ */
+export function loadCheerpj(workdir: string): Promise<void> {
 	loading ??= (async () => {
 		await new Promise<void>((resolve, reject) => {
 			const script = document.createElement('script');
@@ -96,7 +104,25 @@ export function loadCheerpj(): Promise<void> {
 			script.onerror = () => reject(new Error(`Could not load CheerpJ from ${LOADER_URL}`));
 			document.head.appendChild(script);
 		});
-		await cheerpj.cheerpjInit({ version: 25 });
+		await cheerpj.cheerpjInit({ version: 25, javaProperties: [`user.dir=${workdir}`] });
+		rootRelativePaths(workdir);
 	})();
 	return loading;
+}
+
+/**
+ * `user.dir` moves `java.nio` and `javac`, but `java.io` (`new File("input.txt")`, `FileReader`,
+ * `Scanner(File)`) still resolves relative paths against `/files/`: CheerpJ has no working
+ * directory yet. Rooting them at `workdir` first makes both agree.
+ */
+function rootRelativePaths(workdir: string): void {
+	const normalize = cheerpj.cheerpjNormalizePath;
+	if (typeof normalize !== 'function') {
+		console.warn(
+			'CheerpJ has no cheerpjNormalizePath; java.io resolves relative paths in /files/.'
+		);
+		return;
+	}
+	cheerpj.cheerpjNormalizePath = (path) =>
+		normalize(path.startsWith('/') ? path : `${workdir}/${path}`);
 }
