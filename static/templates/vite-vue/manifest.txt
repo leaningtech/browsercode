@@ -1,7 +1,8 @@
 index.html
 manifest.txt
-package-lock.json
 package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
 public/favicon.svg
 public/icons.svg
 src/App.vue
