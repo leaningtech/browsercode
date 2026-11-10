@@ -1,0 +1,7 @@
+# The pod cannot execute native binaries, so these resolve to their WebAssembly builds.
+overrides:
+  esbuild: 'npm:esbuild-wasm@*'
+  rollup: 'npm:@rollup/wasm-node@*'
+# esbuild-wasm resolves Svelte's own imports from the symlinked path, where pnpm's isolated
+# layout leaves them unreachable; a flat node_modules keeps them next to it.
+nodeLinker: hoisted
