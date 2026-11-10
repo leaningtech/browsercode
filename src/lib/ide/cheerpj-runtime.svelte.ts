@@ -10,11 +10,12 @@ import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { listDirectory, makeDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
+import { parseJavacOutput } from '$lib/java/javac-diagnostics';
 import type { JavaVersion } from '$lib/java/versions';
 import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
-import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
+import { SETUP, STARTING, type Diagnostic, type IdeRuntime, type RuntimeEnv } from './runtime';
 
 const ROOT = '/files/browsercode';
 const PROJECT_DIR = `${ROOT}/project`;
@@ -32,6 +33,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
 	readonly stages: readonly string[];
 	readonly loaderMark = cheerpjMark;
+	diagnostics = $state.raw<readonly Diagnostic[]>([]);
 	inUseElsewhere = $state<string | null>(null);
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
@@ -87,6 +89,8 @@ export class CheerpjRuntime implements IdeRuntime {
 		const env = this.env;
 		if (!env || env.cancelled()) return;
 		env.onStage(SETUP);
+		// Cleared up front, so a run that stops before `javac` doesn't leave the last build's marks.
+		this.diagnostics = [];
 		const start = await this.source.startCommand(this.context(focus));
 		if (!start) return;
 		// A Java process takes no environment, so `start.env` goes unused.
@@ -115,11 +119,20 @@ export class CheerpjRuntime implements IdeRuntime {
 			this.console!.write(`Could not copy the project for Java: ${reason}\n`, 'error');
 			return;
 		}
+		let log = '';
+		const stopListening = this.console!.listen((text) => (log += text));
+		// Without `-Xlint`, warnings shrink to a `Note:` with no line to mark.
 		const exit = await this.exec('javac', [
 			'-d',
 			out,
+			'-Xlint',
 			...sources.map((path) => `${PROJECT_DIR}/${path}`)
-		]);
+		]).finally(stopListening);
+		this.diagnostics = parseJavacOutput(log).flatMap((diagnostic) =>
+			diagnostic.path.startsWith(`${PROJECT_DIR}/`)
+				? [{ ...diagnostic, path: diagnostic.path.slice(PROJECT_DIR.length + 1) }]
+				: []
+		);
 		if (exit !== 0) {
 			this.console!.write(`javac exited with code ${exit}\n`, 'error');
 			void this.discard(runDir);
