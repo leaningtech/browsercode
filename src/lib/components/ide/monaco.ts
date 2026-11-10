@@ -14,6 +14,7 @@ import docker from '@shikijs/langs/docker';
 import graphql from '@shikijs/langs/graphql';
 import html from '@shikijs/langs/html';
 import ini from '@shikijs/langs/ini';
+import java from '@shikijs/langs/java';
 import javascript from '@shikijs/langs/javascript';
 import json from '@shikijs/langs/json';
 import less from '@shikijs/langs/less';
@@ -78,6 +79,7 @@ async function installHighlighting(): Promise<void> {
 			graphql,
 			html,
 			ini,
+			java,
 			javascript,
 			json,
 			less,
