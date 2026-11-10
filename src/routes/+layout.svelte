@@ -8,7 +8,7 @@
 	import AnnouncementBar from '$lib/components/AnnouncementBar.svelte';
 	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
 	import { page } from '$app/stores';
-	import { isEnabledTool, toolItems } from '$lib/config/tools';
+	import { pageMeta } from '$lib/config/seo';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { zenState } from '$lib/stores/zen.svelte';
 	import { aboutPanelState } from '$lib/stores/aboutPanel.svelte';
@@ -50,35 +50,9 @@
 		!zenState.on && !isEmbed && !isBootedSession && !announcementState.dismissed
 	);
 
-	let activeTool = $derived(
-		$page.route.id === '/agents/[tool]' && isEnabledTool($page.params.tool)
-			? toolItems.find((t) => t.id === $page.params.tool)
-			: undefined
-	);
-
-	let pageTitle = $derived(
-		activeTool
-			? `${activeTool.label} — BrowserCode`
-			: $page.route.id?.startsWith('/ide')
-				? 'Playground IDE — BrowserCode'
-				: $page.route.id === '/agents'
-					? 'Agents — BrowserCode'
-					: $page.route.id === '/privacy'
-						? 'Privacy Policy — BrowserCode'
-						: 'BrowserCode: Start coding on your browser tab'
-	);
-
-	let pageDescription = $derived(
-		activeTool
-			? `Run ${activeTool.label} in your browser, on BrowserCode.`
-			: $page.route.id?.startsWith('/ide')
-				? 'Build and preview web apps right in your browser, on BrowserCode.'
-				: $page.route.id === '/agents'
-					? 'Use your favorite CLI agents without any installations, sandboxed.'
-					: $page.route.id === '/privacy'
-						? 'How Leaning Technologies handles your data when you use BrowserCode.'
-						: 'BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute.'
-	);
+	let meta = $derived(pageMeta($page.route.id, $page.params.tool));
+	let pageTitle = $derived(meta.title);
+	let pageDescription = $derived(meta.description);
 
 	let pageUrl = $derived(`https://browsercode.io${$page.url.pathname}`);
 </script>
