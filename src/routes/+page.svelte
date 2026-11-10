@@ -15,22 +15,6 @@
 		window.location.href = '/ide';
 	}
 
-	/** The IDE's two runtimes, offered once the IDE card is hovered or focused. */
-	const RUNTIME_CARDS = [
-		{
-			href: '/ide',
-			icon: 'simple-icons:nodedotjs',
-			title: 'Web apps',
-			text: 'Node.js frameworks, on BrowserPod'
-		},
-		{
-			href: '/java',
-			icon: 'simple-icons:openjdk',
-			title: 'Java',
-			text: 'Java 8 to 25 and Swing, on CheerpJ'
-		}
-	];
-
 	let panelScroll = $state<HTMLDivElement>();
 	let logoComp = $state<BrowserCodeLogo>();
 
@@ -149,100 +133,65 @@
 				them instantly.
 			</p>
 
-			<div class="hero-cards w-full max-w-xl">
-				<div class="relative grid gap-3 sm:grid-cols-2">
-					<!-- Hovering or focusing the IDE card reveals the runtimes it opens on. The branch sits
-					     inside this zone, so moving down onto it keeps it open. -->
-					<div class="ide-zone">
-						<button
-							onclick={goIde}
-							style="background: rgb(var(--bc-tint) / 4%)"
-							class="glass-panel group flex w-full flex-col gap-3 rounded-xl border border-bc-tint/30 p-4 text-left transition hover:border-bc-tint/45"
+			<div class="grid w-full max-w-xl gap-3 sm:grid-cols-2">
+				<!-- One door for every language: /ide picks between them, with room to say how they differ. -->
+				<button
+					onclick={goIde}
+					style="background: rgb(var(--bc-tint) / 4%)"
+					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/30 p-4 text-left transition hover:border-bc-tint/45"
+				>
+					<div class="flex items-center gap-3">
+						<span
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
 						>
-							<div class="flex items-center gap-3">
-								<span
-									class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
-								>
-									<Icon icon="mingcute:code-line" width="20" height="20" />
-								</span>
-								<span class="flex-1 text-[14px] font-medium text-bc-text">IDE playground</span>
-								<Icon
-									icon="mingcute:arrow-right-line"
-									width="16"
-									height="16"
-									class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
-								/>
-							</div>
-							<div class="text-[12.5px] leading-relaxed text-bc-mist">
-								Editor, terminal and live preview for web apps and Java
-							</div>
-						</button>
-
-						<div class="branch">
-							<svg class="branch-lines" aria-hidden="true">
-								<line class="stem" x1="25%" y1="0" x2="25%" y2="100%" pathLength="1" />
-								<line class="fork" x1="25%" y1="40%" x2="75%" y2="40%" pathLength="1" />
-								<line class="drop" x1="75%" y1="40%" x2="75%" y2="100%" pathLength="1" />
-							</svg>
-							<div class="grid grid-cols-2 gap-3">
-								{#each RUNTIME_CARDS as card (card.href)}
-									<button
-										onclick={() => (window.location.href = card.href)}
-										class="runtime-card glass-panel group flex flex-col gap-2 rounded-lg border border-bc-tint/20 px-3.5 py-3 text-left transition hover:border-bc-tint/40"
-									>
-										<div class="flex items-center gap-2">
-											<Icon icon={card.icon} width="16" height="16" class="shrink-0 text-bc-text" />
-											<span class="flex-1 text-[13px] font-medium text-bc-text">{card.title}</span>
-											<Icon
-												icon="mingcute:arrow-right-line"
-												width="14"
-												height="14"
-												class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
-											/>
-										</div>
-										<div class="text-[12px] leading-relaxed text-bc-mist">
-											{card.text}
-										</div>
-									</button>
-								{/each}
-							</div>
-						</div>
+							<Icon icon="mingcute:code-line" width="20" height="20" />
+						</span>
+						<span class="flex-1 text-[14px] font-medium text-bc-text">IDE playground</span>
+						<Icon
+							icon="mingcute:arrow-right-line"
+							width="16"
+							height="16"
+							class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
+						/>
 					</div>
-					<button
-						onclick={goAgents}
-						style="background: rgb(var(--bc-tint) / 4%)"
-						class="agents-card glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/20 p-4 text-left transition hover:border-bc-tint/35"
-					>
-						<div class="flex items-center gap-3">
-							<span
-								class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
-							>
-								<Icon icon="mingcute:robot-line" width="20" height="20" />
-							</span>
-							<span class="flex-1 text-[14px] font-medium text-bc-text">Run coding agents</span>
-							<Icon
-								icon="mingcute:arrow-right-line"
-								width="16"
-								height="16"
-								class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
-							/>
-						</div>
-						<div class="text-[12.5px] leading-relaxed text-bc-mist">
-							Claude Code, Codex CLI and Pi, sandboxed in your browser
-						</div>
-					</button>
-				</div>
-
-				<p class="footnote mx-auto mt-6 max-w-md text-[12px] leading-relaxed text-bc-text-muted">
-					Everything runs in WebAssembly in this tab: Node.js on BrowserPod (Rust and Python in
-					preview) and Java on CheerpJ. No installs, no servers, no cloud compute.
-				</p>
+					<div class="text-[12.5px] leading-relaxed text-bc-mist">
+						Editor, terminal and live preview for web apps and Java
+					</div>
+				</button>
+				<button
+					onclick={goAgents}
+					style="background: rgb(var(--bc-tint) / 4%)"
+					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/20 p-4 text-left transition hover:border-bc-tint/35"
+				>
+					<div class="flex items-center gap-3">
+						<span
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
+						>
+							<Icon icon="mingcute:robot-line" width="20" height="20" />
+						</span>
+						<span class="flex-1 text-[14px] font-medium text-bc-text">Run coding agents</span>
+						<Icon
+							icon="mingcute:arrow-right-line"
+							width="16"
+							height="16"
+							class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
+						/>
+					</div>
+					<div class="text-[12.5px] leading-relaxed text-bc-mist">
+						Claude Code, Codex CLI and Pi, sandboxed in your browser
+					</div>
+				</button>
 			</div>
+
+			<p class="mt-6 max-w-md text-[12px] leading-relaxed text-bc-text-muted">
+				Everything runs in WebAssembly in this tab: Node.js on BrowserPod (Rust and Python in
+				preview) and Java on CheerpJ. No installs, no servers, no cloud compute.
+			</p>
 		</div>
 
 		<button
 			onclick={openPanel}
-			class="learn-more absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-mist"
+			class="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-mist"
 		>
 			Learn more
 			<Icon icon="mingcute:down-line" width="16" height="16" class="animate-bounce" />
@@ -394,92 +343,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	/* Hidden until the IDE card is hovered or focused; laid over the footnote so nothing moves. */
-	.branch {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 2;
-		opacity: 0;
-		visibility: hidden;
-		transform: translateY(-4px);
-		/* A short grace on the way out, so a pointer crossing the gap doesn't flicker it shut. */
-		transition:
-			opacity 0.18s ease 0.12s,
-			transform 0.18s ease 0.12s,
-			visibility 0s linear 0.3s;
-	}
-	.branch-lines {
-		display: block;
-		width: 100%;
-		height: 26px;
-		overflow: visible;
-	}
-	.branch-lines line {
-		stroke: rgb(var(--bc-tint) / 28%);
-		stroke-width: 1;
-		stroke-dasharray: 1;
-		stroke-dashoffset: 1;
-		transition: stroke-dashoffset 0.16s ease-out;
-	}
-
-	@media (hover: hover) and (min-width: 640px) {
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .branch {
-			opacity: 1;
-			visibility: visible;
-			transform: none;
-			transition:
-				opacity 0.2s ease 0.12s,
-				transform 0.2s ease 0.12s,
-				visibility 0s;
-		}
-		/* Drawn in order, stem then fork then drop, before the cards settle in. */
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .branch-lines line {
-			stroke-dashoffset: 0;
-		}
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .fork {
-			transition-delay: 0.08s;
-		}
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .drop {
-			transition-delay: 0.16s;
-		}
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .agents-card {
-			opacity: 0.45;
-		}
-		.hero-cards:has(.ide-zone:is(:hover, :focus-within)) .footnote,
-		section:has(.ide-zone:is(:hover, :focus-within)) .learn-more {
-			opacity: 0;
-		}
-	}
-	/* A touch screen has no hover, and a phone stacks the cards; the IDE card opens the IDE there. */
-	@media not ((hover: hover) and (min-width: 640px)) {
-		.branch {
-			display: none;
-		}
-	}
-
-	.footnote {
-		transition: opacity 0.18s ease;
-	}
-	/* Keeps the hover colour change its Tailwind class would otherwise give it. */
-	.learn-more {
-		transition:
-			opacity 0.18s ease,
-			color 0.15s ease;
-	}
-	.runtime-card {
-		background: var(--color-bc-navy);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.branch,
-		.branch-lines line,
-		.footnote,
-		.learn-more {
-			transition: none !important;
-		}
-	}
-</style>
