@@ -20,7 +20,9 @@ export function sharedProjectSource(project: SharedProject): ProjectSource {
 			}
 		},
 		javaVersion: project.java ?? 8,
-		share: (files, java) => sharedProjectLink(project.title, files, java),
+		// A link from before the key names none; the build then finds the class to start.
+		mainClass: project.main,
+		share: (files, java, main) => sharedProjectLink(project.title, files, java, main),
 		trackBoot: () => trackEvent('Booted Playground', { framework: 'Shared Java project' })
 	};
 }

@@ -22,8 +22,6 @@ export type BootContext = {
 	) => Promise<void>;
 	/** True once the boot was superseded or the session unmounted; a hook must return early. */
 	cancelled: () => boolean;
-	/** The workdir-relative file in front of the user when a run started from the editor. */
-	focus?: string;
 };
 
 /**
@@ -64,6 +62,15 @@ export type ProjectSource = {
 	trackBoot: () => void;
 	/** The Java CheerpJ boots; absent for a project that isn't Java. */
 	javaVersion?: JavaVersion;
-	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
-	share?: (files: { path: string; content: string }[], javaVersion?: JavaVersion) => string;
+	/** The binary name of the class a Java project starts from; absent when it names none. */
+	mainClass?: string;
+	/**
+	 * A link, relative to the site, that reopens `files` with the Java version and main class;
+	 * absent where there is no format for one.
+	 */
+	share?: (
+		files: { path: string; content: string }[],
+		javaVersion?: JavaVersion,
+		mainClass?: string
+	) => string;
 };

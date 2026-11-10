@@ -22,7 +22,8 @@ export async function shareLink(
 			content: await session.fs.readFile(`${session.workdir}/${path}`)
 		}))
 	);
-	return new URL(share(files, javaVersion), location.origin).href;
+	return new URL(share(files, javaVersion, session.runtime.mainClass ?? undefined), location.origin)
+		.href;
 }
 
 /** Only the hash changes, so an embed keeps the options in its query string. */

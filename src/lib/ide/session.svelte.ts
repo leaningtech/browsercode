@@ -353,7 +353,7 @@ export class IdeSession {
 		this.phase = 'building';
 		try {
 			await this.saveAll();
-			await this.runtime.run?.(this.selectedFile || undefined);
+			await this.runtime.run?.();
 		} finally {
 			this.phase = 'ready';
 		}

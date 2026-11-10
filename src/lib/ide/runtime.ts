@@ -75,10 +75,19 @@ export interface IdeRuntime {
 	/**
 	 * Builds and starts the project again from its current files, resolving once it has started
 	 * or failed to; absent where a dev server picks up saved files by itself. The session never
-	 * calls it before `launch` resolves or while another run is under way. `focus` is the
-	 * workdir-relative path of the file in front of the user.
+	 * calls it before `launch` resolves or while another run is under way.
 	 */
-	run?(focus?: string): Promise<void>;
+	run?(): Promise<void>;
+	/**
+	 * The classes the last build can start, for a runtime that starts one by name; absent where
+	 * the project names its own entry point.
+	 */
+	readonly mainClasses?: readonly string[];
+	/**
+	 * The class `run` starts, one of `mainClasses` once a build has listed them; null until the
+	 * source names one or the user picks one.
+	 */
+	mainClass?: string | null;
 	/**
 	 * Hands the program's own windows `el` to draw into, which the shell shows in place of a
 	 * preview; absent where the preview is a served app. `onWindows` hears whether any window is

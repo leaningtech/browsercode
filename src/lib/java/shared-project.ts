@@ -15,16 +15,19 @@ export type SharedProject = {
 	 * and a Java 8 project still encodes to the same bytes.
 	 */
 	java?: JavaVersion;
+	/** The binary name of the class to start. Absent in older links, which encode unchanged. */
+	main?: string;
 };
 
 /** Keys go in a fixed order, so the same project always encodes to the same hash. */
-export function encodeSharedProject({ title, updated, files, java }: SharedProject): string {
+export function encodeSharedProject({ title, updated, files, java, main }: SharedProject): string {
 	return LZString.compressToEncodedURIComponent(
 		JSON.stringify({
 			title,
 			updated,
 			files: files.map(({ path, content }) => ({ path, content })),
-			java: java === 8 ? undefined : java
+			java: java === 8 ? undefined : java,
+			main
 		})
 	);
 }
@@ -38,17 +41,19 @@ export function decodeSharedProject(hash: string): SharedProject | null {
 		return null;
 	}
 	if (typeof data !== 'object' || data === null) return null;
-	const { title, updated, files, java } = data as Record<string, unknown>;
+	const { title, updated, files, java, main } = data as Record<string, unknown>;
 	if (typeof title !== 'string' || (updated !== undefined && typeof updated !== 'string')) {
 		return null;
 	}
 	if (!Array.isArray(files) || !files.every(isFile)) return null;
 	if (java !== undefined && !isJavaVersion(java)) return null;
+	if (main !== undefined && typeof main !== 'string') return null;
 	return {
 		title,
 		...(updated !== undefined && { updated }),
 		files: files.map(({ path, content }) => ({ path, content })),
-		...(java !== undefined && { java })
+		...(java !== undefined && { java }),
+		...(main !== undefined && { main })
 	};
 }
 
@@ -62,11 +67,13 @@ function isFile(value: unknown): value is { path: string; content: string } {
 	);
 }
 
-/** The `/java` link that reopens `files` on `java`, stamped as edited now. */
+/** The `/java` link that reopens `files` on `java`, starting `main`, stamped as edited now. */
 export function sharedProjectLink(
 	title: string,
 	files: SharedProject['files'],
-	java?: JavaVersion
+	java?: JavaVersion,
+	main?: string
 ): string {
-	return `/java#${encodeSharedProject({ title, updated: new Date().toISOString(), files, java })}`;
+	const updated = new Date().toISOString();
+	return `/java#${encodeSharedProject({ title, updated, files, java, main })}`;
 }

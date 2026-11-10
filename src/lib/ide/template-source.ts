@@ -22,17 +22,12 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 			files.includes(config.defaultFile) ? config.defaultFile : files[0],
 		installCommands: () =>
 			(config.setupCommandArgs ?? [['install']]).map((args) => ({ command: ['npm', ...args] })),
-		startCommand: async (ctx: BootContext) => {
-			if (!config.startCommand) {
-				return { command: ['npm', ...(config.devCommandArgs ?? ['run', 'dev'])] };
-			}
-			const command = config.startCommand(await readProjectFiles(ctx), ctx.focus);
-			if (command) return { command };
-			ctx.write('Found nothing in the project to start.\n');
-			return null;
-		},
+		startCommand: async () => ({
+			command: ['npm', ...(config.devCommandArgs ?? ['run', 'dev'])]
+		}),
 		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
 		javaVersion: config.javaVersion,
+		mainClass: config.mainClass,
 		share: config.share
 	};
 }
@@ -64,22 +59,6 @@ export async function copyTemplate(
 		if (ctx.cancelled()) return;
 		await ctx.fs.writeBinaryFile(`${ctx.workdir}/${file}`, content);
 	}
-}
-
-/**
- * The project's files as text, paths relative to the workdir. Empty on a filesystem that cannot
- * list them.
- */
-export async function readProjectFiles(
-	ctx: BootContext
-): Promise<{ path: string; content: string }[]> {
-	const paths = ctx.fs.filesUnder?.(ctx.workdir) ?? [];
-	return Promise.all(
-		paths.map(async (path) => ({
-			path: path.slice(ctx.workdir.length + 1),
-			content: await ctx.fs.readFile(path)
-		}))
-	);
 }
 
 async function fetchTemplateFile(sourceRoot: string, fileName: string): Promise<ArrayBuffer> {

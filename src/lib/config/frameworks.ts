@@ -1,4 +1,3 @@
-import { findMainClass } from '$lib/java/main-class';
 import { sharedProjectLink } from '$lib/java/shared-project';
 import type { JavaVersion } from '$lib/java/versions';
 
@@ -38,29 +37,21 @@ export type FrameworkConfig = {
 	/** Defaults to `ide`. */
 	section?: SectionId;
 	/**
-	 * Builds the start command from the project's files, for a language that names its entry
-	 * point in the code; `devCommandArgs` goes unused then. `focus` is the file in front of the
-	 * user, if any. Null when no file can start it.
-	 */
-	startCommand?: (files: { path: string; content: string }[], focus?: string) => string[] | null;
-	/**
 	 * The name `/java?example=` and `/embed?runtime=` know it by. The embed's `helloworld`
 	 * predates the registry, so the ids alone would break the URL the blog embeds.
 	 */
 	example?: string;
 	/** The Java a CheerpJ template boots on. */
 	javaVersion?: JavaVersion;
+	/** The class a CheerpJ template starts from, as its binary name. */
+	mainClass?: string;
 	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
-	share?: (files: { path: string; content: string }[], javaVersion?: JavaVersion) => string;
+	share?: (
+		files: { path: string; content: string }[],
+		javaVersion?: JavaVersion,
+		mainClass?: string
+	) => string;
 };
-
-function javaStartCommand(
-	files: { path: string; content: string }[],
-	focus?: string
-): string[] | null {
-	const mainClass = findMainClass(files, focus);
-	return mainClass ? ['java', mainClass] : null;
-}
 
 export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	vite: {
@@ -138,10 +129,10 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		icon: 'simple-icons:openjdk',
 		runtime: 'cheerpj',
 		section: 'java',
-		startCommand: javaStartCommand,
 		example: 'helloworld',
 		javaVersion: 25,
-		share: (files, java) => sharedProjectLink('', files, java)
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
 	},
 	'java-swing': {
 		id: 'java-swing',
@@ -151,10 +142,10 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		icon: 'simple-icons:openjdk',
 		runtime: 'cheerpj',
 		section: 'java',
-		startCommand: javaStartCommand,
 		example: 'swing',
 		javaVersion: 25,
-		share: (files, java) => sharedProjectLink('', files, java)
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
 	}
 };
 

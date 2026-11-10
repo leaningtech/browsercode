@@ -41,6 +41,7 @@ export type JavaLibrary = {
 				Paths: Promise<{ get(first: string, more: string[]): Promise<JavaPath> }>;
 				Files: Promise<{
 					write(path: JavaPath, bytes: Int8Array, options: never[]): Promise<JavaPath>;
+					readAllBytes(path: JavaPath): Promise<Int8Array>;
 				}>;
 			};
 		};

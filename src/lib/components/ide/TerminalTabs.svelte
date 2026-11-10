@@ -17,6 +17,7 @@
 	let bashTabs = $state<BashTab[]>([]);
 	let activeTab = $state(MAIN);
 	let nextId = 1;
+	let mainClasses = $derived(session.runtime.mainClasses ?? []);
 
 	function selectTab(id: number) {
 		activeTab = id;
@@ -84,15 +85,35 @@
 		{/if}
 		<!-- Only runtimes that build on demand run again; the rest pick up saves themselves. -->
 		{#if session.runtime.run}
-			<button
-				onclick={() => session.run()}
-				disabled={session.phase !== 'ready'}
-				title="Build and run"
-				class="vrh-run shrink-0"
-			>
-				<Icon icon="mingcute:play-fill" width="11" height="11" />
-				{session.phase === 'building' ? 'Building…' : 'Run'}
-			</button>
+			<div class="ml-auto flex shrink-0 items-center">
+				<!-- Only once the build finds a choice to make: one class starts by itself. -->
+				{#if mainClasses.length > 1}
+					<select
+						value={mainClasses.includes(session.runtime.mainClass ?? '')
+							? session.runtime.mainClass
+							: ''}
+						onchange={(event) => (session.runtime.mainClass = event.currentTarget.value)}
+						disabled={session.phase !== 'ready'}
+						title="The class Run starts"
+						aria-label="Main class"
+						class="max-w-40 truncate rounded bg-bc-navy px-1 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+					>
+						<option value="" disabled>Main class…</option>
+						{#each mainClasses as name (name)}
+							<option value={name}>{name}</option>
+						{/each}
+					</select>
+				{/if}
+				<button
+					onclick={() => session.run()}
+					disabled={session.phase !== 'ready'}
+					title="Build and run"
+					class="vrh-run"
+				>
+					<Icon icon="mingcute:play-fill" width="11" height="11" />
+					{session.phase === 'building' ? 'Building…' : 'Run'}
+				</button>
+			</div>
 		{/if}
 	</div>
 	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-terminal">

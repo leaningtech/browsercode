@@ -64,6 +64,30 @@ export function makeDirectory(dir: string): Promise<void> {
 	});
 }
 
+/** The bytes of every file under `dir`, at any depth; empty when `dir` doesn't exist. */
+export function readFilesUnder(dir: string): Promise<Uint8Array[]> {
+	return serial(async () => {
+		const nio = (await javaLibrary()).java.nio.file;
+		const paths = await nio.Paths;
+		const nioFiles = await nio.Files;
+		const found: Uint8Array[] = [];
+		const walk = async (file: JavaFile): Promise<void> => {
+			const entries = await file.listFiles();
+			for (let i = 0; i < (entries?.length ?? 0); i++) {
+				const entry = entries![i];
+				if (await entry.isDirectory()) {
+					await walk(entry);
+					continue;
+				}
+				const signed = await nioFiles.readAllBytes(await paths.get(await entry.getPath(), []));
+				found.push(new Uint8Array(signed.buffer, signed.byteOffset, signed.byteLength));
+			}
+		};
+		await walk(await javaFile(dir));
+		return found;
+	});
+}
+
 /** Creates missing parent directories. */
 export function writeFiles(files: { path: string; bytes: Uint8Array }[]): Promise<void> {
 	return serial(async () => {

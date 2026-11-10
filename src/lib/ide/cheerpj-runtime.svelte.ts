@@ -9,8 +9,15 @@ import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
-import { listDirectory, makeDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
+import {
+	listDirectory,
+	makeDirectory,
+	readFilesUnder,
+	removeTree,
+	writeFiles
+} from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
+import { launchableClass } from '$lib/java/class-file';
 import { parseJavacOutput } from '$lib/java/javac-diagnostics';
 import type { JavaVersion } from '$lib/java/versions';
 import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
@@ -36,6 +43,9 @@ export class CheerpjRuntime implements IdeRuntime {
 	readonly loaderMark = cheerpjMark;
 	diagnostics = $state.raw<readonly Diagnostic[]>([]);
 	inUseElsewhere = $state<string | null>(null);
+	mainClasses = $state.raw<readonly string[]>([]);
+	/** Seeded from the source, so a template or shared link starts the class it names. */
+	mainClass = $state<string | null>(null);
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
@@ -51,6 +61,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		this.stages = ['loading CheerpJ', source.hydrateLabel, 'compiling', 'running'];
 		// The newest, for a source that names none.
 		this.version = source.javaVersion ?? 25;
+		this.mainClass = source.mainClass ?? null;
 	}
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
@@ -90,11 +101,11 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	/**
-	 * Copies the project to `PROJECT_DIR`, compiles it and runs the start command with the build
-	 * output on its classpath. Compiling is this runtime's build step, so the command must be
-	 * `java <main class> [args]`.
+	 * Copies the project to `PROJECT_DIR`, compiles it and starts `mainClass` from the build. Java
+	 * names its entry point by class rather than by command, so the source's `startCommand` goes
+	 * unused.
 	 */
-	async run(focus?: string): Promise<void> {
+	async run(): Promise<void> {
 		const env = this.env;
 		if (!env || env.cancelled()) return;
 		env.onStage(SETUP);
@@ -103,17 +114,6 @@ export class CheerpjRuntime implements IdeRuntime {
 		// CheerpJ cannot stop a program, so the last run's keeps going and only its windows are
 		// cleared.
 		this.display?.clearWindows();
-		const start = await this.source.startCommand(this.context(focus));
-		if (!start) return;
-		// A Java process takes no environment, so `start.env` goes unused.
-		const [command, mainClass, ...args] = start.command;
-		if (command !== 'java' || !mainClass) {
-			this.console!.write(
-				`CheerpJ only runs \`java <main class>\`, not: ${start.command.join(' ')}\n`,
-				'error'
-			);
-			return;
-		}
 		const sources = this.projectPaths().filter((path) => path.endsWith('.java'));
 		if (sources.length === 0) {
 			this.console!.write('No .java files to compile.\n', 'error');
@@ -150,8 +150,13 @@ export class CheerpjRuntime implements IdeRuntime {
 			void this.discard(runDir);
 			return;
 		}
+		const mainClass = await this.chooseMainClass(out);
+		if (!mainClass) {
+			void this.discard(runDir);
+			return;
+		}
 		env.onStage(STARTING);
-		void this.exec('java', ['-cp', out, mainClass, ...args]).then((code) => {
+		void this.exec('java', ['-cp', out, mainClass]).then((code) => {
 			this.console!.write(`${mainClass} exited with code ${code}\n`, 'info');
 			void this.discard(runDir);
 		});
@@ -217,9 +222,39 @@ export class CheerpjRuntime implements IdeRuntime {
 		}
 	}
 
-	private context(focus?: string): BootContext {
+	/**
+	 * Reads the build's class files for the ones `java` can start, then settles on `mainClass`
+	 * while it is one of them, or else the only one. Null, having said why, when there is no
+	 * single class to start.
+	 */
+	private async chooseMainClass(out: string): Promise<string | null> {
+		try {
+			const classes = await readFilesUnder(out);
+			this.mainClasses = classes
+				.flatMap((bytes) => launchableClass(bytes, this.version) ?? [])
+				.sort();
+		} catch (error) {
+			const reason = error instanceof Error ? error.message : String(error);
+			console.error('Failed to read the compiled classes:', error);
+			this.console!.write(`Could not read the compiled classes: ${reason}\n`, 'error');
+			return null;
+		}
+		if (this.mainClass && this.mainClasses.includes(this.mainClass)) return this.mainClass;
+		if (this.mainClasses.length === 1) {
+			this.mainClass = this.mainClasses[0];
+			return this.mainClass;
+		}
+		this.console!.write(
+			this.mainClasses.length === 0
+				? 'No class in the project has a main method.\n'
+				: 'More than one class has a main method. Pick one beside Run, then run again.\n',
+			'error'
+		);
+		return null;
+	}
+
+	private context(): BootContext {
 		return {
-			focus,
 			fs: this.fs,
 			workdir: this.source.workdir,
 			write: (data) => this.console!.write(data),
