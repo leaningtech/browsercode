@@ -171,6 +171,7 @@ export class CheerpjRuntime implements IdeRuntime {
 				bytes: await this.fs.readBinaryFile(`${workdir}/${path}`)
 			}))
 		);
+		await checkRoom(files.reduce((total, { bytes }) => total + bytes.byteLength, 0));
 		await removeTree(PROJECT_DIR);
 		await writeFiles(files);
 	}
@@ -213,4 +214,16 @@ export class CheerpjRuntime implements IdeRuntime {
 		this.console!.write(`${command}: not available on CheerpJ\n`, 'error');
 		return Promise.resolve(127);
 	}
+}
+
+/**
+ * Refuses up front: CheerpJ never reports a write IndexedDB refuses once storage is full, so the
+ * write would just never finish. The old copy still counts as used, so this errs towards refusing
+ * when storage is nearly full.
+ */
+async function checkRoom(bytes: number): Promise<void> {
+	const estimate = await navigator.storage?.estimate?.();
+	if (estimate?.quota === undefined || estimate.usage === undefined) return;
+	if (estimate.quota - estimate.usage >= bytes) return;
+	throw new Error('browser storage is full. Free some space, then run again.');
 }
