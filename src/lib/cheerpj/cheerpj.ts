@@ -11,6 +11,42 @@ const LOADER_URL =
 	(import.meta.env.VITE_CHEERPJ_LOADER as string | undefined) ??
 	'https://cjrtnc.leaningtech.com/5.0/loader.js';
 
+/** Not iterable: `Array.from` and spreading fail, so read it by index. */
+type JavaArray<T> = { readonly length: number; readonly [index: number]: T };
+
+/** Library mode hands Java's `boolean` back as 1 or 0. */
+type JavaBoolean = number;
+
+export type JavaFile = {
+	isDirectory(): Promise<JavaBoolean>;
+	listFiles(): Promise<JavaArray<JavaFile> | null>;
+	getName(): Promise<string>;
+	getPath(): Promise<string>;
+	exists(): Promise<JavaBoolean>;
+	mkdirs(): Promise<JavaBoolean>;
+	delete(): Promise<JavaBoolean>;
+};
+
+type JavaPath = object;
+
+/**
+ * Classes, constructors and methods all resolve asynchronously, and varargs take an array. A
+ * `byte[]` must be an `Int8Array`: library mode maps a `Uint8Array` to `boolean[]`.
+ */
+export type JavaLibrary = {
+	java: {
+		io: { File: Promise<new (path: string) => Promise<JavaFile>> };
+		nio: {
+			file: {
+				Paths: Promise<{ get(first: string, more: string[]): Promise<JavaPath> }>;
+				Files: Promise<{
+					write(path: JavaPath, bytes: Int8Array, options: never[]): Promise<JavaPath>;
+				}>;
+			};
+		};
+	};
+};
+
 /** One console write or read; `cb` takes the byte count, 0 meaning end of input. */
 type ConCallback = (bytes: number) => void;
 
@@ -18,6 +54,8 @@ type CheerpjGlobals = {
 	cheerpjInit(options: { version: number }): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
 	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
+	/** `''` gives the standard library alone. */
+	cheerpjRunLibrary(classPath: string): Promise<JavaLibrary>;
 	/** `path` must sit directly under `/str/`: that mount has no directories. */
 	cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
 	cheerpOSRemoveStringFile(path: string): void;
