@@ -8,6 +8,7 @@
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
+import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
 import { listDirectory, makeDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
 import { parseJavacOutput } from '$lib/java/javac-diagnostics';
@@ -38,6 +39,8 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	/** Created by `boot`, so xterm.js only loads once a project picks CheerpJ. */
 	private console: JavaConsole | null = null;
+	/** Holds the windows of every program run so far. */
+	private display: CheerpjDisplay | null = null;
 	private env: RuntimeEnv | null = null;
 	/** Held for the tab's life, so only one tab or embed at a time uses `/files/`. */
 	private lock: TabLock | null = null;
@@ -74,6 +77,12 @@ export class CheerpjRuntime implements IdeRuntime {
 		return this.context();
 	}
 
+	async mountDisplay(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void> {
+		if (!(await this.claim())) return;
+		await loadCheerpj(PROJECT_DIR, this.version);
+		this.display ??= createDisplay(el, onWindows);
+	}
+
 	async launch(): Promise<void> {
 		// Without a dev server to wait for, saves are safe as soon as the files are in.
 		this.env?.onSavable();
@@ -91,6 +100,9 @@ export class CheerpjRuntime implements IdeRuntime {
 		env.onStage(SETUP);
 		// Cleared up front, so a run that stops before `javac` doesn't leave the last build's marks.
 		this.diagnostics = [];
+		// CheerpJ cannot stop a program, so the last run's keeps going and only its windows are
+		// cleared.
+		this.display?.clearWindows();
 		const start = await this.source.startCommand(this.context(focus));
 		if (!start) return;
 		// A Java process takes no environment, so `start.env` goes unused.
@@ -146,6 +158,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	shutdown(): void {
+		this.display?.dispose();
 		this.console?.dispose();
 		this.lock?.release();
 	}

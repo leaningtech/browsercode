@@ -51,7 +51,11 @@ export type JavaLibrary = {
 type ConCallback = (bytes: number) => void;
 
 type CheerpjGlobals = {
-	cheerpjInit(options: { version: number; javaProperties?: string[] }): Promise<void>;
+	cheerpjInit(options: {
+		version: number;
+		status?: 'default' | 'splash' | 'none';
+		javaProperties?: string[];
+	}): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
 	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
 	/** `''` gives the standard library alone. */
@@ -61,6 +65,8 @@ type CheerpjGlobals = {
 	 * `/files/`, whatever `user.dir` says.
 	 */
 	cheerpjNormalizePath?: (path: string) => string;
+	/** Where AWT and Swing windows draw; -1 for both sizes fills `parent`. */
+	cheerpjCreateDisplay(width: number, height: number, parent: HTMLElement): HTMLElement;
 	/** Backs every Java process's console; `fileData` is one per process, shared by out and err. */
 	ConInodeOps: {
 		readAsync: (
@@ -104,7 +110,13 @@ export function loadCheerpj(workdir: string, version: number): Promise<void> {
 			script.onerror = () => reject(new Error(`Could not load CheerpJ from ${LOADER_URL}`));
 			document.head.appendChild(script);
 		});
-		await cheerpj.cheerpjInit({ version, javaProperties: [`user.dir=${workdir}`] });
+		await cheerpj.cheerpjInit({
+			version,
+			// The status line sits over the display and, for a program that opens no window, never
+			// goes.
+			status: 'none',
+			javaProperties: [`user.dir=${workdir}`]
+		});
 		rootRelativePaths(workdir);
 	})();
 	return loading;
