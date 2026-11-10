@@ -14,15 +14,15 @@ const LOADER_URL =
 /** One console write or read; `cb` takes the byte count, 0 meaning end of input. */
 type ConCallback = (bytes: number) => void;
 
-declare global {
-	function cheerpjInit(options: { version: number }): Promise<void>;
+type CheerpjGlobals = {
+	cheerpjInit(options: { version: number }): Promise<void>;
 	/** Resolves with the exit code; a program that keeps running may never resolve. */
-	function cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
+	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
 	/** `path` must sit directly under `/str/`: that mount has no directories. */
-	function cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
-	function cheerpOSRemoveStringFile(path: string): void;
+	cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
+	cheerpOSRemoveStringFile(path: string): void;
 	/** Backs every Java process's console; `fileData` is one per process, shared by out and err. */
-	var ConInodeOps: {
+	ConInodeOps: {
 		readAsync: (
 			fileData: object,
 			fileOffset: number,
@@ -41,7 +41,13 @@ declare global {
 			cb: ConCallback
 		) => void;
 	};
-}
+};
+
+/**
+ * What the loader defines on the page, for the rest of this layer. Typed here rather than declared
+ * global, so code outside `src/lib/cheerpj/` can't reach CheerpJ without importing this.
+ */
+export const cheerpj = globalThis as unknown as CheerpjGlobals;
 
 let loading: Promise<void> | null = null;
 
@@ -55,7 +61,7 @@ export function loadCheerpj(): Promise<void> {
 			script.onerror = () => reject(new Error(`Could not load CheerpJ from ${LOADER_URL}`));
 			document.head.appendChild(script);
 		});
-		await cheerpjInit({ version: 25 });
+		await cheerpj.cheerpjInit({ version: 25 });
 	})();
 	return loading;
 }

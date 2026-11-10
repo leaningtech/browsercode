@@ -7,13 +7,12 @@
  */
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
-import { loadCheerpj } from '$lib/cheerpj/cheerpj';
+import { cheerpj, loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
+import { runJava, runJavac } from '$lib/cheerpj/process';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
-
-const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 
 export class CheerpjRuntime implements IdeRuntime {
 	readonly fs = new MemoryFs();
@@ -118,11 +117,11 @@ export class CheerpjRuntime implements IdeRuntime {
 	 */
 	private exec(command: string, args: string[]): Promise<number> {
 		this.console!.write(`❯ ${[command, ...args].join(' ')}\n`, 'info');
-		if (command === 'javac') return cheerpjRunMain(JAVAC_MAIN, '', ...args);
+		if (command === 'javac') return runJavac(args);
 		if (command === 'java') {
 			const [classPath, mainClass, ...programArgs] =
 				args[0] === '-cp' ? args.slice(1) : ['', ...args];
-			return cheerpjRunMain(mainClass, classPath, ...programArgs);
+			return runJava(mainClass, classPath, programArgs);
 		}
 		this.console!.write(`${command}: not available on CheerpJ\n`, 'error');
 		return Promise.resolve(127);
@@ -153,9 +152,10 @@ export class CheerpjRuntime implements IdeRuntime {
 			this.console!.write('No .java files to compile.\n', 'error');
 			return null;
 		}
-		for (const name of this.pushed) if (!byName.has(name)) cheerpOSRemoveStringFile(`/str/${name}`);
+		for (const name of this.pushed)
+			if (!byName.has(name)) cheerpj.cheerpOSRemoveStringFile(`/str/${name}`);
 		for (const [name, path] of byName) {
-			cheerpOSAddStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
+			cheerpj.cheerpOSAddStringFile(`/str/${name}`, await this.fs.readBinaryFile(path));
 		}
 		this.pushed = new SvelteSet(byName.keys());
 		return [...byName.keys()].map((name) => `/str/${name}`);
