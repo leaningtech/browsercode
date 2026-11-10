@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import JavaVersionPicker from './JavaVersionPicker.svelte';
+	import RunBarMenu from './RunBarMenu.svelte';
 
 	let {
 		session,
@@ -19,6 +20,8 @@
 	let activeTab = $state(MAIN);
 	let nextId = 1;
 	let mainClasses = $derived(session.runtime.mainClasses ?? []);
+	/** Null while the chosen class isn't one this build can start. */
+	let mainClass = $derived(mainClasses.find((name) => name === session.runtime.mainClass) ?? null);
 
 	function selectTab(id: number) {
 		activeTab = id;
@@ -94,21 +97,16 @@
 				{/if}
 				<!-- Only once the build finds a choice to make: one class starts by itself. -->
 				{#if mainClasses.length > 1}
-					<select
-						value={mainClasses.includes(session.runtime.mainClass ?? '')
-							? session.runtime.mainClass
-							: ''}
-						onchange={(event) => (session.runtime.mainClass = event.currentTarget.value)}
+					<RunBarMenu
+						label="Main class"
+						options={mainClasses}
+						selected={mainClass}
+						placeholder="Main class…"
 						disabled={session.phase !== 'ready'}
-						title="The class Run starts"
-						aria-label="Main class"
-						class="max-w-40 truncate rounded bg-bc-navy px-1 py-1 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text disabled:pointer-events-none disabled:opacity-40"
+						onselect={(name) => (session.runtime.mainClass = name)}
 					>
-						<option value="" disabled>Main class…</option>
-						{#each mainClasses as name (name)}
-							<option value={name}>{name}</option>
-						{/each}
-					</select>
+						{#snippet option(name)}{name}{/snippet}
+					</RunBarMenu>
 					<span class="vrh-run-sep"></span>
 				{/if}
 				<button
