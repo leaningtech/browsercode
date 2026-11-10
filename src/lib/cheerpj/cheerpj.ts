@@ -56,9 +56,6 @@ type CheerpjGlobals = {
 	cheerpjRunMain(className: string, classPath: string, ...args: string[]): Promise<number>;
 	/** `''` gives the standard library alone. */
 	cheerpjRunLibrary(classPath: string): Promise<JavaLibrary>;
-	/** `path` must sit directly under `/str/`: that mount has no directories. */
-	cheerpOSAddStringFile(path: string, content: string | Uint8Array): void;
-	cheerpOSRemoveStringFile(path: string): void;
 	/** Backs every Java process's console; `fileData` is one per process, shared by out and err. */
 	ConInodeOps: {
 		readAsync: (
