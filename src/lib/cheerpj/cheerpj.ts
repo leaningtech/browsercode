@@ -93,9 +93,9 @@ let loading: Promise<void> | null = null;
 
 /**
  * Injects the loader and initializes CheerpJ, once per page. CheerpJ can't be initialized twice,
- * so the first caller's `workdir` holds for the page.
+ * so the first caller's `workdir` and `version` hold for the page.
  */
-export function loadCheerpj(workdir: string): Promise<void> {
+export function loadCheerpj(workdir: string, version: number): Promise<void> {
 	loading ??= (async () => {
 		await new Promise<void>((resolve, reject) => {
 			const script = document.createElement('script');
@@ -104,7 +104,7 @@ export function loadCheerpj(workdir: string): Promise<void> {
 			script.onerror = () => reject(new Error(`Could not load CheerpJ from ${LOADER_URL}`));
 			document.head.appendChild(script);
 		});
-		await cheerpj.cheerpjInit({ version: 25, javaProperties: [`user.dir=${workdir}`] });
+		await cheerpj.cheerpjInit({ version, javaProperties: [`user.dir=${workdir}`] });
 		rootRelativePaths(workdir);
 	})();
 	return loading;

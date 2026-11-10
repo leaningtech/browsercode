@@ -6,9 +6,15 @@ import { cheerpj } from './cheerpj';
 
 const JAVAC_MAIN = 'com.sun.tools.javac.Main';
 
-/** Resolves with `javac`'s exit code. */
-export function runJavac(args: string[]): Promise<number> {
-	return cheerpj.cheerpjRunMain(JAVAC_MAIN, '', ...args);
+/**
+ * Java 8's `javac` lives in `tools.jar`, which CheerpJ doesn't ship, so the site serves one (`/app/`
+ * is the site root). Later versions have it in the runtime.
+ */
+const JAVAC_CLASS_PATH: Partial<Record<number, string>> = { 8: '/app/cheerpj/tools.jar' };
+
+/** Resolves with `javac`'s exit code; `version` is the one CheerpJ was loaded with. */
+export function runJavac(version: number, args: string[]): Promise<number> {
+	return cheerpj.cheerpjRunMain(JAVAC_MAIN, JAVAC_CLASS_PATH[version] ?? '', ...args);
 }
 
 /** Resolves with the exit code; a program that keeps running may never resolve. */

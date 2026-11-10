@@ -8,8 +8,9 @@
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
-import { listDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
+import { listDirectory, makeDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
+import type { JavaVersion } from '$lib/java/versions';
 import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
@@ -39,9 +40,12 @@ export class CheerpjRuntime implements IdeRuntime {
 	/** Held for the tab's life, so only one tab or embed at a time uses `/files/`. */
 	private lock: TabLock | null = null;
 	private runs = 0;
+	private readonly version: JavaVersion;
 
 	constructor(private readonly source: ProjectSource) {
 		this.stages = ['loading CheerpJ', source.hydrateLabel, 'compiling', 'running'];
+		// The newest, for a source that names none.
+		this.version = source.javaVersion ?? 25;
 	}
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
@@ -53,11 +57,11 @@ export class CheerpjRuntime implements IdeRuntime {
 		this.console.open(env.outputEl);
 		this.console.onOutput(env.onOutput);
 		this.console.write(
-			'BrowserCode: running Java with CheerpJ. Type here to feed System.in; Ctrl+D ends it.\n',
+			`BrowserCode: running Java ${this.version} with CheerpJ. Type here to feed System.in; Ctrl+D ends it.\n`,
 			'info'
 		);
 		try {
-			await loadCheerpj(PROJECT_DIR);
+			await loadCheerpj(PROJECT_DIR, this.version);
 		} catch (error) {
 			this.console.write(`${error instanceof Error ? error.message : String(error)}\n`, 'error');
 			throw error;
@@ -103,6 +107,8 @@ export class CheerpjRuntime implements IdeRuntime {
 		const out = `${runDir}/classes`;
 		try {
 			await this.copyProject();
+			// javac 8 won't create its output directory.
+			await makeDirectory(out);
 		} catch (error) {
 			const reason = error instanceof Error ? error.message : String(error);
 			console.error('Failed to copy the project for Java:', error);
@@ -205,7 +211,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	 */
 	private exec(command: string, args: string[]): Promise<number> {
 		this.console!.write(`❯ ${[command, ...args].join(' ')}\n`, 'info');
-		if (command === 'javac') return runJavac(args);
+		if (command === 'javac') return runJavac(this.version, args);
 		if (command === 'java') {
 			const [classPath, mainClass, ...programArgs] =
 				args[0] === '-cp' ? args.slice(1) : ['', ...args];
