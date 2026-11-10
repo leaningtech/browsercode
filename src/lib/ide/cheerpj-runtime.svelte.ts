@@ -8,7 +8,7 @@
 import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
-import { removeTree, writeFiles } from '$lib/cheerpj/fs';
+import { listDirectory, removeTree, writeFiles } from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
 import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { MemoryFs } from './memory-fs';
@@ -19,6 +19,10 @@ const ROOT = '/files/browsercode';
 const PROJECT_DIR = `${ROOT}/project`;
 /** A folder per run, since an earlier program may still be loading classes from its own. */
 const RUNS_DIR = `${ROOT}/runs`;
+/** Reserved for uploaded JARs, so clearing `ROOT` leaves it. */
+const LIBRARIES = 'libraries';
+/** Build roots the earlier design left in `/files/`, one per page load, never removed. */
+const LEGACY_ROOT = /^browsercode-[0-9a-f-]{36}$/;
 
 const IN_USE_ELSEWHERE =
 	'Java runs in one BrowserCode tab or embed at a time, and another one has it.';
@@ -60,6 +64,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		}
 		if (env.cancelled()) return null;
 		this.console.attach();
+		await this.clearLeftovers();
 		return this.context();
 	}
 
@@ -134,6 +139,24 @@ export class CheerpjRuntime implements IdeRuntime {
 		return held;
 	}
 
+	/**
+	 * A closed tab never deletes its runs, and older builds left a root per page load. Safe only
+	 * while this tab holds the lock.
+	 */
+	private async clearLeftovers(): Promise<void> {
+		try {
+			for (const name of await listDirectory(ROOT)) {
+				if (name !== LIBRARIES) await removeTree(`${ROOT}/${name}`);
+			}
+			for (const name of await listDirectory('/files')) {
+				if (LEGACY_ROOT.test(name)) await removeTree(`/files/${name}`);
+			}
+		} catch (error) {
+			// Leftovers only cost storage, so the project still boots.
+			console.error('Failed to clear earlier Java sessions:', error);
+		}
+	}
+
 	private projectPaths(): string[] {
 		const { workdir } = this.source;
 		return this.fs.filesUnder(workdir).map((path) => path.slice(workdir.length + 1));
@@ -156,7 +179,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		try {
 			await removeTree(runDir);
 		} catch (error) {
-			// Nothing reads a finished run's classes again, so leaving them only costs storage.
+			// Left for the next boot's `clearLeftovers`.
 			console.error('Failed to delete a finished run:', error);
 		}
 	}
