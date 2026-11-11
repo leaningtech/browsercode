@@ -86,7 +86,7 @@
 		const unwatchIsMobile = watchIsMobile((mobile) => (isMobile = mobile));
 
 		// A pod that cannot run here fails deep inside the boot, leaving a blank terminal.
-		blocker = podBlocker();
+		blocker = podBlocker() ?? (session.apiKey ? null : 'needs-api-key');
 		if (!blocker) {
 			if (consoleEl) session.boot(consoleEl, portal.apply);
 			else console.error('Terminal container is not ready yet');
