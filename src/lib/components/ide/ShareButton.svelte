@@ -57,8 +57,8 @@
 	onDestroy(() => clearTimeout(timer));
 </script>
 
-<!-- Not positioned itself: the note spans the bar this sits in, the nearest positioned ancestor. -->
-<div bind:this={rootEl}>
+<!-- Positions the note itself, so it hangs under the button wherever the bar puts it. -->
+<div bind:this={rootEl} class="share-root">
 	<button
 		onclick={share}
 		disabled={!session.fsReady}
@@ -137,16 +137,21 @@
 		outline-offset: -1px;
 	}
 
-	/* Centred by auto margins, not a transform, which `fly` would overwrite. */
+	.share-root {
+		position: relative;
+		flex-shrink: 0;
+	}
+
+	/* Hangs from the button's right edge: the top bar runs the width of the shell, so a centred
+	   note would float off in the middle of the window with nothing to tie it to. Offset by the
+	   button's own padding so the note's edge lines up with the word, not the hit area. */
 	.note {
 		position: absolute;
-		top: calc(100% + 8px);
-		left: 0;
-		right: 0;
+		top: calc(100% + 6px);
+		right: -2px;
 		z-index: 40;
-		width: fit-content;
-		max-width: min(320px, 100% - 24px);
-		margin-inline: auto;
+		width: max-content;
+		max-width: min(320px, calc(100vw - 24px));
 		padding: 6px 12px;
 		border: 1px solid var(--color-bc-border);
 		border-radius: 8px;
@@ -158,7 +163,6 @@
 	}
 	.note p {
 		margin: 0;
-		text-align: center;
 		text-wrap: balance;
 	}
 	/* Inline with the text, so it stays beside the first word when the lines centre. */

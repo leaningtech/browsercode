@@ -293,6 +293,10 @@
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
 				{/if}
 			</div>
+			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
+			{#if session.source.share}
+				<ShareButton {session} />
+			{/if}
 		</header>
 	{/if}
 
@@ -578,13 +582,9 @@
 					<div class="relative flex min-h-0 flex-1 flex-col" class:pane-hidden={previewCollapsed}>
 						{#if session.runtime.mountDisplay}
 							<!-- No collapse: see .pane-parked. -->
-							<DisplayPane mount={(el, onWindows) => session.runtime.mountDisplay!(el, onWindows)}>
-								{#snippet actions()}
-									{#if session.source.share}
-										<ShareButton {session} />
-									{/if}
-								{/snippet}
-							</DisplayPane>
+							<DisplayPane
+								mount={(el, onWindows) => session.runtime.mountDisplay!(el, onWindows)}
+							/>
 						{:else if portal.portals.length > 0}
 							<Portal
 								{portal}
