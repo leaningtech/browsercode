@@ -44,18 +44,17 @@ export function listDirectory(dir: string): Promise<string[]> {
 
 /** A missing `path` is not an error. */
 export function removeTree(path: string): Promise<void> {
-	return serial(async () => removeFile(await javaFile(path)));
-}
-
-async function removeFile(file: JavaFile): Promise<void> {
-	if (await file.isDirectory()) {
-		const children = await file.listFiles();
-		for (let i = 0; i < (children?.length ?? 0); i++) await removeFile(children![i]);
-	}
-	// Java returns false for a missing file as well as for a failed delete.
-	if (!(await file.delete()) && (await file.exists())) {
-		throw new Error(`Could not delete ${await file.getPath()}`);
-	}
+	const remove = async (file: JavaFile): Promise<void> => {
+		if (await file.isDirectory()) {
+			const children = await file.listFiles();
+			for (let i = 0; i < (children?.length ?? 0); i++) await remove(children![i]);
+		}
+		// Java returns false for a missing file as well as for a failed delete.
+		if (!(await file.delete()) && (await file.exists())) {
+			throw new Error(`Could not delete ${await file.getPath()}`);
+		}
+	};
+	return serial(async () => remove(await javaFile(path)));
 }
 
 export function makeDirectory(dir: string): Promise<void> {
