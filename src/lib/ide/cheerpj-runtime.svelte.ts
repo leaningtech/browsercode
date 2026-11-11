@@ -9,13 +9,7 @@ import cheerpjMark from '$lib/assets/cheerpj-wordmark.svg';
 import { loadCheerpj } from '$lib/cheerpj/cheerpj';
 import type { JavaConsole } from '$lib/cheerpj/console';
 import { createDisplay, type CheerpjDisplay } from '$lib/cheerpj/display';
-import {
-	listDirectory,
-	makeDirectory,
-	readFilesUnder,
-	removeTree,
-	writeFiles
-} from '$lib/cheerpj/fs';
+import { makeDirectory, readFilesUnder, removeTree, writeFiles } from '$lib/cheerpj/fs';
 import { runJava, runJavac } from '$lib/cheerpj/process';
 import { launchableClass } from '$lib/java/class-file';
 import { parseJavacOutput } from '$lib/java/javac-diagnostics';
@@ -29,10 +23,6 @@ const ROOT = '/files/browsercode';
 const PROJECT_DIR = `${ROOT}/project`;
 /** A folder per run, since an earlier program may still be loading classes from its own. */
 const RUNS_DIR = `${ROOT}/runs`;
-/** Reserved for uploaded JARs, so clearing `ROOT` leaves it. */
-const LIBRARIES = 'libraries';
-/** Build roots the earlier design left in `/files/`, one per page load, never removed. */
-const LEGACY_ROOT = /^browsercode-[0-9a-f-]{36}$/;
 
 const IN_USE_ELSEWHERE =
 	'Java runs in one BrowserCode tab or embed at a time, and another one has it.';
@@ -176,18 +166,10 @@ export class CheerpjRuntime implements IdeRuntime {
 		return held;
 	}
 
-	/**
-	 * A closed tab never deletes its runs, and older builds left a root per page load. Safe only
-	 * while this tab holds the lock.
-	 */
+	/** A closed tab never deletes its runs. Safe only while this tab holds the lock. */
 	private async clearLeftovers(): Promise<void> {
 		try {
-			for (const name of await listDirectory(ROOT)) {
-				if (name !== LIBRARIES) await removeTree(`${ROOT}/${name}`);
-			}
-			for (const name of await listDirectory('/files')) {
-				if (LEGACY_ROOT.test(name)) await removeTree(`/files/${name}`);
-			}
+			await removeTree(ROOT);
 		} catch (error) {
 			// Leftovers only cost storage, so the project still boots.
 			console.error('Failed to clear earlier Java sessions:', error);

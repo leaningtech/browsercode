@@ -32,16 +32,6 @@ async function javaFile(path: string): Promise<JavaFile> {
 	return new File(path);
 }
 
-/** Empty when `dir` doesn't exist. */
-export function listDirectory(dir: string): Promise<string[]> {
-	return serial(async () => {
-		const entries = await (await javaFile(dir)).listFiles();
-		const names: string[] = [];
-		for (let i = 0; i < (entries?.length ?? 0); i++) names.push(await entries![i].getName());
-		return names;
-	});
-}
-
 /** A missing `path` is not an error. */
 export function removeTree(path: string): Promise<void> {
 	const remove = async (file: JavaFile): Promise<void> => {
