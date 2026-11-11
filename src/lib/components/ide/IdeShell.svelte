@@ -8,6 +8,7 @@
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
 	import { LOADING_SCENES } from '$lib/components/ide/loading-scenes';
+	import KeylessPreview from '$lib/components/ide/KeylessPreview.svelte';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
 	import { fade } from 'svelte/transition';
@@ -594,7 +595,9 @@
 							/>
 						{/if}
 						<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
-						{#if loaderVisible}
+						{#if session.runtime.previewUnavailable}
+							<KeylessPreview />
+						{:else if loaderVisible}
 							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
 								<LoadingScene
 									lines={bootLines}

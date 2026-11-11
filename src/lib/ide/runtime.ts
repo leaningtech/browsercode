@@ -58,6 +58,8 @@ export interface IdeRuntime {
 	 * that loads the page can run it.
 	 */
 	blocker?(): PodBlocker | null;
+	/** True where the project runs but nothing can be previewed, as on a pod without an API key. */
+	readonly previewUnavailable?: boolean;
 	/**
 	 * What to tell the user once another tab or embed turns out to hold this runtime; `boot` then
 	 * returns null. Absent where tabs never conflict.
