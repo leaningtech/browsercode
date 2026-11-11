@@ -147,7 +147,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		);
 		if (exit !== 0) {
 			this.console!.write(`javac exited with code ${exit}\n`, 'error');
-			void this.discard(runDir);
+			await this.discard(runDir);
 			return;
 		}
 		const mainClass = await this.chooseMainClass(out);
