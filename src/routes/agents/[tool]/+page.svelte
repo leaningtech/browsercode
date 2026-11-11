@@ -4,8 +4,9 @@
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import AgentShell from '$lib/components/agents/AgentShell.svelte';
 	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
-	const session = new AgentSession($page.params.tool);
+	const session = new AgentSession($page.params.tool, { apiKey: SITE_API_KEY });
 
 	// Same reveal treatment as the landing page's About panel: starts closed so the transition
 	// actually animates in on arrival, rather than snapping straight to open.

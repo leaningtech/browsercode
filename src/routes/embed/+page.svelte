@@ -16,8 +16,12 @@
 	const options = parseEmbedOptions($page.url);
 	const source = options?.source;
 
+	// Never our own key: it is whitelisted for browsercode.io, and a host page without its own boots
+	// keyless.
+	const apiKey = options?.apiKey;
+
 	const agentSession =
-		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false }) : null;
+		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false, apiKey }) : null;
 	const ideSession =
 		source && source.kind !== 'agent'
 			? new IdeSession(
@@ -25,7 +29,8 @@
 						? templateSource(source.id)
 						: source.kind === 'shared-project'
 							? sharedProjectSource(source.project)
-							: repoSource(source.ref)
+							: repoSource(source.ref),
+					apiKey
 				)
 			: null;
 </script>
@@ -60,7 +65,8 @@
 			<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
 				optionally with <code class="break-all text-bc-mist"
 					>&amp;view=files,editor,terminal,preview</code
-				>.
+				>
+				and <code class="break-all text-bc-mist">&amp;apiKey=&lt;BrowserPod key&gt;</code>.
 			</p>
 		</div>
 	</div>

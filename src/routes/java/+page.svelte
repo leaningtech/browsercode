@@ -8,6 +8,7 @@
 	import { templateSource } from '$lib/ide/template-source';
 	import { resolveExample } from '$lib/config/frameworks';
 	import { decodeSharedProject } from '$lib/java/shared-project';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
 	// A shared project link carries the project in the hash, and wins over `?example=`. As on /ide, an
 	// unknown name lands on the picker rather than booting something the URL didn't ask for.
@@ -17,9 +18,9 @@
 	const shared = hash ? decodeSharedProject(hash) : null;
 
 	const session = shared
-		? new IdeSession(sharedProjectSource(shared, example))
+		? new IdeSession(sharedProjectSource(shared, example), SITE_API_KEY)
 		: !hash && example
-			? new IdeSession(templateSource(example))
+			? new IdeSession(templateSource(example), SITE_API_KEY)
 			: null;
 
 	// Bare /java has nothing of its own to say: the IDE picker's Java tab is the same page, so send
