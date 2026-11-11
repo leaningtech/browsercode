@@ -10,6 +10,7 @@
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { opensProject } from '$lib/ide/route-project';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
 	import CloneRepoDialog from '$lib/components/ide/CloneRepoDialog.svelte';
 
@@ -29,25 +30,22 @@
 			: undefined
 	);
 
+	// Does this URL open a project? A template, a cloned repo or a shared Java link does; a bare
+	// picker doesn't, and neither does a URL naming something we can't resolve, which lands on
+	// the picker too. See route-project.ts.
+	let opensAProject = $derived(opensProject($page.route.id, $page.url));
+
 	// The bare pickers (/agents index, /ide landing) already show the same choices inline, so the
 	// sidebar flyout stays hidden there; once something is actually running, it becomes a handy
 	// shortcut to switch without leaving the session.
 	let isAgentsIndexOnly = $derived($page.route.id === '/agents');
-	let isIdeLandingOnly = $derived(
-		$page.route.id === '/ide' && !$page.url.searchParams.has('framework')
-	);
-	// A shared project link boots from its hash alone.
-	let isJavaLandingOnly = $derived(
-		isJavaSection && !$page.url.searchParams.has('example') && !$page.url.hash
-	);
+	let isIdeLandingOnly = $derived($page.route.id === '/ide' && !opensAProject);
 
 	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 	// A booted framework (/ide?framework=...) or cloned GitHub repo (/ide/github/...) — the bare
 	// landing picker has nothing running yet, so it's excluded.
-	let isActiveIdeSession = $derived(
-		($page.route.id?.startsWith('/ide') ?? false) && !isIdeLandingOnly
-	);
-	let isActiveJavaSession = $derived(isJavaSection && !isJavaLandingOnly);
+	let isActiveIdeSession = $derived(($page.route.id?.startsWith('/ide') ?? false) && opensAProject);
+	let isActiveJavaSession = $derived(isJavaSection && opensAProject);
 
 	// Full reloads are deliberate here: they're the teardown mechanism for a running pod
 	// (see CLAUDE.md). Every cross-section navigation in this file goes through them. Leaving an
