@@ -6,7 +6,7 @@
 	import { page } from '$app/stores';
 	import { stepperState, openTour } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
-	import { frameworkRailItems } from '$lib/config/frameworks';
+	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
 	const totalSteps = 6;
@@ -169,11 +169,11 @@
 					</h1>
 					<p class="text-sm leading-relaxed text-bc-text-muted">
 						Run AI coding agents like Claude Code, or spin up a full IDE playground for popular
-						frameworks, with everything sandboxed right in this browser tab.
+						JavaScript frameworks and Java, with everything sandboxed right in this browser tab.
 					</p>
 				{:else if stepperState.step === 2}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
-						Powered by BrowserPod
+						Powered by BrowserPod and CheerpJ
 					</h1>
 					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is built on
@@ -184,33 +184,65 @@
 							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 							>BrowserPod</a
 						>, a browser-based sandbox that runs AI agents, code and development tools in the
-						browser, without cloud compute.
+						browser, without cloud compute. You can also run Java code with
+						<a
+							href="https://cheerpj.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+							>CheerpJ</a
+						>, a full OpenJDK implementation for the browser.
 					</p>
 
-					<a
-						href="https://browserpod.io"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="glass-panel mt-6 flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
-					>
-						<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-bc-mist" />
-						<div class="flex-1 text-sm text-bc-mist">
-							<span class="font-medium">BrowserPod</span>
-							<span class="ml-2 text-bc-icon">Learn more</span>
-						</div>
-						<Icon icon="mingcute:arrow-right-up-line" width="16" height="16" class="text-bc-icon" />
-					</a>
+					<div class="mt-6 flex flex-col gap-2">
+						<a
+							href="https://browserpod.io"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="glass-panel flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
+						>
+							<Icon icon="mingcute:cube-3d-line" width="22" height="22" class="text-bc-mist" />
+							<div class="flex-1 text-sm text-bc-mist">
+								<span class="font-medium">BrowserPod</span>
+								<span class="ml-2 text-bc-icon">Learn more</span>
+							</div>
+							<Icon
+								icon="mingcute:arrow-right-up-line"
+								width="16"
+								height="16"
+								class="text-bc-icon"
+							/>
+						</a>
+						<a
+							href="https://cheerpj.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="glass-panel flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"
+						>
+							<Icon icon="simple-icons:openjdk" width="22" height="22" class="text-bc-mist" />
+							<div class="flex-1 text-sm text-bc-mist">
+								<span class="font-medium">CheerpJ</span>
+								<span class="ml-2 text-bc-icon">Learn more</span>
+							</div>
+							<Icon
+								icon="mingcute:arrow-right-up-line"
+								width="16"
+								height="16"
+								class="text-bc-icon"
+							/>
+						</a>
+					</div>
 				{:else if stepperState.step === 3}
 					<h1 id="stepper-title" class="mb-3 font-display text-3xl font-bold text-bc-text">
 						Build in the IDE playground
 					</h1>
 					<p class="text-sm leading-relaxed text-bc-text-muted">
-						Boot a curated framework template straight into a full editor with terminal and live
-						previews. You can find them in the sidebar.
+						Boot a curated template straight into a full editor with terminal and live previews. You
+						can find them in the sidebar.
 					</p>
 
 					<div class="mt-6 flex flex-wrap gap-2">
-						{#each frameworkRailItems as fw (fw.id)}
+						{#each [...frameworkRailItems, ...javaRailItems] as fw (fw.id)}
 							<span
 								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-bc-text-muted"
 							>
@@ -370,7 +402,7 @@
 			<span
 				class="-ml-1 flex items-center gap-2 rounded-md bg-bc-mist px-2.5 py-1 text-xs font-medium whitespace-nowrap text-bc-abyss shadow-lg"
 			>
-				Frameworks, ready in one click
+				Templates, ready in one click
 			</span>
 		</div>
 	{/if}
