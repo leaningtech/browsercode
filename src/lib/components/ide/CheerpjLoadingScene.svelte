@@ -89,10 +89,13 @@
 		.fill {
 			transition: none;
 		}
+		/* `transform: none` undoes the base rule's scaleX(0), which the slide animation would
+		   otherwise be overriding: without it the dim full-width bar paints at zero width. */
 		.fill.indeterminate {
 			width: 100%;
 			opacity: 0.35;
 			animation: none;
+			transform: none;
 		}
 	}
 </style>
