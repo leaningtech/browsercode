@@ -3,13 +3,15 @@
  * initialized once per page, so every caller shares one load.
  */
 
+export const CHEERPJ_VERSION = '5.0';
+
 /**
  * A CheerpJ nightly until a release ships the features the IDE relies on. `VITE_CHEERPJ_LOADER`
  * points at another build, such as a local one.
  */
 const LOADER_URL =
 	(import.meta.env.VITE_CHEERPJ_LOADER as string | undefined) ??
-	'https://cjrtnc.leaningtech.com/5.0/loader.js';
+	`https://cjrtnc.leaningtech.com/${CHEERPJ_VERSION}/loader.js`;
 
 /** Without one, CheerpJ runs as the Community Edition and bars the display with a notice. */
 const LICENSE_KEY = import.meta.env.VITE_CHEERPJ_LICENSE_KEY as string | undefined;
