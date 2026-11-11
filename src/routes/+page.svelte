@@ -134,17 +134,19 @@
 			</p>
 
 			<div class="grid w-full max-w-xl gap-3 sm:grid-cols-2">
+				<!-- One door for every language: /ide picks between them, with room to say how they differ. -->
 				<button
 					onclick={goIde}
 					style="background: rgb(var(--bc-tint) / 4%)"
 					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/30 p-4 text-left transition hover:border-bc-tint/45"
 				>
-					<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
 						<span
-							class="flex h-9 w-9 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
 						>
 							<Icon icon="mingcute:code-line" width="20" height="20" />
 						</span>
+						<span class="flex-1 text-[14px] font-medium text-bc-text">IDE playground</span>
 						<Icon
 							icon="mingcute:arrow-right-line"
 							width="16"
@@ -152,11 +154,8 @@
 							class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
 						/>
 					</div>
-					<div>
-						<div class="text-[14px] font-medium text-bc-text">IDE for popular frameworks</div>
-						<div class="mt-0.5 text-[12.5px] leading-relaxed text-bc-mist">
-							A full editor with terminal and live previews
-						</div>
+					<div class="text-[12.5px] leading-relaxed text-bc-mist">
+						Editor, terminal and live preview for web apps and Java
 					</div>
 				</button>
 				<button
@@ -164,12 +163,13 @@
 					style="background: rgb(var(--bc-tint) / 4%)"
 					class="glass-panel group flex flex-col gap-3 rounded-xl border border-bc-tint/20 p-4 text-left transition hover:border-bc-tint/35"
 				>
-					<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
 						<span
-							class="flex h-9 w-9 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bc-tint/8 text-bc-text"
 						>
 							<Icon icon="mingcute:robot-line" width="20" height="20" />
 						</span>
+						<span class="flex-1 text-[14px] font-medium text-bc-text">Run coding agents</span>
 						<Icon
 							icon="mingcute:arrow-right-line"
 							width="16"
@@ -177,18 +177,15 @@
 							class="text-bc-text-muted transition group-hover:translate-x-0.5 group-hover:text-bc-text"
 						/>
 					</div>
-					<div>
-						<div class="text-[14px] font-medium text-bc-text">Run coding agents</div>
-						<div class="mt-0.5 text-[12.5px] leading-relaxed text-bc-mist">
-							Claude Code, Codex CLI and Pi, sandboxed in your browser
-						</div>
+					<div class="text-[12.5px] leading-relaxed text-bc-mist">
+						Claude Code, Codex CLI and Pi, sandboxed in your browser
 					</div>
 				</button>
 			</div>
 
 			<p class="mt-6 max-w-md text-[12px] leading-relaxed text-bc-text-muted">
-				A multi-language WebAssembly sandbox (Node.js, Rust, and Python in preview) with no
-				installs, no servers, no cloud compute.
+				Everything runs in WebAssembly in this tab: Node.js on BrowserPod (Rust and Python in
+				preview) and Java on CheerpJ. No installs, no servers, no cloud compute.
 			</p>
 		</div>
 
