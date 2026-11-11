@@ -42,8 +42,12 @@ export class PodRuntime implements IdeRuntime {
 		return this.podFs;
 	}
 
+	get previewUnavailable(): boolean {
+		return !this.apiKey;
+	}
+
 	blocker(): PodBlocker | null {
-		return podBlocker();
+		return podBlocker() ?? (this.apiKey || this.source.keyless ? null : 'needs-api-key');
 	}
 
 	/** Boots the pod and attaches the Output terminal, with the banner and branded shell rc. */

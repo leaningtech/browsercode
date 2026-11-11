@@ -38,6 +38,18 @@
 			<p class="text-[12px] leading-relaxed text-bc-text-muted">
 				Agents and Node.js projects need a desktop browser. Java projects run here.
 			</p>
+		{:else if blocker === 'needs-api-key'}
+			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">API key needed</h3>
+			<p class="text-[12px] leading-relaxed break-words text-bc-text-muted">
+				Cloning a repo or running an agent needs a BrowserPod API key. The page embedding this frame
+				can add one with <code class="text-bc-text">&amp;apiKey=</code>.
+			</p>
+			<a
+				href="{DOCS_URL}#api-key"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="mt-3 inline-block text-[12px] text-bc-mist hover:text-bc-link-hover">Learn more</a
+			>
 		{:else}
 			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Incompatible Browser</h3>
 			<p class="text-[12px] leading-relaxed text-bc-text-muted">
