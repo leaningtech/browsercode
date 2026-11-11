@@ -31,6 +31,9 @@
 	let agentsTop = 155;
 	let githubTop = 31;
 	let githubRight = 160;
+	// Where the sidebar's rounded panel starts. Everything above it on that side is the
+	// announcement bar, which the backdrop's sidebar cut-out would otherwise leave undimmed.
+	let sidebarTop = 45;
 
 	// `display: none` (the ribbon on mobile, via its `hidden md:flex`) still returns a rect, just
 	// an all-zero one — treat that the same as "not found" rather than snapping the tooltip there.
@@ -45,6 +48,9 @@
 
 		const ideRect = centerOf('[data-tour-target="ide"]');
 		if (ideRect) ideTop = ideRect.top + ideRect.height / 2;
+
+		const sidebarRect = centerOf('[data-tour-target="sidebar"]');
+		if (sidebarRect) sidebarTop = sidebarRect.top;
 
 		const githubRect = centerOf('[data-tour-target="github-ribbon"]');
 		if (githubRect) {
@@ -136,6 +142,17 @@
 	     +0.625rem matches the sidebar's own `ml-2.5` left margin (Sidebar.svelte) — the floating
 	     card sits that far past --width-sidebar, so the backdrop needs the same offset or it dims
 	     a sliver of the card's right edge. -->
+	<!-- The cut-out above runs the full height of the window, but the sidebar it keeps sharp starts
+	     below the announcement bar, so the bar's left end would stay bright over the dimmed page.
+	     This covers just that corner. Visual only: it doesn't take the clicks off the bar. -->
+	{#if sidebarSteps.has(stepperState.step)}
+		<div
+			class="pointer-events-none fixed top-0 left-0 z-50 bg-black/75 backdrop-blur-sm"
+			style="width: calc(var(--width-sidebar) + 0.625rem); height: {sidebarTop}px;"
+			aria-hidden="true"
+		></div>
+	{/if}
+
 	<div
 		class="fixed inset-y-0 right-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm transition-[left] duration-500 ease-out"
 		style="left: {sidebarSteps.has(stepperState.step)

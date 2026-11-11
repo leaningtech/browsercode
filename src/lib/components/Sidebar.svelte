@@ -92,6 +92,7 @@
 
 <aside
 	style="background-color: var(--color-bc-abyss)"
+	data-tour-target="sidebar"
 	class="glass-panel relative z-30 my-2.5 ml-2.5 hidden h-[calc(100%-20px)] w-sidebar flex-col rounded-[18px] border border-bc-tint/11 md:flex"
 >
 	<!-- Home: not expandable, always takes you back to the landing page -->
