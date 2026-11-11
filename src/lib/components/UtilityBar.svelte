@@ -5,6 +5,8 @@
 	import appPkg from '../../../package.json';
 	import favicon from '$lib/assets/favicon.svg';
 	import browserpodLogo from '$lib/assets/browserpod.svg';
+	import cheerpjLogo from '$lib/assets/cheerpj.png';
+	import { CHEERPJ_VERSION } from '$lib/cheerpj/cheerpj';
 </script>
 
 <footer
@@ -55,23 +57,46 @@
 		>
 	</span>
 
-	<a
-		href="https://browserpod.io"
-		target="_blank"
-		rel="noopener noreferrer"
-		class="group flex items-center gap-1.5 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"
-	>
-		<img
-			src={browserpodLogo}
-			alt="BrowserPod logo"
-			class="bc-mono-icon h-4 w-4 opacity-60 grayscale"
-		/>
-		<span>Powered by BrowserPod</span>
-		<span
-			class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist transition-colors duration-150 group-hover:text-bc-link-hover"
-			>v{pkg.version}</span
+	<!-- One "Powered by" for both runtimes, in one group so justify-between still spaces four. Like
+	     llms.txt, CheerpJ waits for lg, where the bar has room for it without wrapping a label. -->
+	<span class="flex items-center gap-1.5 text-[11.5px] whitespace-nowrap">
+		<span>Powered by</span>
+		<a
+			href="https://browserpod.io"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="group flex items-center gap-1.5 text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"
 		>
-	</a>
+			<img
+				src={browserpodLogo}
+				alt="BrowserPod logo"
+				class="bc-mono-icon h-4 w-4 opacity-60 grayscale"
+			/>
+			<span>BrowserPod</span>
+			<span
+				class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist transition-colors duration-150 group-hover:text-bc-link-hover"
+				>v{pkg.version}</span
+			>
+		</a>
+		<span class="hidden px-0.5 lg:inline">&</span>
+		<a
+			href="https://cheerpj.com"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="group hidden items-center gap-1.5 text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover lg:flex"
+		>
+			<img
+				src={cheerpjLogo}
+				alt="CheerpJ logo"
+				class="bc-mono-icon h-4 w-auto opacity-60 grayscale"
+			/>
+			<span>CheerpJ</span>
+			<span
+				class="rounded bg-bc-tint/12 px-1.5 py-0.5 font-mono text-[10.5px] text-bc-mist transition-colors duration-150 group-hover:text-bc-link-hover"
+				>v{CHEERPJ_VERSION}</span
+			>
+		</a>
+	</span>
 
 	<a
 		href="https://labs.leaningtech.com/blog/browserpod-rust"

@@ -1,125 +1,135 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { page } from '$app/stores';
+	import { replaceState } from '$app/navigation';
 	import Icon from '@iconify/svelte';
-	import { frameworkRailItems } from '$lib/config/frameworks';
-	import CloneRepoForm from './CloneRepoForm.svelte';
+	import JavaExamples from '$lib/components/java/JavaExamples.svelte';
+	import JsTemplates from './JsTemplates.svelte';
 
-	function openFramework(id: string) {
-		window.location.href = `/ide?framework=${id}`;
+	/**
+	 * One tab per language, not per runtime: a runtime doesn't line up with what you write, so the
+	 * axis wouldn't survive growth (Python and Rust would both be BrowserPod, and nobody wants a
+	 * tab called CheerpJ). Side by side the lists also invite a comparison of things that aren't
+	 * comparable, hence tabs over sections. `?lang=` names the tab, and is deliberately distinct
+	 * from the embed's `?runtime=`, which names the machine and boots a project.
+	 */
+	type Lang = 'js' | 'java';
+
+	let {
+		unknownFramework,
+		unknownExample,
+		unreadableLink = false,
+		lang
+	}: {
+		/** Set when ?framework= carried something we couldn't resolve, so the picker can say so. */
+		unknownFramework?: string;
+		/** Set when ?example= carried something we couldn't resolve. */
+		unknownExample?: string;
+		/** Set when a shared link's hash held no project we could read. */
+		unreadableLink?: boolean;
+		/** Opens on this tab, for a route that isn't /ide and so carries no `?lang=`. */
+		lang?: Lang;
+	} = $props();
+
+	const TABS: { id: Lang; label: string; icon: string }[] = [
+		{ id: 'js', label: 'JavaScript', icon: 'simple-icons:nodedotjs' },
+		{ id: 'java', label: 'Java', icon: 'simple-icons:openjdk' }
+	];
+
+	function parseLang(value: string | null): Lang | undefined {
+		return TABS.find((tab) => tab.id === value)?.id;
 	}
 
-	/** Set when ?framework= carried something we couldn't resolve, so the picker can say so. */
-	let { unknownFramework }: { unknownFramework?: string } = $props();
-
-	// Spelled out rather than left to the buttons below: whoever (or whatever) built the bad URL
-	// needs the accepted vocabulary, not just a grid of labels that don't match the ids.
-	const templateIds = frameworkRailItems.map((fw) => fw.id).join(', ');
-
-	// A hand-built query string can carry anything; keep a long one from stretching the callout.
-	let shownId = $derived(
-		unknownFramework && unknownFramework.length > 32
-			? `${unknownFramework.slice(0, 32)}…`
-			: unknownFramework
+	// Seeded once: the tab is this component's own state from here on, and `?lang=` only sets where
+	// it opens. Deep links from the sidebar and a shared /java link land on the right one.
+	let active = $state<Lang>(
+		untrack(() => lang ?? parseLang($page.url.searchParams.get('lang')) ?? 'js')
 	);
+
+	/**
+	 * Mirrored into the URL so a tab can be linked to and survives a reload. `replaceState`, not
+	 * `push`: the tab filters one page rather than being a place of its own, so Back should leave
+	 * the landing instead of walking the tabs.
+	 */
+	function select(tab: Lang): void {
+		active = tab;
+		// Only on /ide; the Java route renders this picker at its own URL, which ignores `?lang=`.
+		if ($page.route.id !== '/ide') return;
+		const url = new URL(location.href);
+		url.searchParams.set('lang', tab);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		replaceState(url.href, {});
+	}
 </script>
 
-<div class="flex h-full w-full items-center justify-center overflow-auto p-6 text-bc-mist">
-	<div class="w-full max-w-lg">
+<!-- `m-auto` rather than centring the flex row: the page outgrows short screens, and a centred
+     child that overflows can't scroll back to its top. -->
+<div class="flex h-full w-full overflow-auto p-6 text-bc-mist">
+	<div class="m-auto w-full max-w-lg py-4">
 		<h1 class="mb-1 font-display text-[18px] font-semibold text-bc-text">IDE Playground</h1>
-		<p class="mb-4 text-[13px] text-bc-text-muted">
-			Start from a framework template or clone a GitHub repo.
+		<p class="mb-5 text-[13px] text-bc-text-muted">
+			Pick a language. Each runs on its own runtime, right in this browser tab.
 		</p>
 
-		{#if unknownFramework}
-			<div
-				class="mb-4 flex items-start gap-2.5 rounded-lg border border-bc-gold/25 bg-bc-gold/6 px-3 py-2.5 text-left"
-			>
-				<span
-					class="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-bc-gold/12 text-bc-gold"
-				>
-					<Icon icon="mingcute:alert-line" width="14" height="14" />
-				</span>
-				<span class="text-[12px] leading-relaxed text-bc-text-muted">
-					There's no template called <span class="font-mono text-bc-text">{shownId}</span>. Pick one
-					below, or use <span class="font-mono text-bc-text">?framework=</span> with one of:
-					<span class="font-mono text-bc-text">{templateIds}</span>.
-				</span>
-			</div>
-		{/if}
-
-		<!-- Info callout: lilac is the palette's "info" accent (also used for badges and Codex CLI),
-		     so this is tinted distinctly from the plain framework/clone buttons below instead of
-		     sharing their neutral glass-panel look. Only "BrowserPod" itself links out. -->
 		<div
-			class="mb-6 flex items-start gap-2.5 rounded-lg border border-bc-orchid/18 bg-bc-orchid/6 px-3 py-2.5 text-left"
+			role="tablist"
+			aria-label="Language"
+			class="mb-6 flex gap-1 rounded-lg border border-bc-border bg-bc-tint/4 p-1"
 		>
-			<span
-				class="flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] bg-bc-orchid/12 text-bc-orchid"
-			>
-				<Icon icon="mingcute:cube-3d-line" width="14" height="14" />
-			</span>
-			<span class="text-[12px] leading-relaxed text-bc-text-muted">
-				Runs entirely in a <a
-					href="https://browserpod.io"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
-					>BrowserPod</a
-				> sandbox, a WebAssembly environment with a real filesystem, npm and git. Nothing installs on
-				your machine.
-			</span>
+			{#each TABS as tab (tab.id)}
+				<button
+					role="tab"
+					id="lang-tab-{tab.id}"
+					aria-selected={active === tab.id}
+					aria-controls="lang-panel-{tab.id}"
+					onclick={() => select(tab.id)}
+					class="tab flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium transition"
+				>
+					<Icon icon={tab.icon} width="15" height="15" class="shrink-0" />
+					{tab.label}
+				</button>
+			{/each}
 		</div>
 
-		<div class="mb-6">
-			<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
-				Frameworks
-			</div>
-			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-				{#each frameworkRailItems as fw (fw.id)}
-					<button
-						onclick={() => openFramework(fw.id)}
-						class="glass-panel flex items-center gap-2 rounded-lg border border-bc-border px-3 py-2 text-left text-[13px] text-bc-mist transition hover:border-bc-tint/30"
-					>
-						<Icon icon={fw.icon} width="16" height="16" class="shrink-0" />
-						<span class="truncate">{fw.label}</span>
-					</button>
-				{/each}
-			</div>
-		</div>
-
-		<div>
-			<div class="mb-2 flex items-center gap-2">
-				<span class="text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
-					Clone from GitHub
-				</span>
-				<span class="group relative flex items-center">
-					<span
-						class="cursor-default rounded-full border border-bc-azure/30 bg-bc-azure/10 px-1.5 py-0.5 text-[9.5px] font-semibold tracking-wider text-bc-azure/85 uppercase"
-					>
-						Beta
-					</span>
-					<span
-						class="pointer-events-none absolute top-full left-0 z-50 mt-2 flex flex-col items-start opacity-0 transition-opacity duration-100 group-hover:opacity-100"
-					>
-						<span class="solid-panel ml-3 h-1.5 w-1.5 rotate-45 border-t border-l border-bc-border"
-						></span>
-						<span
-							class="solid-panel -mt-px flex w-[26rem] max-w-[80vw] flex-col gap-2 rounded-md border border-bc-border px-3.5 py-3 text-[12.5px] leading-[1.6] text-bc-mist shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
-						>
-							<span>
-								Paste the GitHub URL of a working template, for example;
-								<span class="block font-mono text-[11.5px] break-all text-bc-mist">
-									github.com/vitejs/vite/tree/main/packages/create-vite/template-vanilla
-								</span>
-							</span>
-							<span class="text-bc-text-muted">
-								Browsing and editing a cloned repo works. Automatically building and running one is
-								still in beta.
-							</span>
-						</span>
-					</span>
-				</span>
-			</div>
-			<CloneRepoForm />
+		<!-- Held to the taller panel's height, so switching tabs doesn't bounce the heading and tabs
+		     up and down. `min-height` only ever adds space, so a panel that outgrows it still fits. -->
+		<div class="panels">
+			{#if active === 'js'}
+				<div id="lang-panel-js" role="tabpanel" aria-labelledby="lang-tab-js">
+					<JsTemplates {unknownFramework} />
+				</div>
+			{:else}
+				<div id="lang-panel-java" role="tabpanel" aria-labelledby="lang-tab-java">
+					<JavaExamples {unknownExample} {unreadableLink} />
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>
+
+<style>
+	.tab {
+		color: var(--color-bc-text-muted);
+		cursor: pointer;
+	}
+	.tab[aria-selected='false']:hover {
+		color: var(--color-bc-text);
+	}
+	.tab[aria-selected='true'] {
+		background: var(--color-bc-navy);
+		color: var(--color-bc-text);
+		box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+	}
+	.tab:focus-visible {
+		outline: 1px solid var(--color-bc-azure);
+		outline-offset: -1px;
+	}
+
+	/* Only where the grids are three across and both panels fit on screen; below that the page
+	   scrolls anyway and the reserved space would just be a gap under the Java examples. */
+	@media (min-width: 640px) {
+		.panels {
+			min-height: 22.5rem;
+		}
+	}
+</style>
