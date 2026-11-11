@@ -17,7 +17,7 @@
 	const shared = hash ? decodeSharedProject(hash) : null;
 
 	const session = shared
-		? new IdeSession(sharedProjectSource(shared))
+		? new IdeSession(sharedProjectSource(shared, example))
 		: !hash && example
 			? new IdeSession(templateSource(example))
 			: null;

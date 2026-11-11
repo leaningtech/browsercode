@@ -8,14 +8,12 @@ import type { IdeSession } from './session.svelte';
 type ProjectFile = { path: string; content: string };
 
 /** The absolute link, or null where the source has no share format or the files aren't in yet. */
-export async function shareLink(
-	session: IdeSession,
-	javaVersion = session.source.javaVersion
-): Promise<string | null> {
+export async function shareLink(session: IdeSession): Promise<string | null> {
 	const share = session.source.share;
 	if (!share || !session.fsReady) return null;
 	const mainClass = session.runtime.mainClass ?? undefined;
-	return new URL(share(await currentFiles(session), javaVersion, mainClass), location.origin).href;
+	const files = await currentFiles(session);
+	return new URL(share(files, session.source.javaVersion, mainClass), location.origin).href;
 }
 
 /**
