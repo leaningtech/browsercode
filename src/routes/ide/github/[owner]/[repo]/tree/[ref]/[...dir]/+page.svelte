@@ -6,6 +6,7 @@
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { repoSource } from '$lib/ide/repo-source';
 	import { isValidRepoPath } from '$lib/github/parse';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
 	// `[...dir]` matches the empty segment, so /…/tree/<ref> arrives here with dir = ''.
 	const owner = $page.params.owner ?? '';
@@ -15,7 +16,7 @@
 
 	const valid = isValidRepoPath({ owner, repo, ref, dir });
 
-	const session = new IdeSession(repoSource({ owner, repo, ref, dir }));
+	const session = new IdeSession(repoSource({ owner, repo, ref, dir }), SITE_API_KEY);
 </script>
 
 {#if valid}

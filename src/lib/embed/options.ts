@@ -16,7 +16,8 @@ export type EmbedSource =
 	| { kind: 'agent'; id: ToolId }
 	| { kind: 'shared-project'; project: SharedProject };
 
-export type EmbedOptions = { source: EmbedSource; shell: ShellOptions };
+/** `apiKey` is the host page's BrowserPod key, whitelisted for its domain. */
+export type EmbedOptions = { source: EmbedSource; shell: ShellOptions; apiKey?: string };
 
 const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
 type View = (typeof VIEWS)[number];
@@ -29,7 +30,13 @@ function isView(value: string): value is View {
 /** Null when the URL names a project we cannot boot, so the route can report the bad parameter. */
 export function parseEmbedOptions(url: URL): EmbedOptions | null {
 	const source = parseSource(url);
-	return source && { source, shell: parseShell(url) };
+	return (
+		source && {
+			source,
+			shell: parseShell(url),
+			apiKey: url.searchParams.get('apiKey') || undefined
+		}
+	);
 }
 
 /**

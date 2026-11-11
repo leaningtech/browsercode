@@ -8,7 +8,10 @@ import type { IdeRuntime } from './runtime';
  * How each runtime a source can name gets built. `IdeSession` looks its runtime up here, so a new
  * runtime is one entry rather than another branch in the session.
  */
-export const RUNTIMES: Record<RuntimeId, (source: ProjectSource) => IdeRuntime> = {
-	pod: (source) => new PodRuntime(source),
+export const RUNTIMES: Record<
+	RuntimeId,
+	(source: ProjectSource, apiKey: string | undefined) => IdeRuntime
+> = {
+	pod: (source, apiKey) => new PodRuntime(source, apiKey),
 	cheerpj: (source) => new CheerpjRuntime(source)
 };
