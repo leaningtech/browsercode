@@ -11,7 +11,7 @@
 
 [![Discord server](https://img.shields.io/discord/988743885121548329?color=%235865F2&logo=discord&logoColor=%23fff)](https://discord.gg/8ySMrQv6X)
 [![Issues](https://img.shields.io/github/issues/leaningtech/browsercode)](https://github.com/leaningtech/browsercode/issues)
-![Version](https://img.shields.io/badge/version-1.3.0-blue)
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
 
   <h1>Run AI coding CLIs and frameworks in the browser</h1>
 
@@ -45,7 +45,7 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 
 BrowserCode started out as a way to run AI coding CLIs entirely client-side. It's since grown into a full IDE: alongside the CLIs, it can boot and preview web frameworks directly in the browser, so you can prototype an agent's output without ever leaving the tab.
 
-BrowserCode 1.3.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code, Codex CLI and Pi, completely client-side.
+BrowserCode 2.0.0 is our latest beta release. It runs a full code editor, development environment, and unmodified versions of Claude Code, Codex CLI and Pi, completely client-side.
 
 <h2 id="quickstart">Quickstart</h2>
 
