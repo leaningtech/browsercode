@@ -70,10 +70,10 @@ export class IdeSession {
 	private unmounted = false;
 	private bootToken = 0;
 
-	constructor(source: ProjectSource) {
+	constructor(source: ProjectSource, apiKey: string | undefined) {
 		this.source = source;
 		this.workdir = source.workdir;
-		this.runtime = RUNTIMES[source.runtime](source);
+		this.runtime = RUNTIMES[source.runtime](source, apiKey);
 	}
 
 	/**

@@ -28,6 +28,9 @@ export class AgentSession {
 	/** Null for a CLI that declares no credential; those boot with no overlay at all. */
 	readonly gate: CredentialGate | null;
 
+	/** Absent for a keyless pod, which cannot reach the agent's API. */
+	readonly apiKey: string | undefined;
+
 	lock = $state<LockState>('pending');
 
 	private releaseLock: () => void = () => {};
@@ -35,8 +38,12 @@ export class AgentSession {
 
 	private readonly leaveGuard: boolean;
 
-	constructor(requestedTool: string | undefined, options: { leaveGuard?: boolean } = {}) {
+	constructor(
+		requestedTool: string | undefined,
+		options: { leaveGuard?: boolean; apiKey: string | undefined }
+	) {
 		this.leaveGuard = options.leaveGuard ?? true;
+		this.apiKey = options.apiKey;
 		this.id = resolveToolId(requestedTool);
 		// resolveToolId only ever returns an id that is in toolItems, so this always resolves.
 		this.tool = toolItems.find((item) => item.id === this.id)!;
@@ -69,6 +76,7 @@ export class AgentSession {
 		try {
 			await bootCLI(
 				this.id,
+				this.apiKey,
 				terminalEl,
 				onPortalUpdate,
 				this.gate ? { beforeLaunch: this.gate.beforeLaunch } : undefined

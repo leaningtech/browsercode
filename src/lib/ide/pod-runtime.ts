@@ -3,6 +3,7 @@
  * writing files or running git, then it installs and starts the project's dev server.
  */
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
+import { podNetworkOptions } from '$lib/pod/api-key';
 import { onTerminalOutput, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import { podBlocker, type PodBlocker } from '$lib/utils/platform';
 import { PodFs } from './pod-fs';
@@ -27,7 +28,10 @@ export class PodRuntime implements IdeRuntime {
 	/** Whether the fetched pnpm made it into LOCAL_BIN; only a pnpm command waits on it. */
 	private localPnpm: Promise<boolean> = Promise.resolve(false);
 
-	constructor(private readonly source: ProjectSource) {
+	constructor(
+		private readonly source: ProjectSource,
+		private readonly apiKey: string | undefined
+	) {
 		this.stages = [
 			'booting BrowserPod',
 			source.hydrateLabel,
@@ -53,9 +57,7 @@ export class PodRuntime implements IdeRuntime {
 		const { BrowserPod } = await import('@leaningtech/browserpod');
 		if (env.cancelled()) return null;
 
-		const pod = await BrowserPod.boot({
-			apiKey: import.meta.env.VITE_API_KEY as string
-		});
+		const pod = await BrowserPod.boot(await podNetworkOptions(BrowserPod, this.apiKey));
 		if (env.cancelled()) {
 			void shutdownPod(pod);
 			return null;
