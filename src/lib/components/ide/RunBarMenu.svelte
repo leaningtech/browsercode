@@ -34,16 +34,28 @@
 
 	/** Room the menu needs below its button before it opens upward instead. */
 	const MENU_HEIGHT = 200;
+	/** Between the button and the menu. */
+	const GAP = 5;
+	/** Kept clear of the viewport edge, so a capped list doesn't sit flush against it. */
+	const EDGE = 8;
+	/** A menu shorter than this is no use; below that it scrolls rather than shrinks further. */
+	const MIN_HEIGHT = 96;
 
 	function toggle(): void {
 		if (!open && buttonEl) {
 			const rect = buttonEl.getBoundingClientRect();
 			const right = `right: ${window.innerWidth - rect.right}px;`;
 			// The Output bar usually sits low on the screen, so the menu mostly opens upward.
-			anchor =
-				rect.bottom + MENU_HEIGHT > window.innerHeight
-					? `bottom: ${window.innerHeight - rect.top + 5}px; ${right}`
-					: `top: ${rect.bottom + 5}px; ${right}`;
+			const upward = rect.bottom + MENU_HEIGHT > window.innerHeight;
+			// The options are whatever the build found, so the list has no length to design
+			// around: a project with a main method in thirty classes would run off the screen,
+			// taking the entries at that end with it. Capped to the room on this side instead,
+			// which leaves the overflow scrollable.
+			const room = (upward ? rect.top : window.innerHeight - rect.bottom) - GAP - EDGE;
+			const cap = `max-height: ${Math.max(MIN_HEIGHT, room)}px;`;
+			anchor = upward
+				? `bottom: ${window.innerHeight - rect.top + GAP}px; ${right} ${cap}`
+				: `top: ${rect.bottom + GAP}px; ${right} ${cap}`;
 		}
 		open = !open;
 	}
@@ -161,6 +173,10 @@
 		z-index: 50;
 		min-width: 168px;
 		max-width: 320px;
+		/* `max-height` comes from the anchor, measured against the room below or above the
+		   button. `contain` keeps a long list's scroll from carrying on into the page. */
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		padding: 4px;
 		border-radius: 8px;
 		border: 1px solid var(--color-bc-border);
