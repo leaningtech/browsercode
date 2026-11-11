@@ -19,6 +19,15 @@ export const HYDRATING = 1;
 export const SETUP = 2;
 export const STARTING = 3;
 
+/** A build message pinned to a project file, by its workdir-relative path; counts from 1. */
+export type Diagnostic = {
+	path: string;
+	line: number;
+	column: number;
+	severity: 'error' | 'warning';
+	message: string;
+};
+
 /** What the session hands a runtime for one boot. */
 export type RuntimeEnv = {
 	/** Where the runtime mounts its output view. */
@@ -42,8 +51,18 @@ export interface IdeRuntime {
 	 * runs, `HYDRATING` while the source hydrates. `launch` and `run` report the rest.
 	 */
 	readonly stages: readonly string[];
-	/** Why this runtime cannot run in this browser, or null when it can. */
-	blocker(): PodBlocker | null;
+	/** What the last build reported against the sources; absent where nothing reports any. */
+	readonly diagnostics?: readonly Diagnostic[];
+	/**
+	 * Why this runtime cannot run in this browser, or null when it can; absent where any browser
+	 * that loads the page can run it.
+	 */
+	blocker?(): PodBlocker | null;
+	/**
+	 * What to tell the user once another tab or embed turns out to hold this runtime; `boot` then
+	 * returns null. Absent where tabs never conflict.
+	 */
+	readonly inUseElsewhere?: string | null;
 	/**
 	 * Brings the machine up and returns the context the source hooks run against; null when the
 	 * boot was cancelled in flight.
@@ -57,6 +76,22 @@ export interface IdeRuntime {
 	 * calls it before `launch` resolves or while another run is under way.
 	 */
 	run?(): Promise<void>;
+	/**
+	 * The classes the last build can start, for a runtime that starts one by name; absent where
+	 * the project names its own entry point.
+	 */
+	readonly mainClasses?: readonly string[];
+	/**
+	 * The class `run` starts, one of `mainClasses` once a build has listed them; null until the
+	 * source names one or the user picks one.
+	 */
+	mainClass?: string | null;
+	/**
+	 * Hands the program's own windows `el` to draw into, which the shell shows in place of a
+	 * preview; absent where the preview is a served app. `onWindows` hears whether any window is
+	 * open, as programs open them and runs clear them.
+	 */
+	mountDisplay?(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void>;
 	/** Attaches an interactive shell to `el`; absent on runtimes without one. */
 	startBash?(el: HTMLElement): Promise<void>;
 	/** Tears the machine down; safe to call before or during `boot`. */

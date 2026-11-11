@@ -10,6 +10,7 @@
 	import { page } from '$app/stores';
 	import { pageMeta } from '$lib/config/seo';
 	import { stepperState } from '$lib/stores/stepper.svelte';
+	import { opensProject } from '$lib/ide/route-project';
 	import { zenState } from '$lib/stores/zen.svelte';
 	import { aboutPanelState } from '$lib/stores/aboutPanel.svelte';
 	import { announcementState } from '$lib/stores/announcement.svelte';
@@ -24,25 +25,27 @@
 	// Embeds render inside a host page, where none of the app chrome belongs.
 	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
 
-	// Show on the landing surfaces (Home, /agents, bare /ide) and during tour step 6.
+	// Shared with Sidebar.svelte, which gates the leave-session warning off the same answer.
+	let opensAProject = $derived(opensProject($page.route.id, $page.url));
+	let isPlaygroundLanding = $derived(
+		($page.route.id === '/ide' || $page.route.id === '/java') && !opensAProject
+	);
+
+	// Show on the landing surfaces (Home, /agents, the bare IDE and Java pickers) and during tour
+	// step 6.
 	let showRibbon = $derived(
 		!zenState.on &&
 			!isEmbed &&
 			(ribbonAboveTour ||
 				$page.route.id === '/' ||
 				$page.route.id === '/agents' ||
-				($page.route.id === '/ide' && !$page.url.searchParams.has('framework')))
+				isPlaygroundLanding)
 	);
 
-	// A booted session, i.e. something live in a pod: a running agent, or an IDE session backed by
-	// a framework template or a cloned repo. The bare pickers (/agents, /ide with no framework)
-	// aren't booted yet. Mirrors Sidebar.svelte's isActiveAgentSession / isActiveIdeSession, which
-	// gate the leave-session warning off the same distinction.
-	let isBootedSession = $derived(
-		$page.route.id === '/agents/[tool]' ||
-			($page.route.id === '/ide' && $page.url.searchParams.has('framework')) ||
-			($page.route.id?.startsWith('/ide/') ?? false)
-	);
+	// A booted session: a running agent, an IDE session backed by a framework template or a cloned
+	// repo, or a Java project. The bare pickers (/agents, and an /ide or /java URL with nothing to
+	// open) aren't booted yet.
+	let isBootedSession = $derived($page.route.id === '/agents/[tool]' || opensAProject);
 
 	// Everywhere but a booted session (whose vertical space belongs to the terminal and editor),
 	// zen mode and embeds, until dismissed.

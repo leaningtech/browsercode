@@ -1,6 +1,8 @@
 /**
  * How a project gets onto its runtime. `IdeSession` runs one boot pipeline over these hooks.
  */
+import type { RuntimeId } from '$lib/config/frameworks';
+import type { JavaVersion } from '$lib/java/versions';
 import type { WorkspaceFs } from './workspace-fs';
 
 /** Runtime-side handles the hooks work against; the session owns the boot token. */
@@ -29,8 +31,8 @@ export type BootContext = {
 export type ProjectCommand = { command: string[]; env?: string[] };
 
 export type ProjectSource = {
-	/** The runtime the project boots on: a BrowserPod, or CheerpJ for Java. */
-	runtime: 'pod' | 'cheerpj';
+	/** The runtime the project boots on. */
+	runtime: RuntimeId;
 	/** Carried into analytics and bug reports as the boot mode. */
 	id: string;
 	/** Doubles as the filename the project downloads under. */
@@ -58,4 +60,19 @@ export type ProjectSource = {
 	startCommand: (ctx: BootContext) => Promise<ProjectCommand | null>;
 	/** Called once the files are readable, so a boot that dies earlier is not counted. */
 	trackBoot: () => void;
+	/** The Java CheerpJ boots; absent for a project that isn't Java. */
+	javaVersion?: JavaVersion;
+	/** The binary name of the class a Java project starts from; absent when it names none. */
+	mainClass?: string;
+	/** The untouched starter for `java`, where the starter differs between versions. */
+	starterFiles?: (java: JavaVersion) => Promise<{ path: string; content: string }[]>;
+	/**
+	 * A link, relative to the site, that reopens `files` with the Java version and main class;
+	 * absent where there is no format for one.
+	 */
+	share?: (
+		files: { path: string; content: string }[],
+		javaVersion?: JavaVersion,
+		mainClass?: string
+	) => string;
 };

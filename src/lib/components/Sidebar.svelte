@@ -5,11 +5,12 @@
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { toolItems } from '$lib/config/tools';
-	import { frameworkRailItems } from '$lib/config/frameworks';
+	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
+	import { opensProject } from '$lib/ide/route-project';
 	import { themeState, toggleTheme } from '$lib/stores/theme.svelte';
 	import CloneRepoDialog from '$lib/components/ide/CloneRepoDialog.svelte';
 
@@ -17,7 +18,9 @@
 
 	let isHome = $derived($page.route.id === '/');
 	let isAgentsSection = $derived($page.route.id?.startsWith('/agents') ?? false);
-	let isIdeSection = $derived($page.route.id?.startsWith('/ide') ?? false);
+	let isJavaSection = $derived($page.route.id === '/java');
+	// Java is one of the IDE's two runtimes, so its pages light the IDE entry.
+	let isIdeSection = $derived(($page.route.id?.startsWith('/ide') ?? false) || isJavaSection);
 
 	// Which agent is currently booted, if any — drives the flyout's "active" row badge only;
 	// the main button's color stays the same regardless of which one (or whether any) is running.
@@ -27,25 +30,29 @@
 			: undefined
 	);
 
+	// Does this URL open a project? A template, a cloned repo or a shared Java link does; a bare
+	// picker doesn't, and neither does a URL naming something we can't resolve, which lands on
+	// the picker too. See route-project.ts.
+	let opensAProject = $derived(opensProject($page.route.id, $page.url));
+
 	// The bare pickers (/agents index, /ide landing) already show the same choices inline, so the
 	// sidebar flyout stays hidden there; once something is actually running, it becomes a handy
 	// shortcut to switch without leaving the session.
 	let isAgentsIndexOnly = $derived($page.route.id === '/agents');
-	let isIdeLandingOnly = $derived(
-		$page.route.id === '/ide' && !$page.url.searchParams.has('framework')
-	);
+	let isIdeLandingOnly = $derived($page.route.id === '/ide' && !opensAProject);
 
 	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 	// A booted framework (/ide?framework=...) or cloned GitHub repo (/ide/github/...) — the bare
 	// landing picker has nothing running yet, so it's excluded.
-	let isActiveIdeSession = $derived(isIdeSection && !isIdeLandingOnly);
+	let isActiveIdeSession = $derived(($page.route.id?.startsWith('/ide') ?? false) && opensAProject);
+	let isActiveJavaSession = $derived(isJavaSection && opensAProject);
 
 	// Full reloads are deliberate here: they're the teardown mechanism for a running pod
 	// (see CLAUDE.md). Every cross-section navigation in this file goes through them. Leaving an
 	// active agent or IDE session asks for confirmation first, since it would tear down a live
 	// terminal/dev server.
 	function navigate(path: string) {
-		navigateWithLeaveGuard(path, isActiveAgentSession || isActiveIdeSession);
+		navigateWithLeaveGuard(path, isActiveAgentSession || isActiveIdeSession || isActiveJavaSession);
 	}
 
 	// Flyout visibility is tracked explicitly (rather than relying on CSS :hover + a bridging
@@ -83,6 +90,7 @@
 
 <aside
 	style="background-color: var(--color-bc-abyss)"
+	data-tour-target="sidebar"
 	class="glass-panel relative z-30 my-2.5 ml-2.5 hidden h-[calc(100%-20px)] w-sidebar flex-col rounded-[18px] border border-bc-tint/11 md:flex"
 >
 	<!-- Home: not expandable, always takes you back to the landing page -->
@@ -100,8 +108,9 @@
 	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
-		<!-- Ide: expands on hover with the curated framework list; the flyout is suppressed on the
-		     bare /ide landing, which already shows the same choices inline -->
+		<!-- Ide: expands on hover with both languages' templates, grouped and named as /ide's two tabs
+		     are; the flyout is suppressed on the bare /ide landing, which shows the same choices
+		     inline. Bare /java redirects there, so it never needs suppressing on its own. -->
 		<div
 			class="group relative flex items-center justify-center"
 			role="group"
@@ -134,7 +143,7 @@
 						<div
 							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
 						>
-							Frameworks
+							JavaScript
 						</div>
 						{#each frameworkRailItems as fw (fw.id)}
 							<button
@@ -148,6 +157,25 @@
 									<Icon icon={fw.icon} width="14" height="14" />
 								</span>
 								<span class="flex-1 truncate">{fw.label}</span>
+							</button>
+						{/each}
+						<div
+							class="px-2 pt-2.5 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
+						>
+							Java
+						</div>
+						{#each javaRailItems as item (item.id)}
+							<button
+								type="button"
+								onclick={() => navigate(`/java?example=${item.example}`)}
+								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+							>
+								<span
+									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
+								>
+									<Icon icon={item.icon} width="14" height="14" />
+								</span>
+								<span class="flex-1 truncate">{item.label}</span>
 							</button>
 						{/each}
 						<div class="my-1 h-px bg-bc-border"></div>
@@ -172,7 +200,7 @@
 							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
 								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
 							</span>
-							<span class="flex-1 truncate">See all frameworks</span>
+							<span class="flex-1 truncate">See all templates</span>
 						</button>
 					</div>
 				</div>

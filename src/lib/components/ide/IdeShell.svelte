@@ -2,12 +2,14 @@
 	import { onDestroy, onMount, tick, untrack } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import Portal from '$lib/components/Portal.svelte';
+	import DisplayPane from '$lib/components/ide/DisplayPane.svelte';
 	import EditorPane from '$lib/components/ide/EditorPane.svelte';
 	import FileTreePanel from '$lib/components/ide/FileTreePanel.svelte';
 	import SearchPanel from '$lib/components/ide/SearchPanel.svelte';
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
-	import LoadingScene from '$lib/components/ide/LoadingScene.svelte';
+	import { LOADING_SCENES } from '$lib/components/ide/loading-scenes';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
+	import ShareButton from '$lib/components/ide/ShareButton.svelte';
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -16,6 +18,7 @@
 	import { startDrag } from '$lib/utils/drag';
 	import type { PodBlocker } from '$lib/utils/platform';
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
+	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
@@ -38,6 +41,7 @@
 
 	// The runtime names its own boot steps; the session tracks which one is under way.
 	let bootLines = $derived(session.runtime.stages);
+	const LoadingScene = LOADING_SCENES[untrack(() => session.source.runtime)];
 
 	let blocker = $state<PodBlocker | null>(null);
 	let downloading = $state(false);
@@ -64,12 +68,17 @@
 	type Pane = 'editor' | 'terminal' | 'preview';
 
 	let isMobile = $state(false);
+	// A display stays blank for a program that only prints, so a narrow layout opens on Output,
+	// which always shows the run.
+	const initialPane = untrack(() =>
+		shell.initialPane === 'preview' && session.runtime.mountDisplay ? 'terminal' : shell.initialPane
+	);
 	// Seeded once, deliberately: `shell` is built before mount and never swapped. The requested
 	// pane wins when the shell renders it; otherwise the first one that is actually there does.
 	let activeMobileView = $state<Pane>(
 		untrack(() =>
-			shell[shell.initialPane]
-				? shell.initialPane
+			shell[initialPane]
+				? initialPane
 				: shell.editor
 					? 'editor'
 					: shell.terminal
@@ -88,7 +97,12 @@
 					icon: 'mingcute:terminal-line',
 					shown: shell.terminal
 				},
-				{ id: 'preview', label: 'Preview', icon: 'mingcute:eye-2-line', shown: shell.preview }
+				{
+					id: 'preview',
+					label: session.runtime.mountDisplay ? 'Display' : 'Preview',
+					icon: session.runtime.mountDisplay ? 'mingcute:display-line' : 'mingcute:eye-2-line',
+					shown: shell.preview
+				}
 			] satisfies { id: Pane; label: string; icon: string; shown: boolean }[]
 		).filter((tab) => tab.shown)
 	);
@@ -127,7 +141,12 @@
 	let bugReportHref = $derived(bugReportUrl({ repo: session.source.repo, previewUrl: portal.url }));
 
 	// Live once the framed document loaded, so the loader covers the server's start and first paint.
-	let previewLive = $derived(portal.frameStatus === 'ready');
+	// A display has no document to wait for, only the first run.
+	let previewLive = $derived(
+		session.runtime.mountDisplay
+			? session.phase === 'ready' || session.phase === 'building'
+			: portal.frameStatus === 'ready'
+	);
 	let loaderVisible = $state(true);
 	$effect(() => {
 		if (!previewLive) loaderVisible = true;
@@ -226,7 +245,7 @@
 	onMount(() => (shell.leaveGuard ? installLeaveGuard() : undefined));
 
 	onMount(async () => {
-		blocker = session.runtime.blocker();
+		blocker = session.runtime.blocker?.() ?? null;
 		if (blocker) {
 			session.loading = false;
 			return;
@@ -250,6 +269,8 @@
 	<!-- Covers the shell, not the preview pane, which an embed may not render. -->
 	{#if blocker}
 		<PodBlockerOverlay {blocker} />
+	{:else if session.runtime.inUseElsewhere}
+		<DuplicateTabDialog message={session.runtime.inUseElsewhere} />
 	{/if}
 
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
@@ -272,6 +293,10 @@
 					<span class="ml-1 shrink-0 text-bc-mist/70">saving…</span>
 				{/if}
 			</div>
+			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
+			{#if session.source.share}
+				<ShareButton {session} />
+			{/if}
 		</header>
 	{/if}
 
@@ -524,7 +549,12 @@
 			{#if shell.preview}
 				<div
 					class="relative flex min-h-0 min-w-0 flex-col"
-					class:pane-hidden={isMobile && activeMobileView !== 'preview'}
+					class:pane-hidden={isMobile &&
+						activeMobileView !== 'preview' &&
+						!session.runtime.mountDisplay}
+					class:pane-parked={isMobile &&
+						activeMobileView !== 'preview' &&
+						!!session.runtime.mountDisplay}
 					class:pointer-events-none={dragging !== null}
 					style={isMobile
 						? 'width: 100%; height: 100%;'
@@ -550,7 +580,12 @@
 					{/if}
 
 					<div class="relative flex min-h-0 flex-1 flex-col" class:pane-hidden={previewCollapsed}>
-						{#if portal.portals.length > 0}
+						{#if session.runtime.mountDisplay}
+							<!-- No collapse: see .pane-parked. -->
+							<DisplayPane
+								mount={(el, onWindows) => session.runtime.mountDisplay!(el, onWindows)}
+							/>
+						{:else if portal.portals.length > 0}
 							<Portal
 								{portal}
 								onBeforeReload={() => session.saveAll()}
@@ -654,6 +689,14 @@
 	   take them out of layout so the visible panes fill the space. */
 	.pane-hidden {
 		display: none !important;
+	}
+	/* For a display instead: CheerpJ lays a window out against the display's size when it opens,
+	   and one that opens in a display: none pane stays 0×0 for good. */
+	.pane-parked {
+		position: absolute;
+		inset: 0;
+		visibility: hidden;
+		pointer-events: none;
 	}
 
 	.mobile-tab-btn {

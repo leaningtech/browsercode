@@ -3,7 +3,8 @@
 > BrowserCode runs a full development environment (editor, terminal, npm, git, live preview)
 > inside a browser tab. It is built on BrowserPod, a multi-language WebAssembly sandbox. Nothing
 > installs on the user's machine; there is no server and no cloud compute. It also runs unmodified
-> AI coding CLIs (Claude Code, Codex CLI, Pi) client-side.
+> AI coding CLIs (Claude Code, Codex CLI, Pi) client-side. Java projects run on CheerpJ, a JVM
+> in the browser, instead of BrowserPod.
 
 This file is written for AI assistants. Everything below is a stable, copy-safe URL grammar and a
 set of real constraints, so you can hand a user a link that works the first time.
@@ -35,6 +36,9 @@ Build these directly; they are stable.
 | `https://browsercode.io/` | Landing page |
 | `https://browsercode.io/ide` | Template picker plus a GitHub clone form |
 | `https://browsercode.io/ide?framework=<id>` | Boots that template straight into the IDE |
+| `https://browsercode.io/java` | Java Playground: picker for the Java examples |
+| `https://browsercode.io/java?example=<name>` | Boots a Java example, on Java 25: `helloworld` or `swing` |
+| `https://browsercode.io/java#<project>` | Opens a Java project shared with the Share button; the hash carries its files and Java version (8 when it names none) |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/` | Clones a repo and boots it |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/<dir>` | As above, scoped to a subdirectory |
 | `https://browsercode.io/agents` | Picker for the coding CLIs |
@@ -44,6 +48,10 @@ Build these directly; they are stable.
 ### Template ids for `framework=`
 
 `vite`, `svelte`, `react`, `vue`, `nextjs`, `nuxt`, `express`
+
+Java is not a `framework=` id: it has its own section at `/java`, compiled and run by CheerpJ,
+where Swing windows draw in a Display that takes the preview pane's place. The IDE header switches
+between Java 8, 11, 17, 21 and 25.
 
 `svelte`, `react` and `vue` are Vite starters for those libraries. They are **not** SvelteKit,
 Create React App or Nuxt. For SvelteKit or any other framework without a template, clone a
@@ -86,6 +94,42 @@ dialog.
 ## Embedding
 
 `/embed` renders BrowserCode inside someone else's page, composed entirely from the query string.
+Whether the host page needs special headers depends on the runtime the embed runs on. Check
+which one applies before telling the user to change their server.
+
+| Embed | Runs on | Host page headers | iframe `allow` attribute |
+| --- | --- | --- | --- |
+| `runtime=cheerpj` (Java) | CheerpJ | none | none |
+| `framework=`, `repo=`, `agent=` | BrowserPod | COOP and COEP, below | `cross-origin-isolated` |
+
+### Java embeds: any page, no headers
+
+CheerpJ does not need cross-origin isolation, so a Java embed is a plain iframe and runs on any
+page: a hosted blog or CMS that cannot set response headers, a page full of third-party scripts
+and images, or an isolated page alongside BrowserPod embeds. Do not tell the user to add COOP,
+COEP or the `allow` attribute for it.
+
+```html
+<iframe
+	src="https://browsercode.io/embed?runtime=cheerpj"
+	style="width: 100%; height: 600px; border: 0"
+></iframe>
+```
+
+Java runs in one BrowserCode tab or embed at a time, so a page can hold only one Java embed; a
+second shows a dialog instead. Its Share button copies a link, which Chrome and Edge allow from an
+iframe only with `allow="clipboard-write"`. That attribute is optional and unrelated to isolation.
+
+### BrowserPod embeds: cross-origin isolation required
+
+**For these, the host page must send both of these headers, or the embed will not run.**
+BrowserPod needs `SharedArrayBuffer`, which browsers only expose on cross-origin isolated pages,
+and isolation is inherited from the top-level document:
+
+```
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
 
 ```html
 <iframe
@@ -95,19 +139,11 @@ dialog.
 ></iframe>
 ```
 
-**The host page must send both of these headers, or the embed will not run.** BrowserPod needs
-`SharedArrayBuffer`, which browsers only expose on cross-origin isolated pages, and isolation is
-inherited from the top-level document:
-
-```
-Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp
-```
-
 The `allow="cross-origin-isolated"` attribute on the iframe is also required. All three are
 needed; with any missing, the embed reports that the headers are absent. Note that
 `require-corp` will block cross-origin resources elsewhere on the host page that do not send
-`Cross-Origin-Resource-Policy` or use CORS. Warn the user before they ship it.
+`Cross-Origin-Resource-Policy` or use CORS. Warn the user before they ship it. If the user
+cannot set headers or accept that, only a Java embed will work on their page.
 
 ### Embed parameters
 
@@ -116,9 +152,11 @@ needed; with any missing, the embed reports that the headers are absent. Note th
 | `framework` | A template id from the list above |
 | `repo` | A GitHub URL or `owner/repo`, optionally `…/tree/<ref>/<dir>` |
 | `agent` | `claude`, `codex` or `pi` |
+| `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default) or `swing` |
 | `view` | Comma-separated: `files`, `search`, `editor`, `terminal`, `preview` |
 
-Pass one of `agent`, `repo` or `framework`. With none, a default template boots.
+Pass one of `agent`, `runtime`, `repo` or `framework`. With none, a default template boots.
+A shared project link's hash can stand in for `framework`: `/embed?runtime=cheerpj#<project>`.
 `view` defaults to every pane, and names it does not know are ignored. Any other value that
 cannot be resolved is reported as an error rather than silently replaced. Agents are terminal-first, so for them `view` only decides whether the preview comes
 along. Below 768px wide, which a blog column often is, the panes become tabs,
@@ -130,6 +168,8 @@ opening on the preview when `view` includes it.
 /embed?repo=https://github.com/user/repo/tree/main/examples/demo
 /embed?agent=claude
 /embed?agent=codex&view=terminal
+/embed?runtime=cheerpj
+/embed?runtime=cheerpj&framework=swing&view=editor,preview
 ```
 
 ## Constraints that will bite
@@ -161,6 +201,7 @@ opening on the preview when `view` includes it.
 - Source and README: https://github.com/leaningtech/browsercode
 - Embedding reference: https://github.com/leaningtech/browsercode/blob/main/docs/embedding.md
 - BrowserPod, the sandbox underneath: https://browserpod.io
+- CheerpJ, the JVM that runs Java projects: https://cheerpj.com
 - Working around native npm dependencies:
   https://browserpod.io/docs/guides/working-around-native-npm-dependencies
 - Issues and feedback: https://github.com/leaningtech/browsercode/issues

@@ -56,6 +56,12 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 			description: 'Build and preview web apps right in your browser, on BrowserCode.'
 		};
 	}
+	if (routeId === '/java') {
+		return {
+			title: 'Java Playground — BrowserCode',
+			description: 'Compile and run Java, Swing included, right in your browser, on BrowserCode.'
+		};
+	}
 	if (routeId === '/agents') {
 		return {
 			title: 'Agents — BrowserCode',

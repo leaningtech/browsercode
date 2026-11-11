@@ -1,20 +1,9 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import markUrl from '$lib/assets/browserpod.svg';
+	import mark from '$lib/assets/browserpod.svg';
+	import BootLog from './BootLog.svelte';
+	import type { LoadingSceneProps } from './loading-scenes';
 
-	let {
-		lines = [],
-		activeLine = -1,
-		flash = false,
-		onFlashComplete
-	}: {
-		/** Ordered boot-log messages, dmesg-style (lowercase). */
-		lines?: readonly string[];
-		/** Highest line index real progress justifies revealing (-1 before boot starts). */
-		activeLine?: number;
-		flash?: boolean;
-		onFlashComplete?: () => void;
-	} = $props();
+	let { lines, activeLine, flash, onFlashComplete }: LoadingSceneProps = $props();
 
 	// Handoff to the preview fires at LAUNCH_MS
 	const LAUNCH_MS = 620;
@@ -24,8 +13,9 @@
 	const CAM_H = 30; // camera height above the road (world units)
 	const CELL = 34; // grid cell size (world units)
 	const Z_FAR = 2200; // furthest road row drawn
-	const MARK_W = 35; // mark width (world units)
-	const MARK_ASPECT = 2199 / 2000; // browserpod.svg intrinsic aspect (height / width)
+	// The mark fits this box (world units): a tall mark is capped by height, a wide wordmark by width.
+	const MARK_MAX_W = 80;
+	const MARK_MAX_H = 38.5;
 	const CRUISE_Z = 230; // how far ahead of the camera the mark rides
 	const NEAR_Z = 70; // closest the pod gets on arrival (smaller z = bigger, perspective growth)
 	const HORIZON_FRAC = 0.46; // horizon height as a fraction of the canvas
@@ -44,62 +34,11 @@
 
 	$effect(() => {
 		if (!flash) return;
-		const id = setTimeout(() => onFlashComplete?.(), LAUNCH_MS);
+		const id = setTimeout(() => onFlashComplete(), LAUNCH_MS);
 		return () => clearTimeout(id);
 	});
 
-	const reduceMotion =
-		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-	// Screen-reader status: the current step only, not the streaming log.
-	let srStatus = $derived(activeLine >= 0 && activeLine < lines.length ? lines[activeLine] : '');
-
-	// ── boot log (bottom-left) ──
-
-	// Reveal lines one at a time up to what real progress justifies (activeLine + 1), and drop the
-	// ones past it at once when a rebuild steps back. untrack keeps the effect keyed to activeLine,
-	// not to its own writes to `revealed`.
-	let revealed = $state(0);
-	$effect(() => {
-		const target = activeLine + 1;
-		if (reduceMotion || untrack(() => revealed) > target) {
-			revealed = target;
-			return;
-		}
-		let id: ReturnType<typeof setTimeout>;
-		const tick = () => {
-			const current = untrack(() => revealed);
-			if (current >= target) return;
-			revealed = current + 1;
-			id = setTimeout(tick, 380);
-		};
-		if (untrack(() => revealed) < target) id = setTimeout(tick, 380);
-		return () => clearTimeout(id);
-	});
-
-	const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-	let spin = $state(0);
-	$effect(() => {
-		if (reduceMotion) return;
-		const id = setInterval(() => (spin = (spin + 1) % SPINNER.length), 90);
-		return () => clearInterval(id);
-	});
-	let spinner = $derived(reduceMotion ? '⠿' : SPINNER[spin]);
-
-	// Elapsed on the active step, so a long stage (pod boot, install) doesn't look frozen.
-	let sinceStage = $state(0);
-	$effect(() => {
-		const stage = activeLine; // reading it resets the timer on each stage change
-		sinceStage = 0;
-		if (reduceMotion || stage < 0) return;
-		const started = performance.now();
-		const id = setInterval(() => {
-			sinceStage = (performance.now() - started) / 1000;
-		}, 250);
-		return () => clearInterval(id);
-	});
-
-	let shown = $derived(lines.slice(0, revealed));
+	let status = $derived(activeLine >= 0 && activeLine < lines.length ? lines[activeLine] : '');
 
 	// ── stage rail (below the logo) ──
 
@@ -119,10 +58,14 @@
 		// Non-null const so the type survives into the frame() closure.
 		const scene: CanvasRenderingContext2D = ctx;
 
-		// The mark asset is a raster (a base64 PNG wrapped in SVG). Drawing the full-res bitmap
-		// heavily downscaled every frame makes its edges shimmer as it drifts, so bake a flat-white
-		// copy (source-in keeps the shape's alpha) at roughly its on-screen size and draw that ~1:1.
-		const mark = new Image();
+		// BrowserPod's mark is a raster (a base64 PNG wrapped in SVG). Drawing a bitmap rescaled every
+		// frame makes its edges shimmer as it drifts, so bake a flat-white copy (source-in keeps the
+		// shape's alpha) at roughly its on-screen size and draw that ~1:1. A vector mark gets the same
+		// bake, which also flattens its colours to the scene's white.
+		const markImage = new Image();
+		// Height over width, read from the image so each runtime's mark keeps its own shape.
+		let markAspect = 1;
+		const markWorldW = (): number => Math.min(MARK_MAX_W, MARK_MAX_H / markAspect);
 		let whiteMark: HTMLCanvasElement | null = null;
 		let whiteMarkPx = 0;
 
@@ -138,27 +81,30 @@
 		// Rebuild the white mark at the mark's cruise (resting) size in device pixels, so the
 		// per-frame blit is ~1:1 and translates smoothly instead of shimmering.
 		function buildWhiteMark() {
-			if (!mark.complete || !mark.naturalWidth || !w || !h) return;
+			if (!markImage.complete || !markImage.naturalWidth || !w || !h) return;
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
 			const focal = Math.max(w, h) * FOCAL_FRAC;
-			const px = Math.max(1, Math.round(((focal * MARK_W) / CRUISE_Z) * dpr));
+			const px = Math.max(1, Math.round(((focal * markWorldW()) / CRUISE_Z) * dpr));
 			if (whiteMark && whiteMarkPx === px) return;
 			const oc = document.createElement('canvas');
 			oc.width = px;
-			oc.height = Math.max(1, Math.round(px * MARK_ASPECT));
+			oc.height = Math.max(1, Math.round(px * markAspect));
 			const octx = oc.getContext('2d');
 			if (!octx) return;
 			octx.imageSmoothingEnabled = true;
 			octx.imageSmoothingQuality = 'high';
-			octx.drawImage(mark, 0, 0, oc.width, oc.height);
+			octx.drawImage(markImage, 0, 0, oc.width, oc.height);
 			octx.globalCompositeOperation = 'source-in';
 			octx.fillStyle = '#ffffff';
 			octx.fillRect(0, 0, oc.width, oc.height);
 			whiteMark = oc;
 			whiteMarkPx = px;
 		}
-		mark.onload = buildWhiteMark;
-		mark.src = markUrl;
+		markImage.onload = () => {
+			markAspect = markImage.naturalHeight / markImage.naturalWidth;
+			buildWhiteMark();
+		};
+		markImage.src = mark;
 
 		const ro = new ResizeObserver(() => {
 			const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -251,8 +197,8 @@
 			const sway = reduceMotion ? 0 : Math.sin(t * 0.6) * 5;
 			const arriveZoom = reduceMotion ? 0 : ease;
 			const z = Math.max(NEAR_Z, CRUISE_Z + bob - arriveZoom * (CRUISE_Z - NEAR_Z));
-			const size = (focal * MARK_W) / z;
-			const markH = size * MARK_ASPECT;
+			const size = (focal * markWorldW()) / z;
+			const markH = size * markAspect;
 			const markX = cx + (focal * sway * (1 - Math.min(1, arrive))) / z;
 			const roadY = horizon + (focal * CAM_H) / z;
 			const centerY = roadY - markH / 2;
@@ -287,33 +233,20 @@
 <div class="road-scene">
 	<canvas class="road-canvas" use:roadScene aria-hidden="true"></canvas>
 
-	<!-- Both readouts are aria-hidden; the polite status below carries the current step to screen readers. -->
+	<!-- The boot log carries the current step to screen readers. -->
 
 	<!-- stage readout, just below where the mark rests on the road -->
 	<div class="hud" class:hud-hide={flash} style="top: {railTop}px" aria-hidden="true">
 		<div class="line">
 			<span class="clock">[{elapsed.toFixed(1)}]</span>
-			{#key srStatus}
-				<span class="label">{srStatus}</span>
+			{#key status}
+				<span class="label">{status}</span>
 			{/key}
 			<span class="cursor"></span>
 		</div>
 	</div>
 
-	<!-- streaming boot log, bottom-left -->
-	<div class="boot-log" class:boot-log-hide={flash} aria-hidden="true">
-		{#each shown as line, i (line)}
-			{@const done = i < activeLine}
-			{@const active = i === activeLine}
-			<div class="log-line" class:done>
-				<span class="gate">[<span class="tok" class:ok={done}>{done ? 'OK' : spinner}</span>]</span>
-				<span class="msg">{line}</span>
-				{#if active && sinceStage >= 2}<span class="wait">{Math.floor(sinceStage)}s</span>{/if}
-			</div>
-		{/each}
-	</div>
-
-	<span class="sr-only" role="status" aria-live="polite">{srStatus}</span>
+	<BootLog {lines} {activeLine} hidden={flash} />
 </div>
 
 <style>
@@ -329,74 +262,6 @@
 		width: 100%;
 		height: 100%;
 		display: block;
-	}
-
-	/* ── boot-log styles (bottom-left) ── */
-
-	.boot-log {
-		position: absolute;
-		left: clamp(14px, 3vw, 28px);
-		bottom: clamp(14px, 4vh, 26px);
-		z-index: 3;
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-		/* Stack Sans Text must be self-hosted (same-origin @font-face): the page is cross-origin
-		   isolated for SharedArrayBuffer, so Google Fonts API assets are off the table. */
-		font-family: 'Stack Sans Text', system-ui, sans-serif;
-		font-size: 12px;
-		line-height: 1.3;
-		transition: opacity 0.2s ease;
-		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7); /* legibility over the grid */
-	}
-	.boot-log-hide {
-		opacity: 0;
-	}
-
-	.log-line {
-		display: flex;
-		align-items: center;
-		gap: 9px;
-		white-space: nowrap;
-		animation: log-in 0.22s ease both;
-	}
-
-	.gate {
-		color: rgba(255, 255, 255, 0.3);
-	}
-	.tok {
-		display: inline-block;
-		/* min-, not fixed, width: 'OK' can run wider than 2ch in a proportional face */
-		min-width: 2ch;
-		text-align: center;
-		color: rgba(255, 255, 255, 0.9);
-	}
-	.tok.ok {
-		color: #ffffff; /* completed step lands at full brightness */
-		font-weight: 600;
-	}
-
-	/* active step reads bright; completed steps recede into history */
-	.msg {
-		color: rgba(255, 255, 255, 0.92);
-	}
-	.log-line.done .msg {
-		color: rgba(255, 255, 255, 0.4);
-	}
-	.wait {
-		color: rgba(255, 255, 255, 0.4);
-		font-variant-numeric: tabular-nums;
-	}
-
-	@keyframes log-in {
-		from {
-			opacity: 0;
-			transform: translateY(4px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
 	}
 
 	/* ── stage readout styles (below the logo) ── */
@@ -462,7 +327,6 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.log-line,
 		.label {
 			animation: none;
 		}
