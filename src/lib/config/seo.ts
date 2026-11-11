@@ -7,9 +7,13 @@ const NOINDEX_ROUTES = ['/embed'];
 
 /**
  * The pages we want in search results: listed in /sitemap.xml and given a canonical link, while
- * every other HTML response gets `noindex` (hooks.server.ts). That covers NOINDEX_ROUTES and all
- * the SPA fallback (200.html) serves: /ide/github/… repo views, disabled tools, the legacy
- * /<tool> redirects and unknown URLs.
+ * every other prerendered page gets `noindex` (hooks.server.ts) — NOINDEX_ROUTES plus the agent
+ * pages of disabled tools, which are prerendered for exactly that reason.
+ *
+ * A <meta> tag only reaches URLs that have their own file. Cloudflare answers everything else
+ * with index.html, not the 200.html fallback, so /ide/github/… repo views take `X-Robots-Tag`
+ * from static/_headers instead. The legacy /<tool> redirects and unknown URLs keep inheriting the
+ * home page's canonical, which already points search engines back at `/`.
  *
  * Static routes are found on disk, so a new page is indexed unless it opts out above; only the
  * glob's keys are used, nothing is imported. Dynamic routes are skipped, except agent pages,

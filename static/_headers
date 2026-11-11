@@ -8,3 +8,8 @@
 # is what lets a host page embed /embed.
 /agents*
   Content-Security-Policy: frame-ancestors 'self' https://browserpod.io https://*.browserpod.io https://*.browserpod.pages.dev
+
+# One URL per repo, not content of ours. Cloudflare answers unmatched paths with index.html, so
+# these are served by the SPA fallback and no <meta> noindex can reach them; the header can.
+/ide/github/*
+  X-Robots-Tag: noindex

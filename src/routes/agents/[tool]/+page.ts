@@ -1,8 +1,9 @@
 import { toolItems } from '$lib/config/tools';
 
-// Prerender one page per enabled tool, so each gets its own static head (title, description,
-// canonical — see hooks.server.ts) instead of falling through to the SPA fallback, which
-// serves every non-prerendered URL the same HTML as `/`. Disabled tools still fall back.
+// Prerender one page per tool in the registry, so each gets its own static head from
+// hooks.server.ts instead of falling through to the SPA fallback, which answers every unmatched
+// URL with the same HTML as `/`. Enabled tools get a title, description and canonical; disabled
+// ones sit outside INDEXABLE_PATHS and so get `noindex`, which the fallback could never carry.
 export function entries() {
-	return toolItems.filter((item) => !item.disabled).map((item) => ({ tool: item.id }));
+	return toolItems.map((item) => ({ tool: item.id }));
 }
