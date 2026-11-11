@@ -142,7 +142,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		}
 		const mainClass = await this.chooseMainClass(out);
 		if (!mainClass) {
-			void this.discard(runDir);
+			await this.discard(runDir);
 			return;
 		}
 		env.onStage(STARTING);
