@@ -118,6 +118,15 @@
 		consumeReveal(entry.path);
 	});
 
+	// Re-runs as tabs open, so a file's model picks up the last build's marks when it appears.
+	$effect(() => {
+		const diagnostics = session.runtime.diagnostics;
+		void session.openFiles.length;
+		void activeFile;
+		if (!monacoMod || !editor || !diagnostics) return;
+		monacoMod.showDiagnostics(diagnostics);
+	});
+
 	// Theme switching repaints only; no model or view state is touched.
 	$effect(() => {
 		const themeId = activeEditorThemeId();
