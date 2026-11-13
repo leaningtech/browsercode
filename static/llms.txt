@@ -154,7 +154,7 @@ cannot set headers or accept that, only a Java embed will work on their page.
 | `agent` | `claude`, `codex` or `pi` |
 | `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default) or `swing` |
 | `view` | Comma-separated: `files`, `search`, `editor`, `terminal`, `preview` |
-| `apiKey` | The embedder's own BrowserPod API key, whitelisted for their domain |
+| `apiKey` | Empty (`apiKey=`) for keyless mode; see below |
 
 Pass one of `agent`, `runtime`, `repo` or `framework`. With none, a default template boots.
 A shared project link's hash can stand in for `framework`: `/embed?runtime=cheerpj#<project>`.
@@ -163,15 +163,14 @@ cannot be resolved is reported as an error rather than silently replaced. Agents
 along. Below 768px wide, which a blog column often is, the panes become tabs,
 opening on the preview when `view` includes it.
 
-Without `apiKey` an embed boots with no key: a `framework` template installs and runs but has no
-live preview, and `repo` and `agent` embeds do not boot at all. For a working embed the user
-creates a key at https://console.browserpod.io/keys and whitelists their domain for it. Never
-invent a key; leave a placeholder for them to fill. Java embeds (`runtime=cheerpj`) do not use
-the key.
+An empty `apiKey=` runs the embed in keyless mode, with no BrowserPod API key: a `framework`
+template installs and runs but has no live preview, and `repo` and `agent` embeds do not boot at
+all. Leave `apiKey` out for a full embed. Embeds cannot pass their own key yet, so never put one
+in the URL. Java embeds (`runtime=cheerpj`) ignore `apiKey`.
 
 ```
 /embed?framework=vite&view=preview
-/embed?framework=vite&view=preview&apiKey=<your BrowserPod API key>
+/embed?framework=vite&view=terminal&apiKey=
 /embed?framework=nextjs&view=files,editor,terminal
 /embed?repo=https://github.com/user/repo/tree/main/examples/demo
 /embed?agent=claude
