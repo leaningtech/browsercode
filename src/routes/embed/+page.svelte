@@ -10,14 +10,19 @@
 	import { repoSource } from '$lib/ide/repo-source';
 	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { parseEmbedOptions } from '$lib/embed/options';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
 	// The host page composes the embed through the query string; nothing here is navigable, so the
 	// options are read once for this page's lifetime.
 	const options = parseEmbedOptions($page.url);
 	const source = options?.source;
 
+	// An empty `apiKey` opts into keyless mode; anything else runs on our key until embeds can bring
+	// their own.
+	const apiKey = options?.apiKey === '' ? undefined : SITE_API_KEY;
+
 	const agentSession =
-		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false }) : null;
+		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false, apiKey }) : null;
 	const ideSession =
 		source && source.kind !== 'agent'
 			? new IdeSession(
@@ -25,7 +30,8 @@
 						? templateSource(source.id)
 						: source.kind === 'shared-project'
 							? sharedProjectSource(source.project)
-							: repoSource(source.ref)
+							: repoSource(source.ref),
+					apiKey
 				)
 			: null;
 </script>
@@ -60,7 +66,8 @@
 			<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
 				optionally with <code class="break-all text-bc-mist"
 					>&amp;view=files,editor,terminal,preview</code
-				>.
+				>
+				and <code class="break-all text-bc-mist">&amp;apiKey=</code> for keyless mode.
 			</p>
 		</div>
 	</div>

@@ -6,6 +6,7 @@
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
 	// Bare /ide (no ?framework=) shows the landing instead of auto-booting a template, and so does
 	// an id we don't recognise. Falling back to the default template silently handed anyone who
@@ -16,7 +17,7 @@
 	const showLanding = !resolved;
 	const framework: FrameworkId = resolved ?? defaultFrameworkId;
 
-	const session = new IdeSession(templateSource(framework));
+	const session = new IdeSession(templateSource(framework), SITE_API_KEY);
 
 	// Landing (pre-boot) fades the glass panel in, full coverage from the start. Once booted,
 	// IdeShell keeps the sheet-slide-up entrance instead (see below).

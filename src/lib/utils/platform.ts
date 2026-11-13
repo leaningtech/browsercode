@@ -11,7 +11,12 @@ export function isIos(): boolean {
 }
 
 /** Why BrowserPod cannot run here, or null when it can. */
-export type PodBlocker = 'unsupported-platform' | 'unsupported-browser' | 'not-isolated';
+/** `needs-api-key` is a keyless pod asked for more than the npm registry, which is all it reaches. */
+export type PodBlocker =
+	| 'unsupported-platform'
+	| 'unsupported-browser'
+	| 'not-isolated'
+	| 'needs-api-key';
 
 /**
  * iOS is checked first because it passes every feature test below and still fails: the pod boots,

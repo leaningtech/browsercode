@@ -13,6 +13,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 	return {
 		id: 'framework',
 		runtime: config.runtime ?? 'pod',
+		keyless: true,
 		label: config.label,
 		hydrateLabel: 'copying project files',
 		workdir: POD_HOME,

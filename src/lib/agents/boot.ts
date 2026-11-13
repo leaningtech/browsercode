@@ -1,5 +1,6 @@
 import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { cliConfigs, toolItems } from '$lib/config/tools';
+import { podNetworkOptions } from '$lib/pod/api-key';
 import { writePodBinaryFile, writeToTerminal } from '$lib/pod/fs';
 import type { PortalUpdate } from '$lib/pod/portals';
 import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -19,6 +20,7 @@ export type CLIBootHooks = {
  */
 export async function bootCLI(
 	tool: keyof typeof cliConfigs,
+	apiKey: string | undefined,
 	terminalEl: HTMLElement,
 	onPortalUpdate?: (update: PortalUpdate) => void,
 	hooks?: CLIBootHooks
@@ -34,7 +36,7 @@ export async function bootCLI(
 		const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
 
 		const pod = await BrowserPod.boot({
-			apiKey: import.meta.env.VITE_API_KEY as string,
+			...(await podNetworkOptions(BrowserPod, apiKey)),
 			userImage: config.userImage,
 			storageKey: config.storageKey
 		});

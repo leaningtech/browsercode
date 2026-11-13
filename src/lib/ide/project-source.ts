@@ -43,6 +43,8 @@ export type ProjectSource = {
 	workdir: string;
 	/** Preview is pinned to this port when set. Unknown for an arbitrary repo. */
 	appPort?: number;
+	/** Hydrates and installs from the npm registry alone, so a pod without an API key can run it. */
+	keyless?: boolean;
 	/** What this session cloned, for the bug report's repo field. */
 	repo?: { url: string; ref: string };
 	/** Fetched before the runtime boots, so the file tree renders while the project arrives. */

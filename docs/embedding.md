@@ -41,6 +41,23 @@ The iframe must carry `allow="cross-origin-isolated"`. Without all three the emb
 
 `require-corp` blocks cross-origin resources on your page that do not send `Cross-Origin-Resource-Policy` or use CORS. If your page cannot accept that, or cannot set headers at all, only Java embeds will run on it.
 
+## Keyless mode
+
+Pass an empty `apiKey` to run the embed without a BrowserPod API key:
+
+```
+/embed?framework=vite&view=terminal&apiKey=
+```
+
+A keyless pod reaches nothing but the npm registry:
+
+- A `framework` template still installs and runs, but has no live preview. The preview pane says so.
+- `repo` and `agent` embeds need a key to clone or to reach the agent's API. They show a message instead of booting.
+
+Without `apiKey` the embed runs on BrowserCode's own key. Embeds cannot pass their own key yet, so a non-empty `apiKey` is ignored.
+
+Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
+
 ## Parameters
 
 | Parameter   | Value                                                                         |
@@ -50,6 +67,7 @@ The iframe must carry `allow="cross-origin-isolated"`. Without all three the emb
 | `agent`     | A CLI agent id (`claude`, `codex`, `pi`)                                      |
 | `runtime`   | `cheerpj`, for a Java project compiled and run in the browser by CheerpJ      |
 | `view`      | Comma separated: `files`, `search`, `editor`, `terminal`, `preview`           |
+| `apiKey`    | Empty (`apiKey=`) for keyless mode. See **Keyless mode**                      |
 
 ## Behaviour
 
