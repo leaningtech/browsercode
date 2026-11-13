@@ -6,6 +6,7 @@ import type { BrowserPod, Terminal } from '@leaningtech/browserpod';
 import { onTerminalOutput, writePodFile, writeToTerminal } from '$lib/pod/fs';
 import { podBlocker, type PodBlocker } from '$lib/utils/platform';
 import { PodFs } from './pod-fs';
+import { LOCAL_BIN, fetchPnpm, installPnpm } from './pnpm-binary';
 import { ANSI, BP_RC, BP_RC_PATH } from './shell-rc';
 import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type IdeRuntime, type RuntimeEnv } from './runtime';
@@ -23,6 +24,8 @@ export class PodRuntime implements IdeRuntime {
 	private outputTerminal: Terminal | null = null;
 	/** Set by `boot`; every later hook runs against the boot that set it. */
 	private env: RuntimeEnv | null = null;
+	/** Whether the fetched pnpm made it into LOCAL_BIN; only a pnpm command waits on it. */
+	private localPnpm: Promise<boolean> = Promise.resolve(false);
 
 	constructor(private readonly source: ProjectSource) {
 		this.stages = [
@@ -45,6 +48,8 @@ export class PodRuntime implements IdeRuntime {
 	/** Boots the pod and attaches the Output terminal, with the banner and branded shell rc. */
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
 		this.env = env;
+		// Started before the pod so the download overlaps its boot.
+		const pnpm = fetchPnpm();
 		const { BrowserPod } = await import('@leaningtech/browserpod');
 		if (env.cancelled()) return null;
 
@@ -57,6 +62,7 @@ export class PodRuntime implements IdeRuntime {
 		}
 		this.pod = pod;
 		this.podFs = new PodFs(pod);
+		this.localPnpm = pnpm.then((bytes) => (bytes ? installPnpm(pod, bytes) : false));
 
 		this.outputTerminal = await pod.createDefaultTerminal(env.outputEl);
 		onTerminalOutput(this.outputTerminal, env.onOutput);
@@ -147,7 +153,9 @@ export class PodRuntime implements IdeRuntime {
 		if (!this.pod || !this.outputTerminal) return;
 		this.logCommand(command, args);
 		const fullEnv = [...(color ? COLOR_ENV : []), ...env];
-		await this.pod.run(command, args, {
+		// pod.run only looks a bare name up on the pod's default PATH, which lacks LOCAL_BIN.
+		const program = command === 'pnpm' && (await this.localPnpm) ? `${LOCAL_BIN}/pnpm` : command;
+		await this.pod.run(program, args, {
 			echo: false,
 			terminal: this.outputTerminal,
 			cwd,

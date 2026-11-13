@@ -9,6 +9,7 @@
 const nameIcons: Record<string, string> = {
 	'package.json': 'catppuccin:npm',
 	'package-lock.json': 'catppuccin:npm-lock',
+	'pnpm-lock.yaml': 'catppuccin:pnpm-lock',
 	'tsconfig.json': 'catppuccin:typescript-config',
 	'jsconfig.json': 'catppuccin:typescript-config',
 	'.gitignore': 'catppuccin:git',
