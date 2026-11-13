@@ -7,7 +7,6 @@ settings:
 overrides:
   esbuild: npm:esbuild-wasm@*
   rollup: npm:@rollup/wasm-node@*
-  '@parcel/watcher': npm:@parcel/watcher-wasm@*
 
 importers:
 
