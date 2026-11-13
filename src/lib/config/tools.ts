@@ -147,10 +147,12 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		}
 	},
 	codex: {
-		userImage: 'wss://disks.browserpod.io/rust-post-demos-2.ext2',
-		storageKey: 'rust-post-demos-2',
+		// No disk image of its own, like Pi: the binary is installed into the default one's /home on
+		// first launch, which this key keeps, along with ~/.codex.
+		storageKey: 'codex',
 		command: CODEX_BIN_PATH,
-		args: [],
+		// Otherwise Codex hands off to a background server, which a bare binary can't start, and exits.
+		args: ['--no-daemon'],
 		projectFile: '/project/codex/AGENTS.md',
 		prepare: prepareCodexPod,
 		env: codexEnv,
