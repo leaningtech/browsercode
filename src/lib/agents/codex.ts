@@ -20,7 +20,11 @@ const CODEX_URL = `https://opt.browserpod.io/agents/codex/${CODEX_VERSION}/codex
 const CODEX_SHA512 =
 	'2ae3d4af8faaa1dbdf935372961ac4e50286523ec8b6d8f5b60d319305f74e26686363393cf597cafb6bd11aec02c09ec84f76a3fb7e2425a7e1faf2c11854f5';
 
-export const CODEX_BIN_PATH = `${POD_HOME}/.local/bin/codex`;
+/** Versioned, so a bump installs alongside rather than over a half-written older copy. */
+const CODEX_DIR = `${POD_HOME}/.browsercode/codex-${CODEX_VERSION}`;
+export const CODEX_BIN_PATH = `${CODEX_DIR}/codex`;
+/** Written last, so an install cut short by a reload is redone rather than launched. */
+const INSTALLED_MARKER = `${CODEX_DIR}/.installed`;
 
 const CODEX_CONFIG_PATH = '/home/user/.codex/config.toml';
 const API_KEY_STORAGE = 'codex-api-key';
@@ -70,9 +74,8 @@ export async function prepareCodexPod(pod: BrowserPod, terminal: Terminal): Prom
 }
 
 /**
- * Fetched by the page rather than from inside the pod, whose network only reaches allowlisted
- * hosts; that also lets the download report progress. Installed once per storage key, into the
- * pod's persistent /home.
+ * Fetched by the page, not the pod: the pod's network only reaches allowlisted hosts, and this way
+ * the download can report progress.
  */
 async function installCodex(pod: BrowserPod, terminal: Terminal): Promise<void> {
 	writeToTerminal(terminal, `Downloading Codex ${CODEX_VERSION} (first launch only)...\r\n`);
@@ -95,6 +98,8 @@ async function installCodex(pod: BrowserPod, terminal: Terminal): Promise<void> 
 		echo: false
 	})) as unknown as number;
 	if (exitCode !== 0) throw new Error(`Could not make Codex executable (exit code ${exitCode})`);
+
+	await writePodFile(pod, INSTALLED_MARKER, CODEX_VERSION);
 }
 
 async function download(
@@ -135,7 +140,7 @@ function formatMB(bytes: number): string {
 
 async function isCodexInstalled(pod: BrowserPod): Promise<boolean> {
 	try {
-		return (await podFileSize(pod, CODEX_BIN_PATH)) > 0;
+		return (await podFileSize(pod, INSTALLED_MARKER)) > 0;
 	} catch {
 		return false;
 	}
