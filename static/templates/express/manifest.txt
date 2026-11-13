@@ -1,6 +1,6 @@
 manifest.txt
-package-lock.json
 package.json
+pnpm-lock.yaml
 public/app.js
 public/favicon.svg
 public/index.html

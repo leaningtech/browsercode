@@ -5,6 +5,7 @@ import { frameworkConfigs, type FrameworkConfig, type FrameworkId } from '$lib/c
 import type { JavaVersion } from '$lib/java/versions';
 import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
+import { packageManagerCommand } from './native-deps';
 import type { BootContext, ProjectSource } from './project-source';
 
 export function templateSource(framework: FrameworkId): ProjectSource {
@@ -22,10 +23,9 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 		initialFile: (files: string[]) =>
 			files.includes(config.defaultFile) ? config.defaultFile : files[0],
 		installCommands: () =>
-			(config.setupCommandArgs ?? [['install']]).map((args) => ({ command: ['npm', ...args] })),
-		startCommand: async () => ({
-			command: ['npm', ...(config.devCommandArgs ?? ['run', 'dev'])]
-		}),
+			(config.setupCommandArgs ?? [['install']]).map((args) => packageManagerCommand('pnpm', args)),
+		startCommand: async () =>
+			packageManagerCommand('pnpm', config.devCommandArgs ?? ['run', 'dev']),
 		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
 		javaVersion: config.javaVersion,
 		mainClass: config.mainClass,

@@ -26,9 +26,9 @@ export type FrameworkConfig = {
 	/** File opened in the editor after boot. */
 	defaultFile: string;
 	icon: string;
-	/** npm invocations run before the dev server, e.g. [['install']]. Only a pod runs them. */
+	/** pnpm invocations run before the dev server, e.g. [['install']]. Only a pod runs them. */
 	setupCommandArgs?: string[][];
-	/** npm invocation that starts the dev server. Defaults to ['run', 'dev']. */
+	/** pnpm invocation that starts the dev server. Defaults to ['run', 'dev']. */
 	devCommandArgs?: string[];
 	/** When set, only a portal on this port is auto-selected for the preview. */
 	appPort?: number;

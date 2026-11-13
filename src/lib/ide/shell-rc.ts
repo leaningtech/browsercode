@@ -15,9 +15,10 @@ export const ANSI = {
 	reset: '\x1b[0m'
 };
 
-/** Interactive-shell rc: branded prompt, ls colors, aliases and a welcome banner. Written into the pod at boot; extra bash tabs start with `--rcfile` pointing here. */
+/** Interactive-shell rc: the fetched pnpm on PATH, branded prompt, ls colors, aliases and a welcome banner. Written into the pod at boot; extra bash tabs start with `--rcfile` pointing here. */
 export const BP_RC =
 	'[ -f ~/.bashrc ] && . ~/.bashrc\n' +
+	'export PATH="$HOME/.local/bin:$PATH"\n' +
 	`PS1="\\n\\[\\e[${DIM_SGR}m\\]╭─\\[\\e[0m\\] \\[\\e[1m\\]browsercode\\[\\e[0m\\] \\[\\e[${DIM_SGR}m\\]in\\[\\e[0m\\] \\[\\e[38;5;245m\\]\\w\\[\\e[0m\\]\\n\\[\\e[${DIM_SGR}m\\]╰─\\[\\e[0m\\]\\[\\e[${BLUE_SGR}m\\]❯\\[\\e[0m\\] "\n` +
 	`PS2="\\[\\e[${DIM_SGR}m\\]··\\[\\e[0m\\]\\[\\e[${BLUE_SGR}m\\]❯\\[\\e[0m\\] "\n` +
 	`export LS_COLORS="di=${BLUE_SGR}:ln=38;5;39:ex=38;5;46:*.md=38;5;245"\n` +
