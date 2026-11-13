@@ -41,11 +41,11 @@
 		{:else if blocker === 'needs-api-key'}
 			<h3 class="mb-2 text-[14px] font-semibold text-bc-text">API key needed</h3>
 			<p class="text-[12px] leading-relaxed break-words text-bc-text-muted">
-				Cloning a repo or running an agent needs a BrowserPod API key. The page embedding this frame
-				can add one with <code class="text-bc-text">&amp;apiKey=</code>.
+				Cloning a repo or running an agent needs a BrowserPod API key, and this embed runs in
+				keyless mode. Remove <code class="text-bc-text">apiKey=</code> from the embed URL to run it.
 			</p>
 			<a
-				href="{DOCS_URL}#api-key"
+				href="{DOCS_URL}#keyless-mode"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="mt-3 inline-block text-[12px] text-bc-mist hover:text-bc-link-hover">Learn more</a

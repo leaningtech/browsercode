@@ -3,7 +3,8 @@
 
 	// Stands in for the preview loader: a pod without an API key serves no portals, so the loader
 	// would wait on a dev server it can never show.
-	const DOCS_URL = 'https://github.com/leaningtech/browsercode/blob/main/docs/embedding.md#api-key';
+	const DOCS_URL =
+		'https://github.com/leaningtech/browsercode/blob/main/docs/embedding.md#keyless-mode';
 </script>
 
 <div class="bc-page-bg flex h-full w-full items-center justify-center p-4">
@@ -17,9 +18,8 @@
 		</div>
 		<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Preview needs an API key</h3>
 		<p class="text-[12px] leading-relaxed break-words text-bc-text-muted">
-			This embed runs without a BrowserPod API key, so the project builds and runs but cannot be
-			previewed. The page embedding it can add one with
-			<code class="text-bc-text">&amp;apiKey=</code>.
+			This embed runs in keyless mode, so the project builds and runs but cannot be previewed.
+			Remove <code class="text-bc-text">apiKey=</code> from the embed URL to preview it.
 		</p>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a

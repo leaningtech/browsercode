@@ -10,15 +10,16 @@
 	import { repoSource } from '$lib/ide/repo-source';
 	import { sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { parseEmbedOptions } from '$lib/embed/options';
+	import { SITE_API_KEY } from '$lib/pod/api-key';
 
 	// The host page composes the embed through the query string; nothing here is navigable, so the
 	// options are read once for this page's lifetime.
 	const options = parseEmbedOptions($page.url);
 	const source = options?.source;
 
-	// Never our own key: it is whitelisted for browsercode.io, and a host page without its own boots
-	// keyless.
-	const apiKey = options?.apiKey;
+	// An empty `apiKey` opts into keyless mode; anything else runs on our key until embeds can bring
+	// their own.
+	const apiKey = options?.apiKey === '' ? undefined : SITE_API_KEY;
 
 	const agentSession =
 		source?.kind === 'agent' ? new AgentSession(source.id, { leaveGuard: false, apiKey }) : null;
@@ -66,7 +67,7 @@
 				optionally with <code class="break-all text-bc-mist"
 					>&amp;view=files,editor,terminal,preview</code
 				>
-				and <code class="break-all text-bc-mist">&amp;apiKey=&lt;BrowserPod key&gt;</code>.
+				and <code class="break-all text-bc-mist">&amp;apiKey=</code> for keyless mode.
 			</p>
 		</div>
 	</div>
