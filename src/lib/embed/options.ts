@@ -16,7 +16,7 @@ export type EmbedSource =
 	| { kind: 'agent'; id: ToolId }
 	| { kind: 'shared-project'; project: SharedProject };
 
-/** `apiKey` is the host page's BrowserPod key, whitelisted for its domain. */
+/** `apiKey` is the raw parameter: empty asks for keyless mode, and a host page's own key is not used yet. */
 export type EmbedOptions = { source: EmbedSource; shell: ShellOptions; apiKey?: string };
 
 const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
@@ -34,7 +34,7 @@ export function parseEmbedOptions(url: URL): EmbedOptions | null {
 		source && {
 			source,
 			shell: parseShell(url),
-			apiKey: url.searchParams.get('apiKey') || undefined
+			apiKey: url.searchParams.get('apiKey') ?? undefined
 		}
 	);
 }
