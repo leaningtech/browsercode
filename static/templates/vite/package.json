@@ -10,9 +10,5 @@
   },
   "devDependencies": {
     "vite": "7.3.6"
-  },
-  "overrides": {
-    "esbuild": "npm:esbuild-wasm@*",
-    "rollup": "npm:@rollup/wasm-node@*"
   }
 }

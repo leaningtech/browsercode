@@ -15,9 +15,5 @@
     "@oxc-parser/binding-wasm32-wasi": "^0.98.0",
     "@oxc-transform/binding-wasm32-wasi": "^0.98.0",
     "nuxt": "^3.17.5"
-  },
-  "overrides": {
-    "esbuild": "npm:esbuild-wasm@*",
-    "rollup": "npm:@rollup/wasm-node@*"
   }
 }
