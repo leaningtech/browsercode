@@ -3,6 +3,7 @@
  * install flags it needs. What a repo installed with pnpm needs written outside package.json
  * lives in `pnpm-workspace.ts`.
  */
+import type { ProjectCommand } from './project-source';
 
 type Manifest = {
 	dependencies?: Record<string, string>;
@@ -267,7 +268,7 @@ export function usesWorkspaceProtocol(manifestRaw: string): boolean {
 }
 
 /** Environment each package manager needs to run in the pod; empty for one that needs none. */
-export const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
+const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
 	npm: [],
 	// pnpm pins an exact version via `packageManager` and otherwise refuses to run, but the pod's
 	// own pnpm has no native binary to switch to for an arbitrary pinned version. This tells pnpm
@@ -276,3 +277,8 @@ export const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
 	// needs another way around the pin.
 	pnpm: ['pnpm_config_pm_on_fail=ignore']
 };
+
+/** Runs `args` under `pm`, carrying whatever environment that package manager needs in the pod. */
+export function packageManagerCommand(pm: PackageManager, args: string[]): ProjectCommand {
+	return { command: [pm, ...args], env: PACKAGE_MANAGER_ENV[pm] };
+}

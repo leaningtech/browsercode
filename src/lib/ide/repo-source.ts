@@ -3,8 +3,8 @@ import { fetchRepoTree } from '$lib/github/api';
 import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import {
-	PACKAGE_MANAGER_ENV,
 	declaresPnpm,
+	packageManagerCommand,
 	patchClonedManifest,
 	resolveInstallArgs,
 	usesWorkspaceProtocol,
@@ -57,11 +57,6 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 		startCommand: (ctx: BootContext) => resolveStartScript(ctx, packageManager),
 		trackBoot: () => trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` })
 	};
-}
-
-/** Runs `args` under `pm`, carrying whatever environment that package manager needs in the pod. */
-function packageManagerCommand(pm: PackageManager, args: string[]): ProjectCommand {
-	return { command: [pm, ...args], env: PACKAGE_MANAGER_ENV[pm] };
 }
 
 /** True when something is readable at `path`; the size itself is never used. */
