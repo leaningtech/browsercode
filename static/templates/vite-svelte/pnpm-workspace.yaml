@@ -2,6 +2,6 @@
 overrides:
   esbuild: 'npm:esbuild-wasm@*'
   rollup: 'npm:@rollup/wasm-node@*'
-# esbuild-wasm resolves Svelte's own imports from the symlinked path, where pnpm's isolated
-# layout leaves them unreachable; a flat node_modules keeps them next to it.
+# Vite's dependency optimizer can't resolve Svelte's own imports through pnpm's symlinked layout; a
+# flat node_modules keeps them next to it.
 nodeLinker: hoisted
