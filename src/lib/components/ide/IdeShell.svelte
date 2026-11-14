@@ -9,6 +9,7 @@
 	import TerminalTabs from '$lib/components/ide/TerminalTabs.svelte';
 	import { LOADING_SCENES } from '$lib/components/ide/loading-scenes';
 	import KeylessPreview from '$lib/components/ide/KeylessPreview.svelte';
+	import { STARTING } from '$lib/ide/runtime';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
 	import { fade } from 'svelte/transition';
@@ -141,12 +142,25 @@
 	// Recomputed as the preview moves ports, so a report always carries the live portal URL.
 	let bugReportHref = $derived(bugReportUrl({ repo: session.source.repo, previewUrl: portal.url }));
 
+	// A keyless pod serves no portals, so its loader hands over to the KeylessPreview card once the
+	// dev server starts. One-way: a later `run` resets the stage, and the card should stay put.
+	let keylessStarted = $state(false);
+	$effect(() => {
+		if (
+			session.runtime.previewUnavailable &&
+			(session.bootStage >= STARTING || session.phase === 'ready')
+		)
+			keylessStarted = true;
+	});
+
 	// Live once the framed document loaded, so the loader covers the server's start and first paint.
 	// A display has no document to wait for, only the first run.
 	let previewLive = $derived(
-		session.runtime.mountDisplay
-			? session.phase === 'ready' || session.phase === 'building'
-			: portal.frameStatus === 'ready'
+		session.runtime.previewUnavailable
+			? keylessStarted
+			: session.runtime.mountDisplay
+				? session.phase === 'ready' || session.phase === 'building'
+				: portal.frameStatus === 'ready'
 	);
 	let loaderVisible = $state(true);
 	$effect(() => {
@@ -597,7 +611,8 @@
 						<!-- Loader overlays the preview column, then cross-dissolves out into the iframe. -->
 						{#if session.runtime.previewUnavailable}
 							<KeylessPreview />
-						{:else if loaderVisible}
+						{/if}
+						{#if loaderVisible}
 							<div class="absolute inset-0 z-30" out:fade={{ duration: 460 }}>
 								<LoadingScene
 									lines={bootLines}
