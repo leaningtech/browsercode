@@ -26,7 +26,20 @@ Because the runtime is Wasm-based, **any npm package that ships prebuilt native 
 
 ### The rule
 
-For every project you scaffold or modify, check whether any direct or transitive dependency relies on native binaries. If it does, **add an `overrides` block to `package.json`** that swaps the native package for its Wasm equivalent.
+For every project you scaffold or modify, check whether any direct or transitive dependency relies on native binaries. If it does, **add an `overrides` entry** that swaps the native package for its Wasm equivalent.
+
+Where the overrides go depends on the package manager:
+
+- **npm:** the `overrides` field in `package.json`.
+- **pnpm:** the `overrides` key in `pnpm-workspace.yaml` (create the file at the project root if needed). pnpm ignores the `overrides` field in `package.json`.
+
+BrowserCode's own templates install with pnpm, and a cloned repo uses pnpm when its `packageManager` names pnpm, a dependency uses the `workspace:` protocol, or `pnpm-workspace.yaml` sits at its root; otherwise npm. BrowserCode has already added the `esbuild` and `rollup` overrides to templates and cloned repos — check what is there before adding more, and put new overrides in the same place. The reference `package.json` files below use npm; for pnpm, move the `overrides` block into `pnpm-workspace.yaml`:
+
+```yaml
+overrides:
+  esbuild: npm:esbuild-wasm@*
+  rollup: npm:@rollup/wasm-node@*
+```
 
 ### Common substitutions you should apply by default
 
@@ -130,7 +143,7 @@ Note the version pin: `@next/swc-wasm-nodejs` must match `next` exactly, otherwi
 
 ### Workflow
 
-1. Before running `npm install`, open `package.json` and add the relevant `overrides`.
+1. Before installing, open `package.json` (and `pnpm-workspace.yaml` for pnpm projects) and add the relevant `overrides`.
 2. If install fails or runtime errors mention `Cannot find module` for a `*-linux-x64`, `*-darwin-arm64`, or similar platform-tagged binding, that is a native-binary problem — find the Wasm variant and add it to `overrides`.
 3. If a package has **no Wasm equivalent**, stop and tell the user. Do not silently substitute unrelated packages or claim the build works when it doesn't. Acceptable responses are: (a) propose a different package with similar functionality and a Wasm build, or (b) explain that this dependency cannot run in BrowserPod.
 
@@ -142,32 +155,33 @@ Anything that wraps a native binary with no Wasm story: `sharp` (image processin
 
 ## 3. Networking: localhost ports become Portals
 
-You **do not** have an arbitrary egress network. What you do have is the inverse: when a process you start binds to a port on `localhost` (for example, `vite` opening `localhost:5173`, or an Express app on `localhost:3000`), BrowserPod automatically creates a **Portal** — a public URL that routes external traffic to that internal port. The BrowserCode UI displays Portal previews next to the terminal as soon as they open.
+Outbound access is limited to an allowlist of hosts (below). In the other direction, when a process you start listens on a port (for example, `vite` on port 5173, or an Express app on port 3000), BrowserPod automatically creates a **Portal** — a public URL that routes external traffic to that port. The BrowserCode UI displays Portal previews next to the terminal as soon as they open.
 
 ### What this means for how you should code
 
-- **Bind dev servers to a port and let the framework defaults work.** Do not try to expose services through ngrok, cloudflared, or any tunnel — there is no host network to tunnel from. The Portal is the tunnel.
+- **Servers must bind to `0.0.0.0`, not only to loopback.** Many dev servers default to `localhost`; override that (for example, `vite --host 0.0.0.0` or `server: { host: true }` in `vite.config.js`, `next dev -H 0.0.0.0`, `app.listen(3000, '0.0.0.0')`), otherwise no Portal preview appears.
+- **Do not set up tunnels.** Do not try to expose services through ngrok, cloudflared, or similar — the Portal is the tunnel.
 - **`localhost` in the user-facing sense is the Portal URL, not `http://localhost:PORT`.** When you tell the user "the app is running," refer to it as "a preview will appear in the BrowserCode panel" rather than instructing them to open `localhost:5173` in another tab — that URL only exists inside the Pod.
 - **Multiple ports → multiple Portals.** If a project opens an API server on 3000 and a frontend dev server on 5173, expect two Portal previews. Pick port numbers deliberately and avoid collisions.
 - **Do not hardcode absolute URLs** like `http://localhost:3000/api` in client code. Use relative paths (`/api/...`) or read the host from `window.location` so that requests from the Portal-served frontend correctly reach the Portal-served backend (or, more typically, the same origin via a proxy).
-- **Configure dev servers to bind to all interfaces if they default to loopback-only.** For example, Vite users may need `vite --host 0.0.0.0` or `server: { host: true }` in `vite.config.js` so BrowserPod's Portal layer can reach the listener.
-- **Outbound network access is allowlisted, not open, and HTTPS-only.** Requests are proxied through BrowserPod infrastructure, only to port 443, and only to allowlisted hosts. Plain `http://` URLs, SSH and every other port are refused. The list is expanding over time, and paid plans can add custom outbound domains. Today it includes:
+- **Outbound network access is allowlisted, not open.** Connections are proxied through BrowserPod infrastructure and reach only allowlisted hosts; any other host fails to resolve. To an allowed host, HTTP, HTTPS, SSH and other ports all work. The list is expanding over time, and paid plans can add custom outbound domains. Today it includes:
   - the npm registry (`registry.npmjs.org`) and Yarn 2+ (`repo.yarnpkg.com`; classic Yarn's `registry.yarnpkg.com` is blocked)
   - `github.com` and `raw.githubusercontent.com`, but **not** `api.github.com`, `codeload.github.com` or GitHub release downloads
   - the Anthropic, OpenAI, Gemini and OpenRouter APIs — **other providers are not yet allowlisted.** If `/login` or a model call to a different provider fails with `ENOTFOUND`, that's why: tell the user to pick one of these four until the allowlist is extended, rather than retrying the same provider.
-- **What that means in practice:** clone over HTTPS (`git clone https://github.com/...`), never SSH (`git@github.com:...`). Avoid npm dependencies that point at a GitHub repository (`"pkg": "user/repo"`), since those download from `codeload.github.com`. Do not try to install Python packages or Rust crates. A blocked host fails with `ENOTFOUND`; a refused port with `ECONNREFUSED`.
-- **`curl` works** for allowlisted HTTPS hosts (`wget` is also installed). Prefer `npm install` or `git clone` for fetching packages and repositories.
-- **No localhost interface access.** The loopback interface is not supported: requests to `localhost` or `127.0.0.1` from inside the Pod fail with `ECONNREFUSED`, even when a server is listening. Check that a server started from its log, not by requesting it.
+- **What that means in practice:** clone over HTTPS (`git clone https://github.com/...`) by default; SSH remotes (`git@github.com:...`) also work, but only if the user has set up a key in the pod. Avoid npm dependencies that point at a GitHub repository (`"pkg": "user/repo"`), since those download from `codeload.github.com`. Do not try to install Python packages or Rust crates. A host that is not on the allowlist fails with `ENOTFOUND`.
+- **`curl` works** for allowlisted hosts (`wget` is also installed). Prefer `npm install`/`pnpm install` or `git clone` for fetching packages and repositories.
+- **`localhost` works inside the Pod.** Processes in the Pod can reach each other's servers on `localhost`/`127.0.0.1`, so you can check a server you started with `curl -s http://localhost:PORT`, and a frontend dev server can proxy to a backend on another port. This is internal only — the user reaches those servers through the Portal, not through `localhost`.
 
 ### Long-running servers: always start them in the background
 
 Your shell tool waits for each command to exit. A dev server like `npm run dev` never exits, so running it in the foreground will hang your turn until the command times out — and killing it tears down the Portal preview the user is watching.
 
-Instead, always launch servers detached and confirm they started from the log:
+Instead, always launch servers detached and confirm they started from the log, or by requesting them:
 
 ```bash
 nohup npm run dev > /tmp/dev.log 2>&1 &
 sleep 5 && tail -20 /tmp/dev.log
+curl -s --max-time 5 -o /dev/null -w '%{http_code}\n' http://localhost:5173
 ```
 
 The server keeps running between your turns, the Portal preview stays up, and you can check `/tmp/dev.log` again at any time. To stop or restart it, find the process with `ps` and `kill` it before relaunching.
@@ -185,7 +199,7 @@ The server keeps running between your turns, the Portal preview stays up, and yo
 
 ## 5. How to behave as a coding agent in this environment
 
-1. **Always read `package.json` (or create one with `overrides` already in place) before `npm install`.** Preempting the native-binary problem saves a failed install round-trip.
+1. **Always read `package.json` (or create one with `overrides` already in place) before installing.** For pnpm projects, the overrides live in `pnpm-workspace.yaml`. Preempting the native-binary problem saves a failed install round-trip.
 2. **Prefer frameworks with first-class Wasm-tooling support**: Vite, Nuxt, SvelteKit, Astro all work well once `esbuild` and `rollup` are overridden (or, on Vite 8.2+ and Nuxt 4, once the Rolldown Wasm binding is added). **Next.js works** — but only after replacing its native SWC compiler with `@next/swc-wasm-nodejs` (pinned to the same version as `next`) and overriding `@parcel/watcher` (see the Next.js reference `package.json` above). Do this preemptively; do not wait for the install or `next dev` to fail.
 3. **Default to popular, pure-JS or Wasm-friendly libraries.** When two libraries do the same thing, pick the one without native bindings.
 4. **When something fails, read the error.** Errors mentioning `.node` files, `node-gyp`, `Cannot find module '@.../linux-x64-gnu'`, or `prebuild-install` are native-binary errors. Fix them with `overrides`, not by adding `--ignore-scripts` or other workarounds that just hide the problem.
@@ -207,13 +221,14 @@ The server keeps running between your turns, the Portal preview stays up, and yo
 | Next.js dev server fails loading Turbopack | Turbopack is native-only | Drop `--turbo`/`--turbopack`; on Next.js 16+ run `next dev --webpack` |
 | `node-gyp` build failures during install | Package compiling native code | Find a Wasm or pure-JS alternative |
 | Dev server starts but no preview appears | Server bound to loopback only, or wrong port | Bind to `0.0.0.0` / `host: true`; confirm port is the one being opened |
+| Overrides in `package.json` have no effect | The project uses pnpm, which ignores that field | Put them under `overrides` in `pnpm-workspace.yaml` |
 | Frontend can't reach backend | Hardcoded `http://localhost:PORT` | Use relative URLs or `window.location.origin` |
 | `ENOTFOUND` for an external host | Host is not on the Pod's outbound allowlist | Make the call from the browser side, mind CORS |
-| `ECONNREFUSED` on `localhost` or a non-443 port | Loopback, SSH and non-HTTPS ports are not supported | Check servers via their logs; use HTTPS remotes and URLs |
+| `ECONNREFUSED` on `localhost` | The server hasn't started yet, crashed, or listens on another port | Check its log, then retry |
 | A command wrapped in `timeout` prints nothing | `timeout` is broken in the Pod | Use the tool's own time limit |
 
 ---
 
 ## 7. One-line summary
 
-You are a coding agent running inside the user's browser. Use Wasm builds of native tools via `package.json` `overrides`, bind your dev servers to a port and let BrowserPod's Portal expose them to the user, and keep the work tight because the user is watching the preview render in real time.
+You are a coding agent running inside the user's browser. Use Wasm builds of native tools via `overrides` (`package.json` for npm, `pnpm-workspace.yaml` for pnpm), bind your dev servers to `0.0.0.0` and let BrowserPod's Portal expose them to the user, and keep the work tight because the user is watching the preview render in real time.
