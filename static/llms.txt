@@ -24,7 +24,7 @@ BrowserCode 2.0.0, beta. Hosted at https://browsercode.io. Free, no account need
 - The project needs npm packages with native binaries and has no WebAssembly equivalent
 - The user is on an iPhone or iPad, or a browser older than Chrome 137, Firefox 153 or Safari 27
   (Java projects are the exception: they run on CheerpJ, which needs neither)
-- Anything has to bind or reach `localhost`, use a non-HTTPS protocol, or SSH
+- The work has to reach hosts outside the allowlist (see **Constraints** below)
 - The work needs Python packages from PyPI, or a Rust toolchain inside the sandbox
 - The user needs the work to persist on a server, or to be reachable by others long-term
 
@@ -208,11 +208,12 @@ carries a small BrowserCode badge linking back to browsercode.io.
   BrowserCode applies the `esbuild` and `rollup` overrides automatically to its own templates and
   to cloned repos. For a cloned Next.js repo, add `@next/swc-wasm-nodejs` yourself;
   the agents' instruction files tell them to do this.
-- **Outbound network is HTTPS on port 443 only**, to an allowlist covering the npm registry,
-  Yarn 2+, GitHub (`github.com`, `raw.githubusercontent.com`) and the major AI provider APIs.
-  Plain HTTP, other ports, SSH (so `git@github.com:` remotes) and `localhost` from inside the pod
-  are all refused. Servers started inside a pod are still reachable through BrowserPod portals,
-  which is how the live preview works.
+- **Outbound network reaches allowlisted hosts only**: the npm registry, Yarn 2+, GitHub
+  (`github.com`, `raw.githubusercontent.com`) and the major AI provider APIs. Any other host
+  fails to resolve. To allowed hosts, HTTP, HTTPS, SSH (so `git@github.com:` remotes, given a
+  key) and other ports all work.
+- **Servers must bind `0.0.0.0`.** A pod can reach its own servers on `localhost`, and each
+  listening port gets a BrowserPod portal, which is how the live preview works.
 - **Node.js 22 is the default runtime**, with bash, git, npm, pnpm, curl, ripgrep and fd on the
   path. Rust programs run, but BrowserCode ships no Rust toolchain: build them outside the
   sandbox. `python3` (3.12) runs with its standard library only.
