@@ -38,7 +38,7 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 - A browser-contained, POSIX-like filesystem
 - Command line tools: bash, git, npm, pnpm, curl, ripgrep and fd
 - Browser sandbox isolation from the user's operating system
-- Restricted outbound networking: HTTPS only, to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
+- Restricted outbound networking: only to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
 - Support for Vite, Express.js, Svelte, Next, Nuxt, React and Vue (with Wasm overrides)
 - Java projects compiled and run in the browser by [CheerpJ](https://cheerpj.com/), in their own Java playground and through embeds
@@ -131,7 +131,7 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 - Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
 - BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/working-around-native-npm-dependencies)
 - Templates install and run with pnpm. A cloned repo uses pnpm when its `packageManager` names pnpm, a dependency uses the `workspace:` protocol, or `pnpm-workspace.yaml` sits at the clone root, and npm otherwise. Either way, BrowserCode swaps `esbuild` and `rollup` for their WebAssembly builds where that package manager reads overrides: `overrides` in `package.json` for npm, and `overrides` in `pnpm-workspace.yaml` for pnpm, which ignores the `package.json` field. Add your own overrides in the same place
-- Outbound connections are HTTPS-only (port 443) and limited to the allowlist: plain HTTP, SSH (so `git@github.com` remotes) and other ports are refused, and so is `localhost` from inside a pod. Portals still expose servers you start in a pod
+- Outbound connections only reach allowlisted hosts; anything else fails to resolve. HTTP, HTTPS, SSH (so `git@github.com` remotes, given a key) and other ports all work to allowed hosts. A pod can reach its own servers on `localhost`, servers must bind `0.0.0.0`. Portals expose servers you start in a pod
 - Agents and Node.js projects require WebAssembly JSPI: Chrome and Edge 137+, Firefox 153+ or Safari 27+. They also don't run on iOS or iPadOS yet, on any browser. Java projects run on CheerpJ and need neither. For maximum compatibility, please use a Chromium browser on the desktop
 
 <h2 id="roadmap">Roadmap</h2>
