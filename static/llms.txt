@@ -23,6 +23,7 @@ BrowserCode 2.0.0, beta. Hosted at https://browsercode.io. Free, no account need
 
 - The project needs npm packages with native binaries and has no WebAssembly equivalent
 - The user is on an iPhone or iPad, or a browser older than Chrome 137, Firefox 153 or Safari 27
+  (Java projects are the exception: they run on CheerpJ, which needs neither)
 - Anything has to bind or reach `localhost`, use a non-HTTPS protocol, or SSH
 - The work needs Python packages from PyPI, or a Rust toolchain inside the sandbox
 - The user needs the work to persist on a server, or to be reachable by others long-term
@@ -49,9 +50,17 @@ Build these directly; they are stable.
 
 `vite`, `svelte`, `react`, `vue`, `nextjs`, `nuxt`, `express`
 
-Java is not a `framework=` id: it has its own section at `/java`, compiled and run by CheerpJ,
-where Swing windows draw in a Display that takes the preview pane's place. The IDE header switches
-between Java 8, 11, 17, 21 and 25.
+Templates install and run with pnpm. A cloned repo uses pnpm when its `packageManager` names pnpm,
+a dependency uses the `workspace:` protocol, or `pnpm-workspace.yaml` sits at the clone root, and
+npm otherwise.
+
+Java is not a `framework=` id: it has its own section at `/java`, compiled and run by CheerpJ.
+The IDE header switches between Java 8, 11, 17, 21 and 25. Run compiles every `.java` file with
+`javac -Xlint`, whose errors and warnings mark the editor at their line and column, then runs the
+project's main class: the one the example or shared link names, or else the only class with a
+`main` method. When several have one, a picker beside Run chooses, and Share keeps the choice. The
+Output tab is the program's console (typing feeds `System.in`, Ctrl+D ends it), and AWT and Swing
+windows draw in a Display that takes the preview pane's place. There is no shell for Java projects.
 
 `svelte`, `react` and `vue` are Vite starters for those libraries. They are **not** SvelteKit,
 Create React App or Nuxt. For SvelteKit or any other framework without a template, clone a
@@ -91,6 +100,9 @@ Sign-in differs per tool, and this trips people up:
 Only one agent session runs per browser. A second tab of the same agent shows a duplicate-session
 dialog.
 
+Each agent starts with an instructions file describing the sandbox (`CLAUDE.md` for Claude Code,
+`AGENTS.md` for Codex CLI and Pi), but it may try its default behaviour before reading it.
+
 ## Embedding
 
 `/embed` renders BrowserCode inside someone else's page, composed entirely from the query string.
@@ -116,9 +128,11 @@ COEP or the `allow` attribute for it.
 ></iframe>
 ```
 
-Java runs in one BrowserCode tab or embed at a time, so a page can hold only one Java embed; a
-second shows a dialog instead. Its Share button copies a link, which Chrome and Edge allow from an
-iframe only with `allow="clipboard-write"`. That attribute is optional and unrelated to isolation.
+Java runs in one BrowserCode tab or embed at a time, because they share one storage area, so a
+page can hold only one Java embed; a second, or one opened while a browsercode.io tab runs Java,
+shows a dialog instead. Java embeds on different sites do not conflict. Its Share button copies
+a link, which Chrome and Edge allow from an iframe only with `allow="clipboard-write"`. That
+attribute is optional and unrelated to isolation.
 
 ### BrowserPod embeds: cross-origin isolation required
 
@@ -152,15 +166,21 @@ cannot set headers or accept that, only a Java embed will work on their page.
 | `framework` | A template id from the list above |
 | `repo` | A GitHub URL or `owner/repo`, optionally `…/tree/<ref>/<dir>` |
 | `agent` | `claude`, `codex` or `pi` |
-| `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default) or `swing` |
+| `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default) or `swing`, also `java` and `java-swing` |
 | `view` | Comma-separated: `files`, `search`, `editor`, `terminal`, `preview` |
 
 Pass one of `agent`, `runtime`, `repo` or `framework`. With none, a default template boots.
 A shared project link's hash can stand in for `framework`: `/embed?runtime=cheerpj#<project>`.
 `view` defaults to every pane, and names it does not know are ignored. Any other value that
-cannot be resolved is reported as an error rather than silently replaced. Agents are terminal-first, so for them `view` only decides whether the preview comes
-along. Below 768px wide, which a blog column often is, the panes become tabs,
-opening on the preview when `view` includes it.
+cannot be resolved is reported as an error rather than silently replaced. Agents are
+terminal-first, so for them `view` only decides whether the preview comes along.
+Below 768px wide, which a blog column often is, the panes become tabs, opening on the preview
+when `view` includes it (a Java embed opens on Output instead).
+
+Agents behave a little differently inside a frame: `claude` opens a new tab for its OAuth sign-in,
+`codex` asks for an OpenAI API key inside the frame, and `pi` installs from npm on its first
+launch. One agent session per browser still applies, across embeds and tabs alike. Every embed
+carries a small BrowserCode badge linking back to browsercode.io.
 
 ```
 /embed?framework=vite&view=preview
@@ -169,6 +189,7 @@ opening on the preview when `view` includes it.
 /embed?agent=claude
 /embed?agent=codex&view=terminal
 /embed?runtime=cheerpj
+/embed?runtime=cheerpj&view=editor,terminal
 /embed?runtime=cheerpj&framework=swing&view=editor,preview
 ```
 
@@ -179,16 +200,22 @@ opening on the preview when `view` includes it.
   isolated. Nothing runs on iOS or iPadOS yet, in any browser. Recommend a desktop browser.
   Java projects are the one exception: they run on CheerpJ and need none of this.
 - **No native binaries.** Any npm package shipping prebuilt binaries for a CPU architecture
-  (x64, arm64, darwin, linux-gnu) will not run. Common fixes are `package.json` `overrides`:
-  `esbuild` → `npm:esbuild-wasm@*`, `rollup` → `npm:@rollup/wasm-node@*`, `@parcel/watcher` →
-  `npm:@parcel/watcher-wasm@*`. Next.js needs `@next/swc-wasm-nodejs` pinned to the `next`
-  version. BrowserCode applies these automatically to its own templates and to cloned repos.
+  (x64, arm64, darwin, linux-gnu) will not run. Common fixes are overrides: `esbuild` →
+  `npm:esbuild-wasm@*`, `rollup` → `npm:@rollup/wasm-node@*`, `@parcel/watcher` →
+  `npm:@parcel/watcher-wasm@*`. Where they go depends on the package manager: `overrides` in
+  `package.json` for npm, `overrides` in `pnpm-workspace.yaml` for pnpm, which ignores the
+  `package.json` field. Next.js needs `@next/swc-wasm-nodejs` pinned to the `next` version.
+  BrowserCode applies the `esbuild` and `rollup` overrides automatically to its own templates and
+  to cloned repos. For a cloned Next.js repo, add `@next/swc-wasm-nodejs` yourself;
+  the agents' instruction files tell them to do this.
 - **Outbound network is HTTPS on port 443 only**, to an allowlist covering the npm registry,
   Yarn 2+, GitHub (`github.com`, `raw.githubusercontent.com`) and the major AI provider APIs.
   Plain HTTP, other ports, SSH (so `git@github.com:` remotes) and `localhost` from inside the pod
   are all refused. Servers started inside a pod are still reachable through BrowserPod portals,
   which is how the live preview works.
-- **Node.js 22 is the default runtime.** `python3` (3.12) runs with its standard library only.
+- **Node.js 22 is the default runtime**, with bash, git, npm, pnpm, curl, ripgrep and fd on the
+  path. Rust programs run, but BrowserCode ships no Rust toolchain: build them outside the
+  sandbox. `python3` (3.12) runs with its standard library only.
   There is no `pip`, and PyPI is unreachable. Do not assume a Rust toolchain; check
   `command -v cargo` first.
 - **`timeout` does not work.** It never runs its command and kills it once the delay expires. Use
