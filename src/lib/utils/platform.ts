@@ -28,13 +28,17 @@ export type PodBlocker =
  *
  * SharedArrayBuffer is only exposed on cross-origin isolated pages, and isolation is inherited
  * from the top-level document, so an embed fails here when its host page omits the headers.
+ *
+ * Without an `apiKey` the pod is keyless and reaches only the npm registry, so it is blocked
+ * unless the caller says it can run that way (`runsKeyless`).
  */
-export function podBlocker(): PodBlocker | null {
+export function podBlocker(apiKey: string | undefined, runsKeyless = false): PodBlocker | null {
 	if (isIos()) return 'unsupported-platform';
 	if (typeof Atomics?.waitAsync !== 'function') return 'unsupported-browser';
 	// JSPI is not in TypeScript's DOM lib yet
 	const wasm = globalThis.WebAssembly as { promising?: unknown } | undefined;
 	if (typeof wasm?.promising !== 'function') return 'unsupported-browser';
 	if (!globalThis.crossOriginIsolated) return 'not-isolated';
+	if (!apiKey && !runsKeyless) return 'needs-api-key';
 	return null;
 }
