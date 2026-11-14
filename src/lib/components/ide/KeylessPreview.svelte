@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 
-	// Stands in for the preview loader: a pod without an API key serves no portals, so the loader
-	// would wait on a dev server it can never show.
+	// Takes the preview's place once the loader hands over: a pod without an API key serves no
+	// portals, so there is no app to frame.
 	const DOCS_URL =
 		'https://github.com/leaningtech/browsercode/blob/main/docs/embedding.md#keyless-mode';
 </script>
@@ -16,10 +16,10 @@
 		>
 			<Icon icon="mingcute:key-2-line" width="22" height="22" />
 		</div>
-		<h3 class="mb-2 text-[14px] font-semibold text-bc-text">Preview needs an API key</h3>
+		<h3 class="mb-2 text-[14px] font-semibold text-bc-text">No live preview in keyless mode</h3>
 		<p class="text-[12px] leading-relaxed break-words text-bc-text-muted">
-			This embed runs in keyless mode, so the project builds and runs but cannot be previewed.
-			Remove <code class="text-bc-text">apiKey=</code> from the embed URL to preview it.
+			Your project is running; its output is in the terminal. Showing it here needs a BrowserPod API
+			key, which this embed runs without.
 		</p>
 		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
