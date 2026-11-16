@@ -99,12 +99,12 @@
 	</span>
 
 	<a
-		href="https://labs.leaningtech.com/blog/browserpod-rust"
+		href="https://browserpod.io/blog/browserpod-40/"
 		target="_blank"
 		rel="noopener noreferrer"
 		class="flex items-center gap-1 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"
 	>
-		<span>Rust & BrowserPod 3.0</span>
+		<span>BrowserPod 4.0</span>
 		<Icon icon="mingcute:arrow-right-up-line" width="12" height="12" />
 	</a>
 </footer>

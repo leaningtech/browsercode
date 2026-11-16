@@ -3,7 +3,7 @@
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { dismissAnnouncement } from '$lib/stores/announcement.svelte';
 
-	const POST_URL = 'https://labs.leaningtech.com/blog/announcing-browsercode';
+	const POST_URL = 'https://browserpod.io/blog/browserpod-40/';
 </script>
 
 <!-- The ink has its own token (--color-bc-stripe-ink) because it sits on the lilac, not the page:
@@ -27,7 +27,7 @@
 		<!-- min-w-0 here and on the <a>, or flex's min-width:auto grows both past the stripe instead
 		     of letting truncate bite. Phones left-align because centring would need Dismiss-width
 		     padding on both sides; left-aligned, the copy fits uncut down to ~350px. -->
-		<span class="min-w-0 truncate font-medium">Read the BrowserCode release announcement!</span>
+		<span class="min-w-0 truncate font-medium">Read the BrowserPod 4.0 release announcement!</span>
 		<Icon
 			icon="mingcute:arrow-right-line"
 			width="13"
