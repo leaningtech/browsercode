@@ -30,9 +30,10 @@ export async function bootCLI(
 	let terminal: Terminal | null = null;
 
 	try {
-		const { BrowserPod } = await import('@leaningtech/browserpod');
-
 		const config = cliConfigs[tool] ?? cliConfigs.claude;
+		// TEMP browserpod-legacy: start
+		const { BrowserPod } = await (config.loadSdk?.() ?? import('@leaningtech/browserpod'));
+		// TEMP browserpod-legacy: end
 		const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
 
 		const pod = await BrowserPod.boot({

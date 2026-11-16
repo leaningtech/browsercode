@@ -110,7 +110,14 @@ export type CredentialSpec = {
 	set: (value: string) => void;
 };
 
+// TEMP browserpod-legacy: start
+export type PodSdk = Pick<typeof import('@leaningtech/browserpod'), 'BrowserPod'>;
+// TEMP browserpod-legacy: end
+
 export type CLIConfig = {
+	// TEMP browserpod-legacy: start
+	loadSdk?: () => Promise<PodSdk>;
+	// TEMP browserpod-legacy: end
 	/** Prebuilt disk image, mounted at /home. */
 	userImage?: string;
 	storageKey: string;
@@ -127,6 +134,9 @@ export type CLIConfig = {
 
 export const cliConfigs: Record<string, CLIConfig> = {
 	claude: {
+		// TEMP browserpod-legacy: start. Claude Code cannot connect on BrowserPod 3.2.0 and later.
+		loadSdk: () => import('@leaningtech/browserpod-legacy') as unknown as Promise<PodSdk>,
+		// TEMP browserpod-legacy: end
 		userImage: 'wss://disks.browserpod.io/claude_20260506.ext2',
 		storageKey: 'claude_20260506',
 		command: 'node',
