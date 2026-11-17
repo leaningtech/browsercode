@@ -174,7 +174,9 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
-	<div class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-navy">
+	<div
+		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-statusbar"
+	>
 		{#if session.openFiles.length === 0}
 			<div class="flex items-center gap-1.5 px-3 text-[11px] text-bc-text-muted">
 				<Icon icon="mingcute:code-line" width="11" height="11" />

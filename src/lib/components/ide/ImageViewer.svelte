@@ -91,7 +91,7 @@
 		{/if}
 	</div>
 	<footer
-		class="flex h-7 shrink-0 items-center gap-3 border-t border-bc-border bg-bc-navy px-3 text-[10px] text-bc-text-muted"
+		class="flex h-7 shrink-0 items-center gap-3 border-t border-bc-border bg-bc-statusbar px-3 text-[10px] text-bc-text-muted"
 	>
 		{#if natural}
 			<span class="tabular-nums">{natural.width} &times; {natural.height}</span>
