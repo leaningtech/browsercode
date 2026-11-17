@@ -19,7 +19,7 @@
 
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 	<div
-		class="flex h-8 shrink-0 items-center gap-1.5 border-b border-bc-border bg-bc-navy px-3 text-[11px] text-bc-text-muted"
+		class="flex h-8 shrink-0 items-center gap-1.5 border-b border-bc-border bg-bc-statusbar px-3 text-[11px] text-bc-text-muted"
 	>
 		<Icon icon="mingcute:display-line" width="12" height="12" class="shrink-0" />
 		<span class="font-medium tracking-wide">Display</span>

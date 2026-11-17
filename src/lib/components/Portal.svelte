@@ -100,7 +100,7 @@
 		<!-- Controls stay left so the fixed promo ribbon keeps the corner. -->
 		<div
 			bind:this={toolbarEl}
-			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-border bg-bc-navy px-1"
+			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-border bg-bc-statusbar px-1"
 		>
 			{#if onCollapse}
 				<button

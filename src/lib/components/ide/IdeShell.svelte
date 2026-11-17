@@ -291,7 +291,7 @@
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 	{#if shell.header}
 		<header
-			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-navy px-3"
+			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-statusbar px-3"
 		>
 			<div class="flex min-w-0 items-center gap-2 text-[11px] text-bc-text-muted">
 				{#if shell.brand}
@@ -355,7 +355,7 @@
 		{/if}
 		<!-- Icon rail: panel navigators anchor to the top, global view toggles to the bottom. -->
 		{#if hasRail}
-			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-navy">
+			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-statusbar">
 				<div class="flex flex-col gap-0.5 p-1 pt-2">
 					{#if shell.fileTree}
 						<button
@@ -426,7 +426,7 @@
 		<!-- Side panel: files or search -->
 		{#if activePanel}
 			<div
-				class="side-panel flex shrink-0 flex-col bg-bc-navy"
+				class="side-panel flex shrink-0 flex-col bg-bc-statusbar"
 				style="width: {isMobile ? 240 : filePanelWidth}px;"
 			>
 				{#if activePanel === 'files'}
@@ -582,7 +582,7 @@
 							onclick={togglePreview}
 							title="Show preview"
 							aria-label="Show preview"
-							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-navy py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
+							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-statusbar py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
 						>
 							<Icon icon="mingcute:left-line" width="13" height="13" />
 							{#if portal.selectedPort !== null}
@@ -631,7 +631,7 @@
 	<!-- ── Mobile tab bar ──────────────────────────────────────────────────── -->
 	{#if isMobile && mobileTabs.length > 1}
 		<nav
-			class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-navy"
+			class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-statusbar"
 			style="height: calc(44px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			{#each mobileTabs as tab (tab.id)}
