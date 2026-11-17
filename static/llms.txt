@@ -37,6 +37,7 @@ Build these directly; they are stable.
 | `https://browsercode.io/` | Landing page |
 | `https://browsercode.io/ide` | Template picker plus a GitHub clone form |
 | `https://browsercode.io/ide?framework=<id>` | Boots that template straight into the IDE |
+| `https://browsercode.io/ide#<project>` | Opens a project shared with the Share button from a template or repo; the hash carries every file except lockfiles, with images left empty |
 | `https://browsercode.io/java` | Java Playground: picker for the Java examples |
 | `https://browsercode.io/java?example=<name>` | Boots a Java example, on Java 25: `helloworld` or `swing` |
 | `https://browsercode.io/java#<project>` | Opens a Java project shared with the Share button; the hash carries its files and Java version (8 when it names none) |

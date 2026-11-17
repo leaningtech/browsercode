@@ -3,9 +3,12 @@
  * outside the IDE aren't tracked in `session.projectFiles`, so the link leaves them out.
  */
 import type { JavaVersion } from '$lib/java/versions';
+import { isBinaryContent } from './media';
+import type { ProjectFile } from './project-link';
 import type { IdeSession } from './session.svelte';
 
-type ProjectFile = { path: string; content: string };
+/** Chat apps and mail tend to cut longer links short. */
+export const MAX_LINK_LENGTH = 65_536;
 
 /** The absolute link, or null where the source has no share format or the files aren't in yet. */
 export async function shareLink(session: IdeSession): Promise<string | null> {
@@ -43,10 +46,13 @@ async function currentFiles(session: IdeSession): Promise<ProjectFile[]> {
 	// Flush unsaved edits first so the link matches the editor.
 	await session.saveAll();
 	return Promise.all(
-		session.projectFiles.map(async (path) => ({
-			path,
-			content: await session.fs.readFile(`${session.workdir}/${path}`)
-		}))
+		session.projectFiles.map(async (path) => {
+			// Saves wait for the runtime to be up, so open tabs are read from the editor.
+			const tab = session.openFiles.find((file) => file.path === path && !file.image);
+			const content = tab?.content ?? (await session.fs.readFile(`${session.workdir}/${path}`));
+			// Binary bytes don't survive as text.
+			return { path, content: isBinaryContent(content) ? '' : content };
+		})
 	);
 }
 

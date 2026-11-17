@@ -50,7 +50,7 @@ export type FrameworkConfig = {
 	 * features. A version switch swaps an untouched starter for the one that compiles there.
 	 */
 	olderJava?: { below: JavaVersion; sourceRoot: string };
-	/** A link, relative to the site, that reopens `files`; absent where there is no format for one. */
+	/** A link, relative to the site, that reopens `files`; defaults to an `/ide` project link. */
 	share?: (
 		files: { path: string; content: string }[],
 		javaVersion?: JavaVersion,

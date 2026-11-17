@@ -167,6 +167,8 @@
 				? session.phase === 'ready' || session.phase === 'building'
 				: portal.frameStatus === 'ready'
 	);
+	// Share reads the whole project back, which stalls while a pod is still booting.
+	let booted = $derived(previewLive || session.phase === 'ready');
 	let loaderVisible = $state(true);
 	$effect(() => {
 		if (!previewLive) loaderVisible = true;
@@ -377,7 +379,7 @@
 				{/if}
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
-			{#if session.source.share}
+			{#if session.source.share && booted}
 				<ShareButton {session} />
 			{/if}
 		</header>
