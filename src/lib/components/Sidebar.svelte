@@ -375,6 +375,21 @@
 						</span>
 						<span class="flex-1 truncate">UI tour</span>
 					</button>
+					<button
+						type="button"
+						onclick={() => {
+							trackEvent('Clicked Help', { action: 'embed' });
+							navigate('/embed/builder');
+						}}
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+					>
+						<span
+							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/10 text-bc-mist"
+						>
+							<Icon icon="mingcute:code-line" width="14" height="14" />
+						</span>
+						<span class="flex-1 truncate">Embed on your site</span>
+					</button>
 					<!-- The tracker is an external URL, so resolve() does not apply here. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a

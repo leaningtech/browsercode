@@ -12,6 +12,7 @@
 	import { STARTING } from '$lib/ide/runtime';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
+	import EmbedButton from '$lib/components/ide/EmbedButton.svelte';
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -167,7 +168,7 @@
 				? session.phase === 'ready' || session.phase === 'building'
 				: portal.frameStatus === 'ready'
 	);
-	// Share reads the whole project back, which stalls while a pod is still booting.
+	// Share and Embed read the whole project back, which stalls while a pod is still booting.
 	let booted = $derived(previewLive || session.phase === 'ready');
 	let loaderVisible = $state(true);
 	$effect(() => {
@@ -380,7 +381,12 @@
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
 			{#if session.source.share && booted}
-				<ShareButton {session} />
+				<div class="flex shrink-0 items-center gap-1">
+					{#if shell.tools}
+						<EmbedButton {session} />
+					{/if}
+					<ShareButton {session} />
+				</div>
 			{/if}
 		</header>
 	{/if}
