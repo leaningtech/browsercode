@@ -103,7 +103,7 @@
 		padding: 4px;
 		border-radius: 8px;
 		border: 1px solid var(--color-bc-border);
-		background-color: var(--color-bc-navy);
+		background-color: var(--color-bc-statusbar);
 		box-shadow: 0 12px 26px rgba(0, 0, 0, 0.55);
 	}
 
