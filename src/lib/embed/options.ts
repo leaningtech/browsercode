@@ -8,13 +8,15 @@ import {
 import { isEnabledTool, type ToolId } from '$lib/config/tools';
 import { decodeSharedProject, type SharedProject } from '$lib/java/shared-project';
 import { parseGitHubUrl, type ParsedRepo } from '$lib/github/parse';
+import { decodeProjectLink, type SharedFiles } from '$lib/ide/project-link';
 import type { ShellOptions } from '$lib/ide/shell-options';
 
 export type EmbedSource =
 	| { kind: 'framework'; id: FrameworkId }
 	| { kind: 'repo'; ref: ParsedRepo }
 	| { kind: 'agent'; id: ToolId }
-	| { kind: 'shared-project'; project: SharedProject };
+	| { kind: 'shared-project'; project: SharedProject }
+	| { kind: 'files'; project: SharedFiles };
 
 /** `apiKey` is the raw parameter: empty asks for keyless mode, and a host page's own key is not used yet. */
 export type EmbedOptions = { source: EmbedSource; shell: ShellOptions; apiKey?: string };
@@ -39,10 +41,7 @@ export function parseEmbedOptions(url: URL): EmbedOptions | null {
 	);
 }
 
-/**
- * `agent` then `runtime` then `repo` then `framework`; a bad value of any is an error, not a
- * silent fallback.
- */
+/** `agent`, `runtime`, a shared hash, `repo`, then `framework`; a bad value is an error. */
 function parseSource(url: URL): EmbedSource | null {
 	const agent = url.searchParams.get('agent');
 	if (agent !== null) return isEnabledTool(agent) ? { kind: 'agent', id: agent } : null;
@@ -56,6 +55,11 @@ function parseSource(url: URL): EmbedSource | null {
 		}
 		const id = resolveRuntimeTemplate(runtime, url.searchParams.get('framework'));
 		return id ? { kind: 'framework', id } : null;
+	}
+
+	if (url.hash.length > 1) {
+		const project = decodeProjectLink(url.hash.slice(1));
+		return project && { kind: 'files', project };
 	}
 
 	const repo = url.searchParams.get('repo');

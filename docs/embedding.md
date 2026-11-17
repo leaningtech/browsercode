@@ -71,7 +71,7 @@ Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
 
 ## Behaviour
 
-- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project.
+- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project. A template or repo project shared with Share embeds the same way without `runtime`: `/embed#<project>`.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.
