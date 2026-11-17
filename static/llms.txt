@@ -173,6 +173,8 @@ cannot set headers or accept that, only a Java embed will work on their page.
 
 Pass one of `agent`, `runtime`, `repo` or `framework`. With none, a default template boots.
 A shared project link's hash can stand in for `framework`: `/embed?runtime=cheerpj#<project>`.
+A template or repo project shared with Share embeds as `/embed#<project>`, with its hash in place
+of `framework` or `repo`.
 `view` defaults to every pane, and names it does not know are ignored. Any other value that
 cannot be resolved is reported as an error rather than silently replaced. Agents are
 terminal-first, so for them `view` only decides whether the preview comes along.
