@@ -13,6 +13,7 @@ import { runJava, runJavac } from '$lib/cheerpj/process';
 import { launchableClass } from '$lib/java/class-file';
 import { parseJavacOutput } from '$lib/java/javac-diagnostics';
 import type { JavaVersion } from '$lib/java/versions';
+import { closeOrReloadTab } from '$lib/stores/leaveWarning.svelte';
 import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { MemoryFs } from './memory-fs';
 import type { BootContext, ProjectSource } from './project-source';
@@ -54,7 +55,8 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	async boot(env: RuntimeEnv): Promise<BootContext | null> {
 		this.env = env;
-		if (!(await this.claim()) || env.cancelled()) return null;
+		await this.claim();
+		if (env.cancelled()) return null;
 		const { JavaConsole } = await import('$lib/cheerpj/console');
 		if (env.cancelled()) return null;
 		this.console = new JavaConsole();
@@ -77,7 +79,7 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	async mountDisplay(el: HTMLElement, onWindows: (open: boolean) => void): Promise<void> {
-		if (!(await this.claim())) return;
+		await this.claim();
 		await loadCheerpj(PROJECT_DIR, this.version);
 		this.display ??= createDisplay(el, onWindows);
 	}
@@ -150,6 +152,8 @@ export class CheerpjRuntime implements IdeRuntime {
 		});
 	}
 
+	takeOver = (): void => this.lock?.takeOver();
+
 	shutdown(): void {
 		this.display?.dispose();
 		this.console?.dispose();
@@ -157,11 +161,11 @@ export class CheerpjRuntime implements IdeRuntime {
 	}
 
 	/** Asked before CheerpJ loads, so a tab that can't run never starts a JVM. */
-	private async claim(): Promise<boolean> {
-		this.lock ??= requestSingleTabLock(`cheerpj:${ROOT}`);
-		const held = await this.lock.acquired;
-		if (!held) this.inUseElsewhere = IN_USE_ELSEWHERE;
-		return held;
+	private async claim(): Promise<void> {
+		this.lock ??= requestSingleTabLock(`cheerpj:${ROOT}`, closeOrReloadTab);
+		if (!(await this.lock.acquired)) this.inUseElsewhere = IN_USE_ELSEWHERE;
+		await this.lock.held;
+		this.inUseElsewhere = null;
 	}
 
 	/** A closed tab never deletes its runs. Safe only while this tab holds the lock. */

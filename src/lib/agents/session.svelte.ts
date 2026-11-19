@@ -9,11 +9,12 @@ import {
 	type ToolItem
 } from '$lib/config/tools';
 import {
+	closeOrReloadTab,
 	installLeaveGuard,
 	markIntentionalNavigation,
 	navigateWithLeaveGuard
 } from '$lib/stores/leaveWarning.svelte';
-import { requestSingleTabLock } from '$lib/utils/tabLock';
+import { requestSingleTabLock, type TabLock } from '$lib/utils/tabLock';
 import { bootCLI } from './boot';
 import { CredentialGate } from './credential-gate.svelte';
 
@@ -33,7 +34,7 @@ export class AgentSession {
 
 	lock = $state<LockState>('pending');
 
-	private releaseLock: () => void = () => {};
+	private tabLock: TabLock | null = null;
 	private disposeLeaveGuard: () => void = () => {};
 
 	private readonly leaveGuard: boolean;
@@ -58,12 +59,12 @@ export class AgentSession {
 		terminalEl: HTMLElement,
 		onPortalUpdate: (update: PortalUpdate) => void
 	): Promise<void> {
-		const lock = requestSingleTabLock(`agent-session:${this.id}`);
-		this.releaseLock = lock.release;
+		const lock = requestSingleTabLock(`agent-session:${this.id}`, closeOrReloadTab);
+		this.tabLock = lock;
 
 		if (!(await lock.acquired)) {
 			this.lock = 'taken';
-			return;
+			await lock.held;
 		}
 		this.lock = 'held';
 
@@ -94,6 +95,8 @@ export class AgentSession {
 		window.location.reload();
 	};
 
+	takeOver = (): void => this.tabLock?.takeOver();
+
 	/** Always confirms: there is a live session here to tear down. */
 	switchTo = (id: string): void => {
 		if (isEnabledTool(id)) navigateWithLeaveGuard(`/agents/${id}`, true);
@@ -104,6 +107,6 @@ export class AgentSession {
 
 	shutdown(): void {
 		this.disposeLeaveGuard();
-		this.releaseLock();
+		this.tabLock?.release();
 	}
 }
