@@ -23,7 +23,7 @@
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
 	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
-	import { shortcutFor, type ShortcutId } from '$lib/ide/shortcuts';
+	import { createShortcutActions, shortcutFor } from '$lib/ide/shortcuts';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -239,56 +239,21 @@
 		});
 	}
 
-	function selectTab(offset: number): void {
-		const files = session.openFiles;
-		const index = files.findIndex((file) => file.path === session.selectedFile);
-		if (index < 0) return;
-		void session.openFile(files[(index + offset + files.length) % files.length].path, true);
-	}
-
-	function moveTab(offset: -1 | 1): void {
-		const index = session.openFiles.findIndex((file) => file.path === session.selectedFile);
-		// `moveFile` inserts before `before`, so one step right is two along.
-		const before = offset < 0 ? index - 1 : index + 2;
-		if (index >= 0 && before >= 0 && before <= session.openFiles.length)
-			session.moveFile(session.selectedFile, before);
-	}
-
-	function toggleTerminal(): void {
-		const toTerminal = !document.activeElement?.closest('.xterm');
-		if (isMobile) showMobileView(toTerminal ? 'terminal' : 'editor');
-		// A pane the narrow layout just showed can't take focus until it renders.
-		void tick().then(() => (toTerminal ? terminalTabs?.focus() : editorPane?.focus()));
-	}
-
-	// Only where the control exists; otherwise the key is left alone.
-	let shortcutActions = $derived<Partial<Record<ShortcutId, () => void>>>({
-		...(shell.editor && {
-			save: () => void session.saveAll(),
-			closeTab: () => session.closeFile(session.selectedFile),
-			previousTab: () => selectTab(-1),
-			nextTab: () => selectTab(1),
-			moveTabLeft: () => moveTab(-1),
-			moveTabRight: () => moveTab(1)
-		}),
-		...((shell.fileTree || shell.search) && {
-			toggleSidePanel: () =>
-				(activePanel = activePanel ? null : shell.fileTree ? 'files' : 'search')
-		}),
-		...(shell.search && {
-			search: () => (activePanel === 'search' ? searchPanel?.focus() : (activePanel = 'search'))
-		}),
-		...(collapsiblePreview && !isMobile && { togglePreview }),
-		...(shell.editor && shell.terminal && { toggleTerminal }),
-		...(shell.terminal &&
-			session.runtime.startBash && {
-				newTerminal: () => {
-					if (isMobile) showMobileView('terminal');
-					terminalTabs?.addTerminal();
-				}
-			}),
-		...(session.runtime.run && { run: () => void session.run() })
-	});
+	let shortcutActions = $derived(
+		createShortcutActions({
+			session,
+			shell,
+			isMobile: () => isMobile,
+			panel: () => activePanel,
+			setPanel: (panel) => (activePanel = panel),
+			togglePreview: collapsiblePreview && !isMobile ? togglePreview : undefined,
+			showPane: showMobileView,
+			focusSearch: () => searchPanel?.focus(),
+			focusEditor: () => editorPane?.focus(),
+			focusTerminal: () => terminalTabs?.focus(),
+			addTerminal: () => terminalTabs?.addTerminal()
+		})
+	);
 
 	function handleShortcut(event: KeyboardEvent): void {
 		const id = shortcutFor(event);
