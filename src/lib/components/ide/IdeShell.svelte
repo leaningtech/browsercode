@@ -168,8 +168,6 @@
 				? session.phase === 'ready' || session.phase === 'building'
 				: portal.frameStatus === 'ready'
 	);
-	// Share and Embed read the whole project back, which stalls while a pod is still booting.
-	let booted = $derived(previewLive || session.phase === 'ready');
 	let loaderVisible = $state(true);
 	$effect(() => {
 		if (!previewLive) loaderVisible = true;
@@ -380,7 +378,7 @@
 				{/if}
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
-			{#if session.source.share && booted}
+			{#if session.source.share && session.fsReady}
 				<div class="flex shrink-0 items-center gap-1">
 					{#if shell.tools}
 						<EmbedButton {session} />
