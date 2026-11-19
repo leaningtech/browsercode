@@ -137,9 +137,9 @@ export const cliConfigs: Record<string, CLIConfig> = {
 				urlOrPath.startsWith('https://claude.com/cai/oauth/authorize') ||
 				urlOrPath.startsWith('https://platform.claude.com/oauth/authorize')
 			) {
-				// Rewrite the localhost callback to the code-based exchange
+				// Rewrite the localhost callback, on whatever port, to the code-based exchange
 				const fixedUrl = urlOrPath.replace(
-					'http%3A%2F%2Flocalhost%3A0',
+					/http%3A%2F%2Flocalhost%3A\d+/,
 					'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode'
 				);
 				window.open(fixedUrl, '_blank');
