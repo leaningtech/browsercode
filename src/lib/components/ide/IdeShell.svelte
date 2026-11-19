@@ -23,8 +23,7 @@
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
 	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
-	import { describeShortcuts, shortcutFor, type ShortcutId } from '$lib/ide/shortcuts';
-	import ShortcutsMenu from '$lib/components/ide/ShortcutsMenu.svelte';
+	import { shortcutFor, type ShortcutId } from '$lib/ide/shortcuts';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -459,12 +458,6 @@
 				{#if shell.tools}
 					<div class="mt-auto flex flex-col gap-0.5 p-1 pb-2">
 						<SettingsMenu
-							baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
-							activeClass="bg-bc-azure/15 text-bc-azure"
-							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
-						/>
-						<ShortcutsMenu
-							shortcuts={describeShortcuts(Object.keys(shortcutActions) as ShortcutId[])}
 							baseClass="flex w-full items-center justify-center rounded p-1.5 transition"
 							activeClass="bg-bc-azure/15 text-bc-azure"
 							idleClass="text-bc-icon hover:bg-bc-tint/5 hover:text-bc-text"
