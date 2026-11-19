@@ -1,7 +1,6 @@
 /** A shared project: its files as deflated JSON in the URL hash, lockfiles left out. */
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
-
-export type ProjectFile = { path: string; content: string };
+import { isProjectFile, type ProjectFile } from '$lib/utils/project-file';
 
 /** `port` pins the preview, for a project that serves more than its app. */
 export type SharedFiles = { files: ProjectFile[]; port?: number };
@@ -35,17 +34,7 @@ export function decodeProjectLink(hash: string): SharedFiles | null {
 		return null;
 	}
 	const { files, port } = (data ?? {}) as Record<string, unknown>;
-	if (!Array.isArray(files) || !files.every(isFile)) return null;
+	if (!Array.isArray(files) || !files.every(isProjectFile)) return null;
 	if (port !== undefined && typeof port !== 'number') return null;
 	return { files: files.map(({ path, content }) => ({ path, content })), port };
-}
-
-function isFile(value: unknown): value is ProjectFile {
-	if (typeof value !== 'object' || value === null) return false;
-	const { path, content } = value as Record<string, unknown>;
-	return (
-		typeof path === 'string' &&
-		typeof content === 'string' &&
-		path.split('/').every((part) => part !== '' && part !== '.' && part !== '..')
-	);
 }

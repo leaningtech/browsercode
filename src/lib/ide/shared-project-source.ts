@@ -3,8 +3,9 @@ import type { FrameworkId } from '$lib/config/frameworks';
 import { sharedProjectLink, type SharedProject } from '$lib/java/shared-project';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import { POD_HOME } from '$lib/pod/fs';
+import type { ProjectFile } from '$lib/utils/project-file';
 import { nodeProject } from './node-project';
-import { projectLink, type ProjectFile, type SharedFiles } from './project-link';
+import { projectLink, type SharedFiles } from './project-link';
 import type { ProjectSource } from './project-source';
 import { templateSource } from './template-source';
 

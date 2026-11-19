@@ -3,8 +3,8 @@
  * outside the IDE aren't tracked in `session.projectFiles`, so the link leaves them out.
  */
 import type { JavaVersion } from '$lib/java/versions';
+import type { ProjectFile } from '$lib/utils/project-file';
 import { isBinaryContent } from './media';
-import type { ProjectFile } from './project-link';
 import type { IdeSession } from './session.svelte';
 
 /** Chat apps and mail tend to cut longer links short. */

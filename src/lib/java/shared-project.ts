@@ -3,13 +3,14 @@
  * URL hash. The format is fixed, byte for byte, so every link already shared keeps opening.
  */
 import LZString from 'lz-string';
+import { isProjectFile, type ProjectFile } from '$lib/utils/project-file';
 import { isJavaVersion, type JavaVersion } from './versions';
 
 export type SharedProject = {
 	title: string;
 	/** An ISO date, stamped on every edit. */
 	updated?: string;
-	files: { path: string; content: string }[];
+	files: ProjectFile[];
 	/**
 	 * Absent means Java 8, which links from before this key always ran on, so they open unchanged
 	 * and a Java 8 project still encodes to the same bytes.
@@ -45,7 +46,7 @@ export function decodeSharedProject(hash: string): SharedProject | null {
 	if (typeof title !== 'string' || (updated !== undefined && typeof updated !== 'string')) {
 		return null;
 	}
-	if (!Array.isArray(files) || !files.every(isFile)) return null;
+	if (!Array.isArray(files) || !files.every(isProjectFile)) return null;
 	if (java !== undefined && !isJavaVersion(java)) return null;
 	if (main !== undefined && typeof main !== 'string') return null;
 	return {
@@ -55,16 +56,6 @@ export function decodeSharedProject(hash: string): SharedProject | null {
 		...(java !== undefined && { java }),
 		...(main !== undefined && { main })
 	};
-}
-
-function isFile(value: unknown): value is { path: string; content: string } {
-	if (typeof value !== 'object' || value === null) return false;
-	const { path, content } = value as Record<string, unknown>;
-	return (
-		typeof path === 'string' &&
-		typeof content === 'string' &&
-		path.split('/').every((part) => part !== '' && part !== '.' && part !== '..')
-	);
 }
 
 /** The `/java` link that reopens `files` on `java`, starting `main`, stamped as edited now. */
