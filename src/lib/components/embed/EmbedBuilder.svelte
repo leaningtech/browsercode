@@ -51,6 +51,8 @@
 	let agentPreview = $state(true);
 	let keyless = $state(false);
 	let height = $state(600);
+	// An emptied number field binds null.
+	let iframeHeight = $derived(height || 600);
 	/** The URL the live preview was loaded for; any change of options drops back to the diagram. */
 	let liveUrl = $state<string | null>(null);
 	let copied = $state<'url' | 'snippet' | null>(null);
@@ -74,7 +76,7 @@
 	let canKeyless = $derived(tab === 'framework' || (target?.kind === 'link' && !target.java));
 	let url = $derived(target && embedUrl(target, shownViews, canKeyless && keyless));
 	let absoluteUrl = $derived(url && `${location.origin}${url}`);
-	let snippet = $derived(target && absoluteUrl && embedSnippet(absoluteUrl, target, height));
+	let snippet = $derived(target && absoluteUrl && embedSnippet(absoluteUrl, target, iframeHeight));
 
 	/** A shared project's hash runs to many KB; only the screen shortens it, Copy takes it whole. */
 	function shorten(text: string): string {
@@ -295,7 +297,7 @@
 					title="Embed preview"
 					allow={target ? iframeAllow(target) : undefined}
 					class="w-full rounded-lg border border-bc-border"
-					style="height: {height}px;"
+					style="height: {iframeHeight}px;"
 				></iframe>
 			{:else}
 				<div class="flex h-44 flex-col gap-1 rounded-lg border border-bc-border bg-bc-abyss p-1.5">
