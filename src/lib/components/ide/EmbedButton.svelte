@@ -53,7 +53,7 @@
 					<p class="text-[12px] leading-relaxed text-bc-text-muted">
 						{link
 							? 'The embed opens the project as it is now; open this again after changes.'
-							: 'This project is too large for a link, so pick something else to embed below.'}
+							: 'This project is too large to embed as a link. Use Download to share it instead.'}
 					</p>
 				</div>
 				<button
@@ -64,7 +64,9 @@
 					<Icon icon="mingcute:close-line" width="16" height="16" />
 				</button>
 			</div>
-			<EmbedBuilder {link} live={false} />
+			{#if link}
+				<EmbedBuilder {link} />
+			{/if}
 		</div>
 	</div>
 {/if}

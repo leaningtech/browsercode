@@ -15,13 +15,10 @@
 	import { parseGitHubUrl } from '$lib/github/parse';
 
 	let {
-		link = '',
-		live = true
+		link = ''
 	}: {
-		/** A Share link to start from. */
+		/** A Share link to embed. Nothing else is offered, nor a live preview of a second copy. */
 		link?: string;
-		/** Off where a live embed would run a second copy of the project beside this one. */
-		live?: boolean;
 	} = $props();
 
 	type Tab = EmbedTarget['kind'];
@@ -153,84 +150,86 @@
 
 <div class="grid gap-6 lg:grid-cols-2">
 	<div class="flex flex-col gap-6">
-		<section>
-			{@render heading('What to embed')}
-			<div class="mb-3 flex flex-wrap gap-1">
-				{#each TABS as item (item.id)}
-					<button
-						type="button"
-						onclick={() => (tab = item.id)}
-						class="rounded-md px-2.5 py-1 text-[12px] transition {tab === item.id
-							? 'bg-bc-azure/15 text-bc-azure'
-							: 'text-bc-text-muted hover:bg-bc-tint/5 hover:text-bc-text'}"
-					>
-						{item.label}
-					</button>
-				{/each}
-			</div>
-
-			{#if tab === 'framework'}
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each frameworkRailItems as item (item.id)}
-						{@render choice(
-							framework === item.id,
-							() => (framework = item.id),
-							item.label,
-							item.icon
-						)}
-					{/each}
-				</div>
-			{:else if tab === 'java'}
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each javaRailItems as item (item.id)}
-						{@render choice(
-							javaExample === item.example,
-							() => (javaExample = item.example),
-							item.label,
-							item.icon
-						)}
-					{/each}
-				</div>
-			{:else if tab === 'agent'}
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each agents as item (item.id)}
+		{#if !link}
+			<section>
+				{@render heading('What to embed')}
+				<div class="mb-3 flex flex-wrap gap-1">
+					{#each TABS as item (item.id)}
 						<button
 							type="button"
-							onclick={() => (agent = item.id)}
-							class="glass-panel flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] transition {agent ===
-							item.id
-								? 'border-bc-azure/50 text-bc-text'
-								: 'border-bc-border text-bc-mist hover:border-bc-tint/30'}"
+							onclick={() => (tab = item.id)}
+							class="rounded-md px-2.5 py-1 text-[12px] transition {tab === item.id
+								? 'bg-bc-azure/15 text-bc-azure'
+								: 'text-bc-text-muted hover:bg-bc-tint/5 hover:text-bc-text'}"
 						>
-							<ToolIcon {item} iconSize={16} imgClass="h-4 w-4" />
-							<span class="truncate">{item.label}</span>
+							{item.label}
 						</button>
 					{/each}
 				</div>
-			{:else}
-				<input
-					type="text"
-					value={tab === 'repo' ? repoInput : linkInput}
-					oninput={(e) =>
-						tab === 'repo'
-							? (repoInput = e.currentTarget.value)
-							: (linkInput = e.currentTarget.value)}
-					spellcheck="false"
-					autocomplete="off"
-					placeholder={tab === 'repo'
-						? 'github.com/owner/repo/tree/main/dir'
-						: 'Paste a link copied with Share'}
-					class="glass-panel w-full rounded-xl border border-bc-border px-3 py-2.5 text-[13px] text-bc-text outline-none placeholder:text-bc-icon focus:border-bc-azure/45"
-				/>
-				{#if (tab === 'repo' ? repoInput : linkInput).trim() && !target}
-					<p class="mt-2 text-[12px] text-bc-coral">
-						{tab === 'repo'
-							? 'Not a GitHub repo URL. Use github.com/owner/repo, optionally with /tree/<branch>/<folder>.'
-							: 'Not a project link. Use Share in the IDE or the Java playground, then paste the link here.'}
-					</p>
+
+				{#if tab === 'framework'}
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						{#each frameworkRailItems as item (item.id)}
+							{@render choice(
+								framework === item.id,
+								() => (framework = item.id),
+								item.label,
+								item.icon
+							)}
+						{/each}
+					</div>
+				{:else if tab === 'java'}
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						{#each javaRailItems as item (item.id)}
+							{@render choice(
+								javaExample === item.example,
+								() => (javaExample = item.example),
+								item.label,
+								item.icon
+							)}
+						{/each}
+					</div>
+				{:else if tab === 'agent'}
+					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+						{#each agents as item (item.id)}
+							<button
+								type="button"
+								onclick={() => (agent = item.id)}
+								class="glass-panel flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[13px] transition {agent ===
+								item.id
+									? 'border-bc-azure/50 text-bc-text'
+									: 'border-bc-border text-bc-mist hover:border-bc-tint/30'}"
+							>
+								<ToolIcon {item} iconSize={16} imgClass="h-4 w-4" />
+								<span class="truncate">{item.label}</span>
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<input
+						type="text"
+						value={tab === 'repo' ? repoInput : linkInput}
+						oninput={(e) =>
+							tab === 'repo'
+								? (repoInput = e.currentTarget.value)
+								: (linkInput = e.currentTarget.value)}
+						spellcheck="false"
+						autocomplete="off"
+						placeholder={tab === 'repo'
+							? 'github.com/owner/repo/tree/main/dir'
+							: 'Paste a link copied with Share'}
+						class="glass-panel w-full rounded-xl border border-bc-border px-3 py-2.5 text-[13px] text-bc-text outline-none placeholder:text-bc-icon focus:border-bc-azure/45"
+					/>
+					{#if (tab === 'repo' ? repoInput : linkInput).trim() && !target}
+						<p class="mt-2 text-[12px] text-bc-coral">
+							{tab === 'repo'
+								? 'Not a GitHub repo URL. Use github.com/owner/repo, optionally with /tree/<branch>/<folder>.'
+								: 'Not a project link. Use Share in the IDE or the Java playground, then paste the link here.'}
+						</p>
+					{/if}
 				{/if}
-			{/if}
-		</section>
+			</section>
+		{/if}
 
 		<section>
 			{@render heading('Panes')}
@@ -326,7 +325,7 @@
 				</div>
 			{/if}
 			<div class="mt-2 flex gap-2">
-				{#if live}
+				{#if !link}
 					<button
 						type="button"
 						disabled={!url || liveUrl === url}
