@@ -67,6 +67,8 @@ export class PodRuntime implements IdeRuntime {
 			return null;
 		}
 		this.pod = pod;
+		// Debug branch only: lets a headless driver run commands in the pod.
+		if (import.meta.env.DEV) (window as unknown as { __bcPod: BrowserPod }).__bcPod = pod;
 		this.podFs = new PodFs(pod);
 		this.localPnpm = pnpm.then((bytes) => (bytes ? installPnpm(pod, bytes) : false));
 

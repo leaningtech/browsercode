@@ -33,6 +33,10 @@ type FrameworkRule = {
 	patches?: (deps: DeclaredDeps, current: CurrentValue) => SectionPatch[];
 	/** Install flags, keyed by package manager; a manager with no entry here needs none. */
 	installFlags?: Partial<Record<PackageManager, string[]>>;
+	/** Environment for both install and the dev server; install runs the repo's postinstall. */
+	env?: string[];
+	/** The port the dev server serves the app on, when the framework opens others beside it. */
+	appPort?: number;
 };
 
 /** Ours wins: for where the repo's own value is the thing that breaks the pod. */
@@ -101,6 +105,14 @@ const FRAMEWORK_RULES: FrameworkRule[] = [
 			const dev = nextDevWithWebpack(current('scripts', 'dev'), deps);
 			return dev ? [force('scripts', { dev })] : [];
 		}
+	},
+	// Every Nuxt: its telemetry consent prompt (from the `nuxt prepare` postinstall, or `nuxt dev`)
+	// waits for input the boot never gives. Dev also opens Vite's HMR socket on 24678 after the app
+	// on 3000, and that later portal would otherwise take over the preview.
+	{
+		applies: (deps) => deps.has('nuxt'),
+		env: ['NUXT_TELEMETRY_DISABLED=1'],
+		appPort: 3000
 	},
 	// Nuxt 4+
 	{
@@ -254,6 +266,24 @@ export function resolveInstallArgs(manifestRaw: string, packageManager: PackageM
 	return ['install', ...flags];
 }
 
+/** Environment and preview port the matching rules ask for; the first rule naming a port wins. */
+export function resolveFrameworkRuntime(
+	manifestRaw: string,
+	packageManager: PackageManager
+): { env: string[]; appPort?: number } {
+	const manifest = parseManifest(manifestRaw);
+	if (!manifest) return { env: [] };
+	const deps = declaredDeps(manifest);
+	const env = new Set<string>();
+	let appPort: number | undefined;
+	for (const rule of FRAMEWORK_RULES) {
+		if (!rule.applies(deps, packageManager)) continue;
+		for (const entry of rule.env ?? []) env.add(entry);
+		appPort ??= rule.appPort;
+	}
+	return { env: [...env], appPort };
+}
+
 /** True when the manifest pins pnpm as its package manager (`"packageManager": "pnpm@..."`). */
 export function declaresPnpm(manifestRaw: string): boolean {
 	const pm = parseManifest(manifestRaw)?.packageManager;
@@ -279,6 +309,10 @@ const PACKAGE_MANAGER_ENV: Record<PackageManager, string[]> = {
 };
 
 /** Runs `args` under `pm`, carrying whatever environment that package manager needs in the pod. */
-export function packageManagerCommand(pm: PackageManager, args: string[]): ProjectCommand {
-	return { command: [pm, ...args], env: PACKAGE_MANAGER_ENV[pm] };
+export function packageManagerCommand(
+	pm: PackageManager,
+	args: string[],
+	extraEnv: string[] = []
+): ProjectCommand {
+	return { command: [pm, ...args], env: [...PACKAGE_MANAGER_ENV[pm], ...extraEnv] };
 }

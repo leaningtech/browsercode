@@ -6,6 +6,7 @@ import {
 	declaresPnpm,
 	packageManagerCommand,
 	patchClonedManifest,
+	resolveFrameworkRuntime,
 	resolveInstallArgs,
 	usesWorkspaceProtocol,
 	type PackageManager
@@ -23,8 +24,14 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 	// flags are resolved from. Until then, what a repo with nothing special about it would get.
 	let packageManager: PackageManager = 'npm';
 	let install: ProjectCommand = packageManagerCommand('npm', ['install']);
+	let frameworkEnv: string[] = [];
+	let appPort: number | undefined;
 
 	return {
+		// A getter: the port is only known once prepare() has read the manifest.
+		get appPort() {
+			return appPort;
+		},
 		id: 'github',
 		runtime: 'pod',
 		label: dir ? `${owner}/${repo}/${dir}` : `${owner}/${repo}`,
@@ -49,12 +56,14 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 		prepare: async (ctx: BootContext): Promise<void> => {
 			const prepared = await prepareManifest(ctx, repoDir);
 			packageManager = prepared.packageManager;
-			install = packageManagerCommand(packageManager, prepared.installArgs);
+			frameworkEnv = prepared.env;
+			appPort = prepared.appPort;
+			install = packageManagerCommand(packageManager, prepared.installArgs, frameworkEnv);
 			if (packageManager === 'pnpm') await preparePnpmOverrides(ctx, repoDir);
 		},
 		initialFile: (files: string[]) => files[0],
 		installCommands: () => [install],
-		startCommand: (ctx: BootContext) => resolveStartScript(ctx, packageManager),
+		startCommand: (ctx: BootContext) => resolveStartScript(ctx, packageManager, frameworkEnv),
 		trackBoot: () => trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` })
 	};
 }
@@ -98,7 +107,12 @@ async function resolvePackageManager(
 async function prepareManifest(
 	ctx: BootContext,
 	repoDir: string
-): Promise<{ installArgs: string[]; packageManager: PackageManager }> {
+): Promise<{
+	installArgs: string[];
+	packageManager: PackageManager;
+	env: string[];
+	appPort?: number;
+}> {
 	const manifestPath = `${ctx.workdir}/package.json`;
 	// Held outside the try so a failure past this point still installs with the right manager,
 	// just against the manifest as cloned.
@@ -111,19 +125,27 @@ async function prepareManifest(
 			// Rare on npm, where the bundler override always applies: it takes a repo that already
 			// declares our values, or a package.json too broken to parse, which install reports anyway.
 			ctx.write(`\r\n${ANSI.dim}Left package.json as cloned.${ANSI.reset}\r\n`);
-			return { installArgs: resolveInstallArgs(raw, packageManager), packageManager };
+			return {
+				installArgs: resolveInstallArgs(raw, packageManager),
+				packageManager,
+				...resolveFrameworkRuntime(raw, packageManager)
+			};
 		}
 		await ctx.fs.writeFile(manifestPath, result.patched);
 		// Header takes the leading blank line; the changes follow indented under it as one block.
 		ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
 		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
-		return { installArgs: resolveInstallArgs(result.patched, packageManager), packageManager };
+		return {
+			installArgs: resolveInstallArgs(result.patched, packageManager),
+			packageManager,
+			...resolveFrameworkRuntime(result.patched, packageManager)
+		};
 	} catch (error) {
 		ctx.write(
 			`\r\n${ANSI.coral}Could not patch package.json; installing the repo as cloned.${ANSI.reset}\r\n`
 		);
 		console.warn('Could not patch the cloned manifest:', error);
-		return { installArgs: ['install'], packageManager };
+		return { installArgs: ['install'], packageManager, env: [] };
 	}
 }
 
@@ -158,7 +180,8 @@ async function preparePnpmOverrides(ctx: BootContext, repoDir: string): Promise<
 
 async function resolveStartScript(
 	ctx: BootContext,
-	packageManager: PackageManager
+	packageManager: PackageManager,
+	env: string[]
 ): Promise<ProjectCommand | null> {
 	let scripts: Record<string, string> = {};
 	try {
@@ -174,5 +197,5 @@ async function resolveStartScript(
 		);
 		return null;
 	}
-	return packageManagerCommand(packageManager, ['run', script]);
+	return packageManagerCommand(packageManager, ['run', script], env);
 }
