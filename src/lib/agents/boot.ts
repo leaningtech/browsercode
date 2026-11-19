@@ -30,10 +30,9 @@ export async function bootCLI(
 	let terminal: Terminal | null = null;
 
 	try {
+		const { BrowserPod } = await import('@leaningtech/browserpod');
+
 		const config = cliConfigs[tool] ?? cliConfigs.claude;
-		// TEMP browserpod-legacy: start
-		const { BrowserPod } = await (config.loadSdk?.() ?? import('@leaningtech/browserpod'));
-		// TEMP browserpod-legacy: end
 		const toolLabel = toolItems.find((item) => item.id === tool)?.label ?? tool;
 
 		const pod = await BrowserPod.boot({
@@ -42,6 +41,8 @@ export async function bootCLI(
 			storageKey: config.storageKey
 		});
 		terminal = await pod.createDefaultTerminal(terminalEl);
+
+		const hiddenPorts = new Set<number>();
 
 		pod.onPortal((portal) => {
 			const port = Number(portal?.port);
@@ -52,6 +53,7 @@ export async function bootCLI(
 				console.log('[portal] update', portal);
 				return;
 			}
+			if (hiddenPorts.has(port)) return;
 
 			if (url.length > 0) {
 				console.log(`[portal] active port=${port} url=${url}`);
@@ -63,7 +65,13 @@ export async function bootCLI(
 		});
 
 		if (config.openCallback) {
-			pod.onOpen(config.openCallback);
+			const openCallback = config.openCallback;
+			// The portal can already be showing by the time the CLI opens the URL that names it.
+			const hidePortal = (port: number): void => {
+				hiddenPorts.add(port);
+				onPortalUpdate?.({ port, url: null, active: false });
+			};
+			pod.onOpen((urlOrPath) => openCallback(urlOrPath, hidePortal));
 		}
 
 		const homePath = '/home/user/project';

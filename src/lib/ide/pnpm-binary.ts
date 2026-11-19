@@ -1,5 +1,5 @@
 /**
- * The pod's own pnpm, /bin/pnpm on the BrowserPod 4.0.0 disk, hosted as one file. Fetched by the
+ * The pod's own pnpm, /bin/pnpm on the BrowserPod 4.1.0 disk, hosted as one file. Fetched by the
  * page, it starts far sooner than the disk's first read of a 25 MB binary, and the browser caches
  * it. Anything short of an exact copy is skipped, so the disk's pnpm runs instead.
  */

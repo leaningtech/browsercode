@@ -104,7 +104,7 @@
 		rel="noopener noreferrer"
 		class="flex items-center gap-1 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"
 	>
-		<span>BrowserPod 4.0</span>
+		<span>Read the blog: BrowserPod 4.0</span>
 		<Icon icon="mingcute:arrow-right-up-line" width="12" height="12" />
 	</a>
 </footer>

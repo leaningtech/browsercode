@@ -110,21 +110,15 @@ export type CredentialSpec = {
 	set: (value: string) => void;
 };
 
-// TEMP browserpod-legacy: start
-export type PodSdk = Pick<typeof import('@leaningtech/browserpod'), 'BrowserPod'>;
-// TEMP browserpod-legacy: end
-
 export type CLIConfig = {
-	// TEMP browserpod-legacy: start
-	loadSdk?: () => Promise<PodSdk>;
-	// TEMP browserpod-legacy: end
 	/** Prebuilt disk image, mounted at /home. */
 	userImage?: string;
 	storageKey: string;
 	command: string;
 	args: string[];
 	projectFile?: string;
-	openCallback?: (urlOrPath: string) => void;
+	/** `hidePortal` keeps a port the user never visits, such as a sign-in callback, out of the preview. */
+	openCallback?: (urlOrPath: string, hidePortal: (port: number) => void) => void;
 	/** Runs after the pod boots, before the CLI launches; `terminal` is the one the CLI gets. */
 	prepare?: (pod: BrowserPod, terminal: Terminal) => Promise<void>;
 	/** Extra env for the CLI process, resolved at launch. */
@@ -134,24 +128,22 @@ export type CLIConfig = {
 
 export const cliConfigs: Record<string, CLIConfig> = {
 	claude: {
-		// TEMP browserpod-legacy: start. Claude Code cannot connect on BrowserPod 3.2.0 and later.
-		loadSdk: () => import('@leaningtech/browserpod-legacy') as unknown as Promise<PodSdk>,
-		// TEMP browserpod-legacy: end
 		userImage: 'wss://disks.browserpod.io/claude_20260506.ext2',
 		storageKey: 'claude_20260506',
 		command: 'node',
 		args: ['/home/user/claude-extracted/src/entrypoints/cli.js'],
 		projectFile: '/project/claude/CLAUDE.md',
-		openCallback: (urlOrPath: string) => {
+		openCallback: (urlOrPath, hidePortal) => {
 			if (
 				urlOrPath.startsWith('https://claude.com/cai/oauth/authorize') ||
 				urlOrPath.startsWith('https://platform.claude.com/oauth/authorize')
 			) {
-				// Rewrite the localhost callback to the code-based exchange
-				const fixedUrl = urlOrPath.replace(
-					'http%3A%2F%2Flocalhost%3A0',
-					'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode'
-				);
+				// Rewrite the localhost callback, on whatever port, to the code-based exchange
+				const callback = /http%3A%2F%2Flocalhost%3A(\d+)/.exec(urlOrPath);
+				if (callback) hidePortal(Number(callback[1]));
+				const fixedUrl = callback
+					? urlOrPath.replace(callback[0], 'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode')
+					: urlOrPath;
 				window.open(fixedUrl, '_blank');
 			}
 		}
