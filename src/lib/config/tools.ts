@@ -117,7 +117,8 @@ export type CLIConfig = {
 	command: string;
 	args: string[];
 	projectFile?: string;
-	openCallback?: (urlOrPath: string) => void;
+	/** `hidePortal` keeps a port the user never visits, such as a sign-in callback, out of the preview. */
+	openCallback?: (urlOrPath: string, hidePortal: (port: number) => void) => void;
 	/** Runs after the pod boots, before the CLI launches; `terminal` is the one the CLI gets. */
 	prepare?: (pod: BrowserPod, terminal: Terminal) => Promise<void>;
 	/** Extra env for the CLI process, resolved at launch. */
@@ -132,16 +133,17 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		command: 'node',
 		args: ['/home/user/claude-extracted/src/entrypoints/cli.js'],
 		projectFile: '/project/claude/CLAUDE.md',
-		openCallback: (urlOrPath: string) => {
+		openCallback: (urlOrPath, hidePortal) => {
 			if (
 				urlOrPath.startsWith('https://claude.com/cai/oauth/authorize') ||
 				urlOrPath.startsWith('https://platform.claude.com/oauth/authorize')
 			) {
 				// Rewrite the localhost callback, on whatever port, to the code-based exchange
-				const fixedUrl = urlOrPath.replace(
-					/http%3A%2F%2Flocalhost%3A\d+/,
-					'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode'
-				);
+				const callback = /http%3A%2F%2Flocalhost%3A(\d+)/.exec(urlOrPath);
+				if (callback) hidePortal(Number(callback[1]));
+				const fixedUrl = callback
+					? urlOrPath.replace(callback[0], 'https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode')
+					: urlOrPath;
 				window.open(fixedUrl, '_blank');
 			}
 		}

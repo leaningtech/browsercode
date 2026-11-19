@@ -42,6 +42,8 @@ export async function bootCLI(
 		});
 		terminal = await pod.createDefaultTerminal(terminalEl);
 
+		const hiddenPorts = new Set<number>();
+
 		pod.onPortal((portal) => {
 			const port = Number(portal?.port);
 			const rawUrl = portal?.url;
@@ -51,6 +53,7 @@ export async function bootCLI(
 				console.log('[portal] update', portal);
 				return;
 			}
+			if (hiddenPorts.has(port)) return;
 
 			if (url.length > 0) {
 				console.log(`[portal] active port=${port} url=${url}`);
@@ -62,7 +65,13 @@ export async function bootCLI(
 		});
 
 		if (config.openCallback) {
-			pod.onOpen(config.openCallback);
+			const openCallback = config.openCallback;
+			// The portal can already be showing by the time the CLI opens the URL that names it.
+			const hidePortal = (port: number): void => {
+				hiddenPorts.add(port);
+				onPortalUpdate?.({ port, url: null, active: false });
+			};
+			pod.onOpen((urlOrPath) => openCallback(urlOrPath, hidePortal));
 		}
 
 		const homePath = '/home/user/project';
