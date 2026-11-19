@@ -74,7 +74,7 @@ Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
 - Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
-- One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog.
+- One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog, which can move the session there and close it in the other.
 - `codex` asks for an OpenAI API key inside the frame.
 - `claude` opens a new tab for OAuth sign-in.
 - `pi` installs from npm on its first launch and signs in through its own `/login`.
@@ -83,7 +83,7 @@ Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
 - A tab marks itself when its own pane does something you cannot see from the one you are on: the terminal on new output, the preview once a dev server answers. Opening that tab clears the mark.
 - Every embed carries a BrowserCode badge linking back to browsercode.io. It sits in the top bar when the embed shows the editor, and floats in the bottom-right corner otherwise.
 - `runtime=cheerpj` compiles every `.java` file with `javac` and runs the project's main class: the one the example or shared project link names, or else the only compiled class with a `main` method. When several have one, a picker beside Run chooses, and Share keeps the choice. `javac` runs with `-Xlint`, and its errors and warnings mark the editor at their line and column until the next build. The Output tab is the program's console: typing feeds `System.in` and Ctrl+D ends it, and its Run button builds and runs again. The preview pane is a Display where AWT and Swing windows draw, showing a placeholder until a window opens; a new run clears it. There is no shell. Narrower than 768px, the embed opens on Output rather than the Display.
-- Java runs in one BrowserCode tab or embed at a time, because they all share one storage area. A second Java embed on the same page, or one opened while a browsercode.io tab runs Java, shows a dialog instead. Browsers keep each site's embeds apart, so Java embeds on different sites don't conflict.
+- Java runs in one BrowserCode tab or embed at a time, because they all share one storage area. A second Java embed on the same page, or one opened while a browsercode.io tab runs Java, shows a dialog that can move Java there and close it in the other. Browsers keep each site's embeds apart, so Java embeds on different sites don't conflict.
 - Share copies a link that reopens the project. Chrome and Edge allow copying from an iframe only when it carries `allow="clipboard-write"`; without it, Share reports that the copy failed.
 
 ## Examples

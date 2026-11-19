@@ -21,7 +21,7 @@
 <div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 	<!-- Kept outside the sheet: its transform would make it the containing block for a fixed child. -->
 	{#if session.lock === 'taken'}
-		<DuplicateTabDialog />
+		<DuplicateTabDialog onTakeOver={session.takeOver} />
 	{/if}
 
 	<div

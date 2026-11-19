@@ -13,6 +13,16 @@ export function markIntentionalNavigation() {
 	intentionalNavigation = true;
 }
 
+/**
+ * Browsers only let a script close a tab it opened or one with no history, and never an embed's
+ * frame, so a refused close falls back to a reload once an allowed one would have happened.
+ */
+export function closeOrReloadTab(): void {
+	markIntentionalNavigation();
+	window.close();
+	setTimeout(() => window.location.reload(), 400);
+}
+
 function consumeIntentionalNavigation(): boolean {
 	const wasIntentional = intentionalNavigation;
 	intentionalNavigation = false;
