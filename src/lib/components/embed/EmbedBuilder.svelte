@@ -130,11 +130,10 @@
 {/snippet}
 
 {#snippet codeBlock(text: string, what: 'url' | 'snippet')}
+	{@const shown = shorten(text)}
 	<div class="relative">
 		<pre
-			class="overflow-x-auto rounded-lg border border-bc-border bg-bc-terminal p-3 pr-20 font-mono text-[11.5px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap text-bc-mist">{shorten(
-				text
-			)}</pre>
+			class="overflow-x-auto rounded-lg border border-bc-border bg-bc-terminal p-3 pr-20 font-mono text-[11.5px] leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap text-bc-mist">{shown}</pre>
 		<button
 			type="button"
 			onclick={() => copy(what, text)}
@@ -148,6 +147,11 @@
 			{copied === what ? 'Copied' : 'Copy'}
 		</button>
 	</div>
+	{#if shown !== text}
+		<p class="mt-1.5 text-[11px] text-bc-text-muted">
+			The link is shortened here. Use Copy to get all of it.
+		</p>
+	{/if}
 {/snippet}
 
 <div class="grid gap-6 lg:grid-cols-2">
