@@ -290,11 +290,23 @@
 				</div>
 			{/if}
 		</div>
-	</nav>
 
-	<div class="mx-3 h-px bg-bc-border"></div>
-
-	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
+		<!-- Embeds cover the IDE and the agents alike, so this sits apart from either group:
+		     pushed to the foot of the nav, above the divider the utilities start under. -->
+		<div class="group relative mt-auto flex items-center justify-center">
+			<button
+				type="button"
+				onclick={() => {
+					trackEvent('Clicked Embed', { from: 'sidebar' });
+					navigate('/embed/builder');
+				}}
+				aria-label="Embed on your site"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
+			>
+				<Icon icon="mingcute:layout-line" width="26" height="26" />
+			</button>
+			{@render tooltip('Embed on your site')}
+		</div>
 		<div class="group relative flex items-center justify-center">
 			<button
 				type="button"
@@ -310,6 +322,11 @@
 			</button>
 			{@render tooltip(themeState.current === 'dark' ? 'Light mode' : 'Dark mode')}
 		</div>
+	</nav>
+
+	<div class="mx-3 h-px bg-bc-border"></div>
+
+	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
 		<div class="group relative flex items-center justify-center">
 			<a
 				href="https://github.com/leaningtech/browsercode"
@@ -374,21 +391,6 @@
 							<Icon icon="mingcute:route-line" width="14" height="14" />
 						</span>
 						<span class="flex-1 truncate">UI tour</span>
-					</button>
-					<button
-						type="button"
-						onclick={() => {
-							trackEvent('Clicked Help', { action: 'embed' });
-							navigate('/embed/builder');
-						}}
-						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
-					>
-						<span
-							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/10 text-bc-mist"
-						>
-							<Icon icon="mingcute:code-line" width="14" height="14" />
-						</span>
-						<span class="flex-1 truncate">Embed on your site</span>
 					</button>
 					<!-- The tracker is an external URL, so resolve() does not apply here. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
