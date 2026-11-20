@@ -3,7 +3,7 @@
 </script>
 
 <div class="bc-page-bg h-full w-full overflow-y-auto text-bc-mist">
-	<div class="mx-auto max-w-6xl px-4 pt-16 pb-24 sm:px-8">
+	<div class="mx-auto max-w-3xl px-4 pt-16 pb-24 sm:px-8">
 		<h1 class="mb-2 font-display text-3xl font-bold tracking-tight text-bc-text sm:text-4xl">
 			Embed BrowserCode
 		</h1>

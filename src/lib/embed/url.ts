@@ -53,6 +53,16 @@ export function embedSnippet(src: string, target: EmbedTarget, height: number): 
 	].join('\n');
 }
 
+/**
+ * The playground URL that reopens `target`, the inverse of the routes' own parsing. Null for a
+ * target only a link can carry: a repo clone and an agent have no project of their own to name.
+ */
+export function projectUrl(target: EmbedTarget): string | null {
+	if (target.kind === 'framework') return `/ide?framework=${target.id}`;
+	if (target.kind === 'java') return `/java?example=${target.example}`;
+	return null;
+}
+
 /** Ids, view names and repo paths need no escaping, so the query reads like the docs. */
 export function embedUrl(target: EmbedTarget, views: readonly View[], keyless: boolean): string {
 	const params: string[] = [];

@@ -2,6 +2,7 @@
  * Turns the project into a link that reopens it, for sources that can encode one. Files created
  * outside the IDE aren't tracked in `session.projectFiles`, so the link leaves them out.
  */
+import { projectUrl, type EmbedTarget } from '$lib/embed/url';
 import type { JavaVersion } from '$lib/java/versions';
 import type { ProjectFile } from '$lib/utils/project-file';
 import { isBinaryContent } from './media';
@@ -10,8 +11,12 @@ import type { IdeSession } from './session.svelte';
 /** Chat apps and mail tend to cut longer links short. */
 export const MAX_LINK_LENGTH = 65_536;
 
-/** An absolute Share link, and the binary files it carries empty. */
-export type ProjectLink = { url: string; emptied: string[] };
+/**
+ * An absolute Share link, what the same project embeds as, and the binary files the link
+ * carries empty. A project still exactly as its source shipped it gets that source's own URL
+ * rather than every file in a hash, so `emptied` is empty and nothing is lost.
+ */
+export type ProjectLink = { url: string; target: EmbedTarget; emptied: string[] };
 
 /** Null where the source has no share format or the files aren't in yet. */
 export async function shareLink(session: IdeSession): Promise<ProjectLink | null> {
@@ -19,8 +24,47 @@ export async function shareLink(session: IdeSession): Promise<ProjectLink | null
 	if (!share || !session.fsReady) return null;
 	const mainClass = session.runtime.mainClass ?? undefined;
 	const { files, emptied } = await currentFiles(session);
-	const url = new URL(share(files, session.source.javaVersion, mainClass), location.origin).href;
-	return { url, emptied };
+
+	const asShipped = await shippedTarget(session, files);
+	const asShippedUrl = asShipped && projectUrl(asShipped);
+	if (asShipped && asShippedUrl) {
+		return { url: new URL(asShippedUrl, location.origin).href, target: asShipped, emptied: [] };
+	}
+
+	// As `shareLinkTarget` reads it back: the format is the route the link opens.
+	const link = new URL(share(files, session.source.javaVersion, mainClass), location.origin);
+	const target: EmbedTarget = {
+		kind: 'link',
+		hash: link.hash.slice(1),
+		java: link.pathname === '/java'
+	};
+	return { url: link.href, target, emptied };
+}
+
+/**
+ * The source's own target when `files` are still exactly what it shipped, else null. Comparing
+ * contents rather than watching for edits is what makes an edit that was undone count as
+ * untouched — and it is the only thing that notices a change made from the terminal.
+ */
+async function shippedTarget(
+	session: IdeSession,
+	files: ProjectFile[]
+): Promise<EmbedTarget | null> {
+	const { pristineFiles, embedTarget } = session.source;
+	if (!pristineFiles || !embedTarget) return null;
+	try {
+		// `currentFiles` blanks binaries, so the shipped side has to be read the same way or a
+		// template with an image never matches itself.
+		const shipped = (await pristineFiles()).map(({ path, content }) => ({
+			path,
+			content: isBinaryContent(content) ? '' : content
+		}));
+		return sameFiles(files, shipped) ? embedTarget : null;
+	} catch (error) {
+		// A link that carries the files still works; only the shorter URL is lost.
+		console.warn('Could not read the files this project shipped with:', error);
+		return null;
+	}
 }
 
 /** Names at most three of the emptied files, e.g. "2 files open empty: hero.png, inter.woff2." */

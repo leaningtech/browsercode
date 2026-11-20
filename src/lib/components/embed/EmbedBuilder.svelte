@@ -15,10 +15,13 @@
 	import { parseGitHubUrl } from '$lib/github/parse';
 
 	let {
-		link = ''
+		fixed = null
 	}: {
-		/** A Share link to embed. Nothing else is offered, nor a live preview of a second copy. */
-		link?: string;
+		/**
+		 * The one thing to embed, set by the IDE's dialog. Nothing else is offered, nor a live
+		 * preview of a second copy of the project already running behind it.
+		 */
+		fixed?: EmbedTarget | null;
 	} = $props();
 
 	type Tab = EmbedTarget['kind'];
@@ -42,14 +45,12 @@
 	const EMBED_HEADERS = `Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp`;
 
-	// svelte-ignore state_referenced_locally
-	let tab = $state<Tab>(link ? 'link' : 'framework');
+	let tab = $state<Tab>('framework');
 	let framework = $state<FrameworkId>(frameworkRailItems[0].id);
 	let javaExample = $state(javaRailItems[0].example);
 	let repoInput = $state('');
 	let agent = $state<ToolId>(defaultToolId);
-	// svelte-ignore state_referenced_locally
-	let linkInput = $state(link);
+	let linkInput = $state('');
 	let views = $state<View[]>([...VIEWS]);
 	let agentPreview = $state(true);
 	let keyless = $state(false);
@@ -62,6 +63,8 @@ Cross-Origin-Embedder-Policy: require-corp`;
 	let copied = $state<Copyable | null>(null);
 
 	let target = $derived.by((): EmbedTarget | null => {
+		// A fixed target can't be changed from here, so the tabs never get a say.
+		if (fixed) return fixed;
 		if (tab === 'framework') return { kind: 'framework', id: framework };
 		if (tab === 'java') return { kind: 'java', example: javaExample };
 		if (tab === 'agent') return { kind: 'agent', id: agent };
@@ -77,11 +80,13 @@ Cross-Origin-Embedder-Policy: require-corp`;
 		tab === 'agent' ? (agentPreview ? [...VIEWS] : ['terminal']) : views
 	);
 	// Only a template boots without a key; a repo clones and an agent calls its API.
-	let canKeyless = $derived(tab === 'framework' || (target?.kind === 'link' && !target.java));
+	let canKeyless = $derived(
+		target?.kind === 'framework' || (target?.kind === 'link' && !target.java)
+	);
 	let url = $derived(target && embedUrl(target, shownViews, canKeyless && keyless));
 	let absoluteUrl = $derived(url && `${location.origin}${url}`);
 	let snippet = $derived(target && absoluteUrl && embedSnippet(absoluteUrl, target, iframeHeight));
-	/** Sums up step 1 beside its heading, so the choices read at a glance once it collapses. */
+	/** Sums the panes and options up beside their step heading, to read back at a glance. */
 	let paneSummary = $derived(
 		tab === 'agent'
 			? agentPreview
@@ -93,6 +98,25 @@ Cross-Origin-Embedder-Policy: require-corp`;
 					...(canKeyless && keyless ? ['no API key'] : [])
 				].join(' · ')
 	);
+
+	/** Names the chosen target beside step 1, as `paneSummary` does for step 2. */
+	let targetSummary = $derived.by((): string => {
+		const chosen = target;
+		if (!chosen) return '';
+		if (chosen.kind === 'framework')
+			return frameworkRailItems.find((item) => item.id === chosen.id)?.label ?? chosen.id;
+		if (chosen.kind === 'java')
+			return javaRailItems.find((item) => item.example === chosen.example)?.label ?? chosen.example;
+		if (chosen.kind === 'agent')
+			return agents.find((item) => item.id === chosen.id)?.label ?? chosen.id;
+		if (chosen.kind === 'repo') return `${chosen.repo.owner}/${chosen.repo.repo}`;
+		return chosen.java ? 'Shared Java project' : 'Shared project';
+	});
+
+	/** The dialog skips step 1, so every later step shifts up by one. */
+	function stepNumber(afterTarget: number): number {
+		return fixed ? afterTarget : afterTarget + 1;
+	}
 
 	/** A shared project's hash runs to many KB; only the screen shortens it, Copy takes it whole. */
 	function shorten(text: string): string {
@@ -120,11 +144,7 @@ Cross-Origin-Embedder-Policy: require-corp`;
 	}
 </script>
 
-{#snippet heading(text: string)}
-	<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">{text}</div>
-{/snippet}
-
-<!-- Numbered heading for the dialog's steps; `summary` reads the choices back at a glance. -->
+<!-- A step heading; `summary` reads that step's choices back on the right. -->
 {#snippet stepHead(n: number, title: string, summary?: string)}
 	<div class="mb-2 flex items-center gap-2.5">
 		<span
@@ -286,67 +306,18 @@ Cross-Origin-Embedder-Policy: require-corp`;
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {/snippet}
 
-{#if link}
-	<!--
-		The IDE's dialog: the project is fixed and the defaults already suit most pages, so the
-		three things left to do are numbered down one column. Nothing gates anything — the panes,
-		the diagram and the snippet all still update as they are changed.
-	-->
-	<div class="flex flex-col">
+<!--
+	One numbered walk-through for both presentations. The IDE's dialog starts a step later: the
+	project it embeds is already fixed, so it has nothing to choose in step 1 and no room for a
+	second live copy of itself. Nothing gates anything — every control updates the diagram and
+	the snippet as it changes.
+-->
+<!-- Width is the host's: the page wrapper constrains the column, the dialog its panel. -->
+<div class="flex flex-col">
+	{#if !fixed}
 		<section>
-			{@render stepHead(1, 'Choose what it shows', paneSummary)}
-			<div class="grid gap-4 pl-[30px] sm:grid-cols-[minmax(0,1fr)_200px]">
-				<div class="flex flex-col gap-3">
-					{@render panesControl()}
-					{@render optionsControl()}
-				</div>
-				{@render paneDiagram('h-28')}
-			</div>
-		</section>
-
-		{#if absoluteUrl && snippet}
-			<div class="my-3 h-px shrink-0 bg-bc-border"></div>
-			<section>
-				{@render stepHead(2, 'Copy the snippet')}
-				<div class="pl-[30px]">
-					{@render codeBlock(snippet, 'snippet')}
-					<div
-						class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-bc-text-muted"
-					>
-						<button
-							type="button"
-							onclick={() => copy('url', absoluteUrl)}
-							class="hover:text-bc-text"
-						>
-							{copied === 'url' ? 'URL copied' : 'Copy the URL instead'}
-						</button>
-						{@render openInNewTab(absoluteUrl)}
-					</div>
-					{#if cheerpj}
-						<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
-							Java runs on CheerpJ, which needs nothing from your page: the snippet works on any
-							site.
-						</p>
-					{/if}
-				</div>
-			</section>
-
-			{#if !cheerpj}
-				<div class="my-3 h-px shrink-0 bg-bc-border"></div>
-				<section>
-					{@render stepHead(3, 'Send these headers from your page')}
-					<div class="pl-[30px] text-[12px] leading-relaxed text-bc-text-muted">
-						{@render headersBlock()}
-					</div>
-				</section>
-			{/if}
-		{/if}
-	</div>
-{:else}
-	<div class="grid gap-6 lg:grid-cols-2">
-		<div class="flex flex-col gap-6">
-			<section>
-				{@render heading('What to embed')}
+			{@render stepHead(1, 'Choose what to embed', targetSummary)}
+			<div class="pl-[30px]">
 				<div class="mb-3 flex flex-wrap gap-1">
 					{#each TABS as item (item.id)}
 						<button
@@ -422,70 +393,76 @@ Cross-Origin-Embedder-Policy: require-corp`;
 						</p>
 					{/if}
 				{/if}
-			</section>
+			</div>
+		</section>
 
-			<section>
-				{@render heading('Panes')}
-				{@render panesControl()}
-			</section>
+		<div class="my-3 h-px shrink-0 bg-bc-border"></div>
+	{/if}
 
-			<section>
-				{@render heading('Options')}
-				{@render optionsControl()}
-			</section>
-		</div>
-
-		<div class="flex flex-col gap-6">
-			<section>
-				{@render heading('Preview')}
+	<section>
+		{@render stepHead(stepNumber(1), 'Choose what it shows', paneSummary)}
+		<div class="pl-[30px]">
+			<div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
+				<div class="flex flex-col gap-3">
+					{@render panesControl()}
+					{@render optionsControl()}
+				</div>
+				{@render paneDiagram('h-28')}
+			</div>
+			<!-- The diagram says which panes are on; this runs the real thing, which costs a pod. -->
+			{#if !fixed}
+				<button
+					type="button"
+					disabled={!url || liveUrl === url}
+					onclick={() => (liveUrl = url)}
+					class="mt-3 flex items-center gap-1.5 rounded-md bg-bc-azure/90 px-3 py-1.5 text-[12px] font-medium text-bc-abyss transition hover:bg-bc-azure disabled:cursor-not-allowed disabled:opacity-40"
+				>
+					<Icon icon="mingcute:play-line" width="13" height="13" />
+					Load live preview
+				</button>
 				{#if url && liveUrl === url}
 					<iframe
 						src={url}
 						title="Embed preview"
 						allow={target ? iframeAllow(target) : undefined}
-						class="w-full rounded-lg border border-bc-border"
+						class="mt-3 w-full rounded-lg border border-bc-border"
 						style="height: {iframeHeight}px;"
 					></iframe>
-				{:else}
-					{@render paneDiagram('h-44')}
 				{/if}
-				<div class="mt-2 flex gap-2">
-					<button
-						type="button"
-						disabled={!url || liveUrl === url}
-						onclick={() => (liveUrl = url)}
-						class="flex items-center gap-1.5 rounded-md bg-bc-azure/90 px-3 py-1.5 text-[12px] font-medium text-bc-abyss transition hover:bg-bc-azure disabled:cursor-not-allowed disabled:opacity-40"
-					>
-						<Icon icon="mingcute:play-line" width="13" height="13" />
-						Load live preview
-					</button>
-					{#if url}
-						<span
-							class="flex items-center gap-1.5 rounded-md bg-bc-tint/10 px-3 py-1.5 text-[12px] text-bc-mist transition hover:bg-bc-tint/16 hover:text-bc-text"
-						>
-							{@render openInNewTab(url)}
-						</span>
-					{/if}
-				</div>
-			</section>
-
-			{#if absoluteUrl && snippet}
-				<section>
-					{@render heading('Embed code')}
-					{@render codeBlock(snippet, 'snippet')}
-				</section>
-				<section>
-					{@render heading('URL')}
-					{@render codeBlock(absoluteUrl, 'url')}
-				</section>
-				<section class="text-[12px] leading-relaxed text-bc-text-muted">
-					{#if cheerpj}
-						Java runs on CheerpJ, which needs nothing from your page: the snippet works on any site.
-					{:else}
-						{@render headersBlock()}
-					{/if}
-				</section>
 			{/if}
 		</div>
-	</div>
-{/if}
+	</section>
+
+	{#if absoluteUrl && snippet}
+		<div class="my-3 h-px shrink-0 bg-bc-border"></div>
+		<section>
+			{@render stepHead(stepNumber(2), 'Copy the snippet')}
+			<div class="pl-[30px]">
+				{@render codeBlock(snippet, 'snippet')}
+				<div
+					class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-bc-text-muted"
+				>
+					<button type="button" onclick={() => copy('url', absoluteUrl)} class="hover:text-bc-text">
+						{copied === 'url' ? 'URL copied' : 'Copy the URL instead'}
+					</button>
+					{@render openInNewTab(absoluteUrl)}
+				</div>
+				{#if cheerpj}
+					<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
+						Java runs on CheerpJ, which needs nothing from your page: the snippet works on any site.
+					</p>
+				{/if}
+			</div>
+		</section>
+
+		{#if !cheerpj}
+			<div class="my-3 h-px shrink-0 bg-bc-border"></div>
+			<section>
+				{@render stepHead(stepNumber(3), 'Send these headers from your page')}
+				<div class="pl-[30px] text-[12px] leading-relaxed text-bc-text-muted">
+					{@render headersBlock()}
+				</div>
+			</section>
+		{/if}
+	{/if}
+</div>

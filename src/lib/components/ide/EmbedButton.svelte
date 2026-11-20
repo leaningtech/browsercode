@@ -2,21 +2,24 @@
 	import Icon from '@iconify/svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import EmbedBuilder from '$lib/components/embed/EmbedBuilder.svelte';
+	import type { EmbedTarget } from '$lib/embed/url';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { emptiedNote, MAX_LINK_LENGTH, shareLink } from '$lib/ide/share';
 
 	let { session }: { session: IdeSession } = $props();
 
 	let open = $state(false);
-	/** The project as Share would link it; empty when it is too large for one. */
-	let link = $state('');
+	/** What to embed; null when the project only fits in a link and that link is too long. */
+	let target = $state<EmbedTarget | null>(null);
 	let emptied = $state<string[]>([]);
 
 	async function show(): Promise<void> {
 		try {
 			const shared = await shareLink(session);
 			if (!shared) return;
-			link = shared.url.length > MAX_LINK_LENGTH ? '' : shared.url;
+			// Only a link has a length to run over; a project still as it shipped is named, not carried.
+			const tooLong = shared.target.kind === 'link' && shared.url.length > MAX_LINK_LENGTH;
+			target = tooLong ? null : shared.target;
 			emptied = shared.emptied;
 			open = true;
 		} catch (error) {
@@ -46,9 +49,11 @@
 					Embed this project
 				</h3>
 				<p class="text-[12px] leading-relaxed text-bc-text-muted">
-					{#if link}
+					{#if target?.kind === 'link'}
 						The embed opens the project as it is now; open this again after changes.
 						{#if emptied.length}{emptiedNote(emptied)} Download keeps them.{/if}
+					{:else if target}
+						Nothing has changed since this project booted, so the embed opens it by name.
 					{:else}
 						This project is too large to embed as a link. Use Download to share it instead.
 					{/if}
@@ -62,8 +67,8 @@
 				<Icon icon="mingcute:close-line" width="16" height="16" />
 			</button>
 		</div>
-		{#if link}
-			<EmbedBuilder {link} />
+		{#if target}
+			<EmbedBuilder fixed={target} />
 		{/if}
 	</Modal>
 {/if}
