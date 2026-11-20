@@ -38,6 +38,9 @@
 		preview: 'Preview'
 	};
 	const agents = toolItems.filter((item) => !item.disabled);
+	/** What the host page has to send for BrowserPod; copied as one block. */
+	const EMBED_HEADERS = `Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp`;
 
 	// svelte-ignore state_referenced_locally
 	let tab = $state<Tab>(link ? 'link' : 'framework');
@@ -55,7 +58,8 @@
 	let iframeHeight = $derived(height || 600);
 	/** The URL the live preview was loaded for; any change of options drops back to the diagram. */
 	let liveUrl = $state<string | null>(null);
-	let copied = $state<'url' | 'snippet' | null>(null);
+	type Copyable = 'url' | 'snippet' | 'headers';
+	let copied = $state<Copyable | null>(null);
 
 	let target = $derived.by((): EmbedTarget | null => {
 		if (tab === 'framework') return { kind: 'framework', id: framework };
@@ -77,6 +81,18 @@
 	let url = $derived(target && embedUrl(target, shownViews, canKeyless && keyless));
 	let absoluteUrl = $derived(url && `${location.origin}${url}`);
 	let snippet = $derived(target && absoluteUrl && embedSnippet(absoluteUrl, target, iframeHeight));
+	/** Sums up step 1 beside its heading, so the choices read at a glance once it collapses. */
+	let paneSummary = $derived(
+		tab === 'agent'
+			? agentPreview
+				? 'Terminal and preview'
+				: 'Terminal only'
+			: [
+					views.length === VIEWS.length ? 'All panes' : `${views.length} of ${VIEWS.length} panes`,
+					`${iframeHeight}px`,
+					...(canKeyless && keyless ? ['no API key'] : [])
+				].join(' · ')
+	);
 
 	/** A shared project's hash runs to many KB; only the screen shortens it, Copy takes it whole. */
 	function shorten(text: string): string {
@@ -93,7 +109,7 @@
 		return VIEW_LABELS[view];
 	}
 
-	async function copy(what: 'url' | 'snippet', text: string): Promise<void> {
+	async function copy(what: Copyable, text: string): Promise<void> {
 		try {
 			await navigator.clipboard.writeText(text);
 			copied = what;
@@ -106,6 +122,18 @@
 
 {#snippet heading(text: string)}
 	<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">{text}</div>
+{/snippet}
+
+<!-- Numbered heading for the dialog's steps; `summary` reads the choices back at a glance. -->
+{#snippet stepHead(n: number, title: string, summary?: string)}
+	<div class="mb-2 flex items-center gap-2.5">
+		<span
+			class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-bc-azure/15 text-[11px] text-bc-azure"
+			>{n}</span
+		>
+		<span class="text-[13px] font-medium text-bc-text">{title}</span>
+		{#if summary}<span class="ml-auto text-[11.5px] text-bc-text-muted">{summary}</span>{/if}
+	</div>
 {/snippet}
 
 {#snippet choice(selected: boolean, onclick: () => void, label: string, icon?: string)}
@@ -129,7 +157,96 @@
 	</div>
 {/snippet}
 
-{#snippet codeBlock(text: string, what: 'url' | 'snippet')}
+{#snippet panesControl()}
+	<div class="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-bc-mist">
+		{#if tab === 'agent'}
+			<label class="flex items-center gap-2">
+				<input type="checkbox" bind:checked={agentPreview} class="accent-bc-azure" />
+				Preview beside the terminal
+			</label>
+		{:else}
+			{#each VIEWS as view (view)}
+				<label class="flex items-center gap-2">
+					<input
+						type="checkbox"
+						checked={views.includes(view)}
+						disabled={views.length === 1 && views.includes(view)}
+						onchange={() => toggleView(view)}
+						class="accent-bc-azure"
+					/>
+					{viewLabel(view)}
+				</label>
+			{/each}
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet optionsControl()}
+	<div class="flex flex-col gap-3 text-[13px] text-bc-mist">
+		<label class="flex items-center gap-2">
+			Height
+			<input
+				type="number"
+				min="200"
+				step="50"
+				bind:value={height}
+				class="w-[6em] rounded-md border border-bc-border bg-bc-terminal px-2 py-1 text-bc-text outline-none focus:border-bc-azure/45"
+			/>
+			px
+		</label>
+		{#if canKeyless}
+			<label class="flex items-start gap-2">
+				<input type="checkbox" bind:checked={keyless} class="mt-1 accent-bc-azure" />
+				<span>
+					Run without an API key
+					<span class="block text-[12px] text-bc-text-muted">
+						The pod reaches only the npm registry, so the project installs and runs but has no live
+						preview.
+					</span>
+				</span>
+			</label>
+		{/if}
+	</div>
+{/snippet}
+
+<!-- The panes as a diagram, so the checkboxes have something to point at. -->
+{#snippet paneDiagram(heightClass: string)}
+	<div
+		class="flex {heightClass} flex-col gap-1 rounded-lg border border-bc-border bg-bc-abyss p-1.5"
+	>
+		{#if tab === 'agent'}
+			<div class="flex min-h-0 flex-1 gap-1">
+				{@render pane('Terminal', 'flex-1')}
+				{#if agentPreview}{@render pane('Preview', 'flex-1')}{/if}
+			</div>
+		{:else}
+			{#if views.includes('editor')}<div class="h-3 shrink-0 rounded bg-bc-tint/5"></div>{/if}
+			<div class="flex min-h-0 flex-1 gap-1">
+				{#if views.includes('files') || views.includes('search')}
+					{@render pane(views.includes('files') ? 'Files' : 'Search', 'w-14 shrink-0')}
+				{/if}
+				{#if views.includes('editor') || views.includes('terminal')}
+					<div class="flex min-w-0 flex-1 flex-col gap-1">
+						{#if views.includes('editor')}{@render pane('Editor', 'flex-[3]')}{/if}
+						{#if views.includes('terminal')}{@render pane(viewLabel('terminal'), 'flex-1')}{/if}
+					</div>
+				{/if}
+				{#if views.includes('preview')}{@render pane(viewLabel('preview'), 'flex-1')}{/if}
+			</div>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet headersBlock()}
+	<p class="mb-2">
+		BrowserPod needs a cross-origin isolated page, so yours must send these two response headers.
+		Set them in a <code class="text-bc-mist">_headers</code> file on Netlify or Cloudflare Pages, or
+		in <code class="text-bc-mist">vercel.json</code> on Vercel.
+	</p>
+	{@render codeBlock(EMBED_HEADERS, 'headers')}
+{/snippet}
+
+{#snippet codeBlock(text: string, what: Copyable)}
 	{@const shown = shorten(text)}
 	<div class="relative">
 		<pre
@@ -154,9 +271,80 @@
 	{/if}
 {/snippet}
 
-<div class="grid gap-6 lg:grid-cols-2">
-	<div class="flex flex-col gap-6">
-		{#if !link}
+{#snippet openInNewTab(href: string)}
+	<!-- An embed URL carries a query and hash resolve() has no route id for. -->
+	<!-- eslint-disable svelte/no-navigation-without-resolve -->
+	<a
+		{href}
+		target="_blank"
+		rel="noopener"
+		class="inline-flex items-center gap-1 hover:text-bc-text"
+	>
+		Open in new tab
+		<Icon icon="mingcute:external-link-line" width="12" height="12" />
+	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+{/snippet}
+
+{#if link}
+	<!--
+		The IDE's dialog: the project is fixed and the defaults already suit most pages, so the
+		three things left to do are numbered down one column. Nothing gates anything — the panes,
+		the diagram and the snippet all still update as they are changed.
+	-->
+	<div class="flex flex-col">
+		<section>
+			{@render stepHead(1, 'Choose what it shows', paneSummary)}
+			<div class="grid gap-4 pl-[30px] sm:grid-cols-[minmax(0,1fr)_200px]">
+				<div class="flex flex-col gap-3">
+					{@render panesControl()}
+					{@render optionsControl()}
+				</div>
+				{@render paneDiagram('h-28')}
+			</div>
+		</section>
+
+		{#if absoluteUrl && snippet}
+			<div class="my-3 h-px shrink-0 bg-bc-border"></div>
+			<section>
+				{@render stepHead(2, 'Copy the snippet')}
+				<div class="pl-[30px]">
+					{@render codeBlock(snippet, 'snippet')}
+					<div
+						class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-bc-text-muted"
+					>
+						<button
+							type="button"
+							onclick={() => copy('url', absoluteUrl)}
+							class="hover:text-bc-text"
+						>
+							{copied === 'url' ? 'URL copied' : 'Copy the URL instead'}
+						</button>
+						{@render openInNewTab(absoluteUrl)}
+					</div>
+					{#if cheerpj}
+						<p class="mt-3 text-[12px] leading-relaxed text-bc-text-muted">
+							Java runs on CheerpJ, which needs nothing from your page: the snippet works on any
+							site.
+						</p>
+					{/if}
+				</div>
+			</section>
+
+			{#if !cheerpj}
+				<div class="my-3 h-px shrink-0 bg-bc-border"></div>
+				<section>
+					{@render stepHead(3, 'Send these headers from your page')}
+					<div class="pl-[30px] text-[12px] leading-relaxed text-bc-text-muted">
+						{@render headersBlock()}
+					</div>
+				</section>
+			{/if}
+		{/if}
+	</div>
+{:else}
+	<div class="grid gap-6 lg:grid-cols-2">
+		<div class="flex flex-col gap-6">
 			<section>
 				{@render heading('What to embed')}
 				<div class="mb-3 flex flex-wrap gap-1">
@@ -235,103 +423,33 @@
 					{/if}
 				{/if}
 			</section>
-		{/if}
 
-		<section>
-			{@render heading('Panes')}
-			<div class="flex flex-wrap gap-x-4 gap-y-2 text-[13px] text-bc-mist">
-				{#if tab === 'agent'}
-					<label class="flex items-center gap-2">
-						<input type="checkbox" bind:checked={agentPreview} class="accent-bc-azure" />
-						Preview beside the terminal
-					</label>
+			<section>
+				{@render heading('Panes')}
+				{@render panesControl()}
+			</section>
+
+			<section>
+				{@render heading('Options')}
+				{@render optionsControl()}
+			</section>
+		</div>
+
+		<div class="flex flex-col gap-6">
+			<section>
+				{@render heading('Preview')}
+				{#if url && liveUrl === url}
+					<iframe
+						src={url}
+						title="Embed preview"
+						allow={target ? iframeAllow(target) : undefined}
+						class="w-full rounded-lg border border-bc-border"
+						style="height: {iframeHeight}px;"
+					></iframe>
 				{:else}
-					{#each VIEWS as view (view)}
-						<label class="flex items-center gap-2">
-							<input
-								type="checkbox"
-								checked={views.includes(view)}
-								disabled={views.length === 1 && views.includes(view)}
-								onchange={() => toggleView(view)}
-								class="accent-bc-azure"
-							/>
-							{viewLabel(view)}
-						</label>
-					{/each}
+					{@render paneDiagram('h-44')}
 				{/if}
-			</div>
-		</section>
-
-		<section>
-			{@render heading('Options')}
-			<div class="flex flex-col gap-3 text-[13px] text-bc-mist">
-				<label class="flex items-center gap-2">
-					Height
-					<input
-						type="number"
-						min="200"
-						step="50"
-						bind:value={height}
-						class="w-[6em] rounded-md border border-bc-border bg-bc-terminal px-2 py-1 text-bc-text outline-none focus:border-bc-azure/45"
-					/>
-					px
-				</label>
-				{#if canKeyless}
-					<label class="flex items-start gap-2">
-						<input type="checkbox" bind:checked={keyless} class="mt-1 accent-bc-azure" />
-						<span>
-							Run without an API key
-							<span class="block text-[12px] text-bc-text-muted">
-								The pod reaches only the npm registry, so the project installs and runs but has no
-								live preview.
-							</span>
-						</span>
-					</label>
-				{/if}
-			</div>
-		</section>
-	</div>
-
-	<div class="flex flex-col gap-6">
-		<section>
-			{@render heading('Preview')}
-			{#if url && liveUrl === url}
-				<iframe
-					src={url}
-					title="Embed preview"
-					allow={target ? iframeAllow(target) : undefined}
-					class="w-full rounded-lg border border-bc-border"
-					style="height: {iframeHeight}px;"
-				></iframe>
-			{:else}
-				<div class="flex h-44 flex-col gap-1 rounded-lg border border-bc-border bg-bc-abyss p-1.5">
-					{#if tab === 'agent'}
-						<div class="flex min-h-0 flex-1 gap-1">
-							{@render pane('Terminal', 'flex-1')}
-							{#if agentPreview}{@render pane('Preview', 'flex-1')}{/if}
-						</div>
-					{:else}
-						{#if views.includes('editor')}<div class="h-3 shrink-0 rounded bg-bc-tint/5"></div>{/if}
-						<div class="flex min-h-0 flex-1 gap-1">
-							{#if views.includes('files') || views.includes('search')}
-								{@render pane(views.includes('files') ? 'Files' : 'Search', 'w-14 shrink-0')}
-							{/if}
-							{#if views.includes('editor') || views.includes('terminal')}
-								<div class="flex min-w-0 flex-1 flex-col gap-1">
-									{#if views.includes('editor')}{@render pane('Editor', 'flex-[3]')}{/if}
-									{#if views.includes('terminal')}{@render pane(
-											viewLabel('terminal'),
-											'flex-1'
-										)}{/if}
-								</div>
-							{/if}
-							{#if views.includes('preview')}{@render pane(viewLabel('preview'), 'flex-1')}{/if}
-						</div>
-					{/if}
-				</div>
-			{/if}
-			<div class="mt-2 flex gap-2">
-				{#if !link}
+				<div class="mt-2 flex gap-2">
 					<button
 						type="button"
 						disabled={!url || liveUrl === url}
@@ -341,44 +459,33 @@
 						<Icon icon="mingcute:play-line" width="13" height="13" />
 						Load live preview
 					</button>
-				{/if}
-				{#if url}
-					<!-- An embed URL carries a query and hash resolve() has no route id for. -->
-					<!-- eslint-disable svelte/no-navigation-without-resolve -->
-					<a
-						href={url}
-						target="_blank"
-						rel="noopener"
-						class="flex items-center gap-1.5 rounded-md bg-bc-tint/10 px-3 py-1.5 text-[12px] text-bc-mist no-underline transition hover:bg-bc-tint/16 hover:text-bc-text"
-					>
-						<Icon icon="mingcute:external-link-line" width="13" height="13" />
-						Open in new tab
-					</a>
-					<!-- eslint-enable svelte/no-navigation-without-resolve -->
-				{/if}
-			</div>
-		</section>
+					{#if url}
+						<span
+							class="flex items-center gap-1.5 rounded-md bg-bc-tint/10 px-3 py-1.5 text-[12px] text-bc-mist transition hover:bg-bc-tint/16 hover:text-bc-text"
+						>
+							{@render openInNewTab(url)}
+						</span>
+					{/if}
+				</div>
+			</section>
 
-		{#if absoluteUrl && snippet}
-			<section>
-				{@render heading('Embed code')}
-				{@render codeBlock(snippet, 'snippet')}
-			</section>
-			<section>
-				{@render heading('URL')}
-				{@render codeBlock(absoluteUrl, 'url')}
-			</section>
-			<section class="text-[12px] leading-relaxed text-bc-text-muted">
-				{#if cheerpj}
-					Java runs on CheerpJ, which needs nothing from your page: the snippet works on any site.
-				{:else}
-					BrowserPod needs a cross-origin isolated page. Yours must send these two headers, or the
-					embed reports that they are missing:
-					<pre
-						class="mt-2 rounded-lg border border-bc-border bg-bc-terminal p-3 font-mono text-[11.5px] text-bc-mist">Cross-Origin-Opener-Policy: same-origin
-Cross-Origin-Embedder-Policy: require-corp</pre>
-				{/if}
-			</section>
-		{/if}
+			{#if absoluteUrl && snippet}
+				<section>
+					{@render heading('Embed code')}
+					{@render codeBlock(snippet, 'snippet')}
+				</section>
+				<section>
+					{@render heading('URL')}
+					{@render codeBlock(absoluteUrl, 'url')}
+				</section>
+				<section class="text-[12px] leading-relaxed text-bc-text-muted">
+					{#if cheerpj}
+						Java runs on CheerpJ, which needs nothing from your page: the snippet works on any site.
+					{:else}
+						{@render headersBlock()}
+					{/if}
+				</section>
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}

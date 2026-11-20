@@ -38,9 +38,9 @@
 	<Modal
 		onClose={() => (open = false)}
 		labelledby="embed-title"
-		class="max-h-full w-full max-w-5xl overflow-y-auto rounded-xl border border-bc-border bg-bc-statusbar p-6 shadow-2xl"
+		class="max-h-full w-full max-w-4xl overflow-y-auto rounded-xl border border-bc-border bg-bc-statusbar p-5 shadow-2xl"
 	>
-		<div class="mb-6 flex items-start justify-between gap-3">
+		<div class="mb-5 flex items-start justify-between gap-3">
 			<div>
 				<h3 id="embed-title" class="mb-1 text-[14px] font-semibold text-bc-text">
 					Embed this project
