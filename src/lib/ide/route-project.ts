@@ -9,17 +9,19 @@
  */
 import { resolveExample, resolveFrameworkId } from '$lib/config/frameworks';
 import { decodeSharedProject } from '$lib/java/shared-project';
+import { decodeProjectLink } from './project-link';
 
 export function opensProject(routeId: string | null | undefined, url: URL): boolean {
 	// A cloned repo carries its owner and name in the path, so there is nothing to resolve.
 	if (routeId?.startsWith('/ide/')) return true;
+	const hash = url.hash.slice(1);
 	if (routeId === '/ide') {
+		if (hash) return decodeProjectLink(hash) !== null;
 		return resolveFrameworkId(url.searchParams.get('framework')) !== undefined;
 	}
 	if (routeId !== '/java') return false;
 	// As on the route: a shared link's hash stands in for `?example=` and wins over it, so a hash
 	// we can't decode opens nothing even when an example is named alongside it.
-	const hash = url.hash.slice(1);
 	if (hash) return decodeSharedProject(hash) !== null;
 	const example = url.searchParams.get('example');
 	return example !== null && resolveExample('java', example) !== undefined;

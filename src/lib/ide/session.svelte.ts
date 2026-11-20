@@ -318,6 +318,18 @@ export class IdeSession {
 		else this.pendingPins.add(path);
 	}
 
+	/** Moves a tab so it sits before the tab now at `before`; `openFiles.length` moves it to the end. */
+	moveFile(path: string, before: number): void {
+		const from = this.openFiles.findIndex((file) => file.path === path);
+		if (from < 0) return;
+		const to = before > from ? before - 1 : before;
+		if (to === from) return;
+		const files = [...this.openFiles];
+		const [entry] = files.splice(from, 1);
+		files.splice(to, 0, entry);
+		this.openFiles = files;
+	}
+
 	/** Closes a tab, flushing unsaved edits first; the neighbour tab (next, else previous) becomes active. */
 	closeFile(path: string): void {
 		const index = this.openFiles.findIndex((file) => file.path === path);

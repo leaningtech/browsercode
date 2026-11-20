@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends string | number">
 	import type { Snippet } from 'svelte';
 	import Icon from '@iconify/svelte';
+	import { dismissable } from '$lib/utils/dismissable';
 
 	let {
 		label,
@@ -27,7 +28,6 @@
 	} = $props();
 
 	let open = $state(false);
-	let rootEl = $state<HTMLElement | null>(null);
 	let buttonEl = $state<HTMLElement | null>(null);
 	/** Fixed to the viewport: the tab bar scrolls sideways, which clips anything absolute in it. */
 	let anchor = $state('');
@@ -65,33 +65,18 @@
 		onselect(value);
 	}
 
-	// `pointerdown`, as in Portal.svelte: `blur` catches a click into the Display's canvas.
+	// A fixed menu would drift from its button as the panes resize.
 	$effect(() => {
 		if (!open) return;
-		const dismiss = (event: PointerEvent): void => {
-			if (!rootEl?.contains(event.target as Node)) open = false;
-		};
-		const onKey = (event: KeyboardEvent): void => {
-			if (event.key === 'Escape') open = false;
-		};
 		const close = (): void => {
 			open = false;
 		};
-		window.addEventListener('pointerdown', dismiss);
-		window.addEventListener('keydown', onKey);
-		window.addEventListener('blur', close);
-		// A fixed menu would drift from its button as the panes resize.
 		window.addEventListener('resize', close);
-		return () => {
-			window.removeEventListener('pointerdown', dismiss);
-			window.removeEventListener('keydown', onKey);
-			window.removeEventListener('blur', close);
-			window.removeEventListener('resize', close);
-		};
+		return () => window.removeEventListener('resize', close);
 	});
 </script>
 
-<div bind:this={rootEl} class="flex h-full">
+<div use:dismissable={{ open, close: () => (open = false) }} class="flex h-full">
 	<button
 		bind:this={buttonEl}
 		onclick={toggle}

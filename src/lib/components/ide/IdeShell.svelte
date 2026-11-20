@@ -12,6 +12,7 @@
 	import { STARTING } from '$lib/ide/runtime';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
+	import EmbedButton from '$lib/components/ide/EmbedButton.svelte';
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -22,6 +23,7 @@
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
 	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
+	import { createShortcutActions, shortcutFor } from '$lib/ide/shortcuts';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -65,6 +67,9 @@
 		untrack(() => (shell.fileTree ? 'files' : shell.search ? 'search' : null))
 	);
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
+	let searchPanel = $state<{ focus: () => void } | null>(null);
+	let editorPane = $state<{ focus: () => void } | null>(null);
+	let terminalTabs = $state<{ focus: () => void; addTerminal: () => void } | null>(null);
 
 	// ── Mobile state ──────────────────────────────────────────────────────────
 	type Pane = 'editor' | 'terminal' | 'preview';
@@ -234,6 +239,32 @@
 		});
 	}
 
+	let shortcutActions = $derived(
+		createShortcutActions({
+			session,
+			shell,
+			isMobile: () => isMobile,
+			panel: () => activePanel,
+			setPanel: (panel) => (activePanel = panel),
+			togglePreview: collapsiblePreview && !isMobile ? togglePreview : undefined,
+			showPane: showMobileView,
+			focusSearch: () => searchPanel?.focus(),
+			focusEditor: () => editorPane?.focus(),
+			focusTerminal: () => terminalTabs?.focus(),
+			addTerminal: () => terminalTabs?.addTerminal()
+		})
+	);
+
+	function handleShortcut(event: KeyboardEvent): void {
+		const id = shortcutFor(event);
+		const action = id && shortcutActions[id];
+		if (!action) return;
+		// Captured on the window, so Monaco and xterm never see the key.
+		event.preventDefault();
+		event.stopPropagation();
+		action();
+	}
+
 	// ── Mobile detection ──────────────────────────────────────────────────────
 	onMount(() =>
 		watchIsMobile((mobile) => {
@@ -278,6 +309,8 @@
 	});
 </script>
 
+<svelte:window onkeydowncapture={handleShortcut} />
+
 <div
 	class="bc-page-bg relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-bc-mist"
 >
@@ -291,7 +324,7 @@
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->
 	{#if shell.header}
 		<header
-			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-navy px-3"
+			class="flex h-10 shrink-0 items-center justify-between border-b border-bc-border bg-bc-statusbar px-3"
 		>
 			<div class="flex min-w-0 items-center gap-2 text-[11px] text-bc-text-muted">
 				{#if shell.brand}
@@ -309,8 +342,13 @@
 				{/if}
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
-			{#if session.source.share}
-				<ShareButton {session} />
+			{#if session.source.share && session.fsReady}
+				<div class="flex shrink-0 items-center gap-1">
+					{#if shell.tools}
+						<EmbedButton {session} />
+					{/if}
+					<ShareButton {session} />
+				</div>
 			{/if}
 		</header>
 	{/if}
@@ -355,7 +393,7 @@
 		{/if}
 		<!-- Icon rail: panel navigators anchor to the top, global view toggles to the bottom. -->
 		{#if hasRail}
-			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-navy">
+			<aside class="flex w-10 shrink-0 flex-col border-r border-bc-border bg-bc-statusbar">
 				<div class="flex flex-col gap-0.5 p-1 pt-2">
 					{#if shell.fileTree}
 						<button
@@ -426,7 +464,7 @@
 		<!-- Side panel: files or search -->
 		{#if activePanel}
 			<div
-				class="side-panel flex shrink-0 flex-col bg-bc-navy"
+				class="side-panel flex shrink-0 flex-col bg-bc-statusbar"
 				style="width: {isMobile ? 240 : filePanelWidth}px;"
 			>
 				{#if activePanel === 'files'}
@@ -483,7 +521,11 @@
 						</span>
 					</div>
 					<div class="min-h-0 flex-1">
-						<SearchPanel {session} onFileOpen={() => isMobile && (activePanel = null)} />
+						<SearchPanel
+							bind:this={searchPanel}
+							{session}
+							onFileOpen={() => isMobile && (activePanel = null)}
+						/>
 					</div>
 				{/if}
 			</div>
@@ -518,7 +560,7 @@
 					class:pane-hidden={!shell.editor || (isMobile && activeMobileView !== 'editor')}
 					style={isMobile ? 'height: 100%; flex-shrink: 0;' : 'flex: 1 1 0; min-height: 0;'}
 				>
-					<EditorPane {session} />
+					<EditorPane bind:this={editorPane} {session} />
 				</div>
 
 				<!-- Divider: editor / terminal -->
@@ -543,7 +585,7 @@
 							? `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; min-height: 0;`
 							: 'flex: 1 1 0; min-height: 0;'}
 				>
-					<TerminalTabs {session} bind:outputEl />
+					<TerminalTabs bind:this={terminalTabs} {session} bind:outputEl />
 				</div>
 			</div>
 
@@ -582,7 +624,7 @@
 							onclick={togglePreview}
 							title="Show preview"
 							aria-label="Show preview"
-							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-navy py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
+							class="flex h-full w-7 shrink-0 flex-col items-center gap-2.5 border-l border-bc-border bg-bc-statusbar py-1.5 text-bc-text-muted transition hover:bg-bc-tint/5 hover:text-bc-text"
 						>
 							<Icon icon="mingcute:left-line" width="13" height="13" />
 							{#if portal.selectedPort !== null}
@@ -631,7 +673,7 @@
 	<!-- ── Mobile tab bar ──────────────────────────────────────────────────── -->
 	{#if isMobile && mobileTabs.length > 1}
 		<nav
-			class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-navy"
+			class="flex shrink-0 items-stretch border-t border-bc-border bg-bc-statusbar"
 			style="height: calc(44px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);"
 		>
 			{#each mobileTabs as tab (tab.id)}

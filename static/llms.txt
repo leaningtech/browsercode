@@ -37,6 +37,7 @@ Build these directly; they are stable.
 | `https://browsercode.io/` | Landing page |
 | `https://browsercode.io/ide` | Template picker plus a GitHub clone form |
 | `https://browsercode.io/ide?framework=<id>` | Boots that template straight into the IDE |
+| `https://browsercode.io/ide#<project>` | Opens a project shared with the Share button from a template or repo; the hash carries every file except lockfiles, with images left empty |
 | `https://browsercode.io/java` | Java Playground: picker for the Java examples |
 | `https://browsercode.io/java?example=<name>` | Boots a Java example, on Java 25: `helloworld` or `swing` |
 | `https://browsercode.io/java#<project>` | Opens a Java project shared with the Share button; the hash carries its files and Java version (8 when it names none) |
@@ -44,6 +45,7 @@ Build these directly; they are stable.
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/<dir>` | As above, scoped to a subdirectory |
 | `https://browsercode.io/agents` | Picker for the coding CLIs |
 | `https://browsercode.io/agents/<tool>` | Boots that CLI in a terminal |
+| `https://browsercode.io/embed/builder` | Builds the iframe snippet for an embed: pick what to embed and which panes to show |
 | `https://browsercode.io/embed?…` | Embeddable build, see **Embedding** below |
 
 ### Template ids for `framework=`
@@ -172,6 +174,8 @@ cannot set headers or accept that, only a Java embed will work on their page.
 
 Pass one of `agent`, `runtime`, `repo` or `framework`. With none, a default template boots.
 A shared project link's hash can stand in for `framework`: `/embed?runtime=cheerpj#<project>`.
+A template or repo project shared with Share embeds as `/embed#<project>`, with its hash in place
+of `framework` or `repo`.
 `view` defaults to every pane, and names it does not know are ignored. Any other value that
 cannot be resolved is reported as an error rather than silently replaced. Agents are
 terminal-first, so for them `view` only decides whether the preview comes along.

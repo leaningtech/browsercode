@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import { leaveWarningState, markIntentionalNavigation } from '$lib/stores/leaveWarning.svelte';
 
 	function confirmLeave() {
@@ -15,58 +16,41 @@
 		leaveWarningState.open = false;
 		leaveWarningState.pendingPath = '';
 	}
-
-	function handleKeydown(event: KeyboardEvent) {
-		if (leaveWarningState.open && event.key === 'Escape') {
-			event.preventDefault();
-			cancel();
-		}
-	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
 {#if leaveWarningState.open}
-	<!-- z-[80]: strictly above the z-70 tier other dialogs use (CloneRepoDialog, FileTreePanel's
-	     delete confirm) — navigateWithLeaveGuard can now fire while one of those is still open
-	     (e.g. the Sidebar's Clone dialog mid-session), and this confirmation has to win the
-	     stack, not render invisibly behind whatever triggered it. -->
-	<div
-		class="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-		role="presentation"
-		onclick={(e) => e.target === e.currentTarget && cancel()}
+	<!-- Above the z-70 dialogs: leaving can be asked while one of them is still open. -->
+	<Modal
+		onClose={cancel}
+		role="alertdialog"
+		labelledby="leave-warning-title"
+		layer="z-[80]"
+		class="glass-panel glass-panel-solid max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 	>
 		<div
-			class="glass-panel glass-panel-solid max-w-sm rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
-			role="alertdialog"
-			aria-modal="true"
-			aria-labelledby="leave-warning-title"
+			class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-gold/10 text-bc-gold"
 		>
-			<div
-				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-gold/10 text-bc-gold"
-			>
-				<Icon icon="mingcute:alert-line" width="22" height="22" />
-			</div>
-			<h3 id="leave-warning-title" class="mb-2 text-[14px] font-semibold text-bc-text">
-				Leave this session?
-			</h3>
-			<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
-				Are you sure you want to leave? Your work will be lost.
-			</p>
-			<div class="flex justify-center gap-2">
-				<button
-					onclick={cancel}
-					class="rounded-md bg-bc-tint/5 px-4 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
-				>
-					Cancel
-				</button>
-				<button
-					onclick={confirmLeave}
-					class="rounded-md bg-bc-coral/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-coral"
-				>
-					Leave
-				</button>
-			</div>
+			<Icon icon="mingcute:alert-line" width="22" height="22" />
 		</div>
-	</div>
+		<h3 id="leave-warning-title" class="mb-2 text-[14px] font-semibold text-bc-text">
+			Leave this session?
+		</h3>
+		<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
+			Are you sure you want to leave? Your work will be lost.
+		</p>
+		<div class="flex justify-center gap-2">
+			<button
+				onclick={cancel}
+				class="rounded-md bg-bc-tint/5 px-4 py-2 text-[13px] font-medium text-bc-mist transition hover:bg-bc-tint/10"
+			>
+				Cancel
+			</button>
+			<button
+				onclick={confirmLeave}
+				class="rounded-md bg-bc-coral/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-coral"
+			>
+				Leave
+			</button>
+		</div>
+	</Modal>
 {/if}

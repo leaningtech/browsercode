@@ -29,11 +29,18 @@
 		setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
 	}
 
-	function addTerminal() {
+	export function addTerminal() {
 		if (!session.fsReady) return;
 		const id = nextId++;
 		bashTabs.push({ id, label: 'Terminal' });
 		selectTab(id);
+	}
+
+	let panes = $state<HTMLElement | null>(null);
+
+	/** BrowserPod and the Java console own the terminals, so this goes through their DOM. */
+	export function focus(): void {
+		panes?.querySelector<HTMLElement>(':scope > :not(.invisible) .xterm-helper-textarea')?.focus();
 	}
 
 	function closeTerminal(id: number) {
@@ -121,7 +128,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="relative min-h-0 flex-1 overflow-hidden bg-bc-terminal">
+	<div bind:this={panes} class="relative min-h-0 flex-1 overflow-hidden bg-bc-terminal">
 		<div
 			bind:this={outputEl}
 			class="absolute inset-0 overflow-hidden p-2"

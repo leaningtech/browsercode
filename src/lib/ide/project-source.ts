@@ -2,6 +2,7 @@
  * How a project gets onto its runtime. `IdeSession` runs one boot pipeline over these hooks.
  */
 import type { RuntimeId } from '$lib/config/frameworks';
+import type { EmbedTarget } from '$lib/embed/url';
 import type { JavaVersion } from '$lib/java/versions';
 import type { WorkspaceFs } from './workspace-fs';
 
@@ -68,6 +69,17 @@ export type ProjectSource = {
 	mainClass?: string;
 	/** The untouched starter for `java`, where the starter differs between versions. */
 	starterFiles?: (java: JavaVersion) => Promise<{ path: string; content: string }[]>;
+	/**
+	 * What this source originally shipped, for telling an untouched project from an edited one.
+	 * Absent where there is nothing to compare against — a clone is patched as it boots, and a
+	 * shared link is only ever its own files.
+	 */
+	pristineFiles?: () => Promise<{ path: string; content: string }[]>;
+	/**
+	 * How to name this project in a URL, for a project still exactly as it shipped: sharing and
+	 * embedding then point at it rather than carrying every file in a hash.
+	 */
+	embedTarget?: EmbedTarget;
 	/**
 	 * A link, relative to the site, that reopens `files` with the Java version and main class;
 	 * absent where there is no format for one.
