@@ -2,7 +2,7 @@
 	import Icon from '@iconify/svelte';
 
 	let {
-		message = 'Sorry, you can only open one tab of the same agent.',
+		message = 'This agent is already running in another tab.',
 		onTakeOver
 	}: { message?: string; onTakeOver: () => void } = $props();
 
