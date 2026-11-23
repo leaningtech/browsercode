@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import EmbedBuilder from '$lib/components/embed/EmbedBuilder.svelte';
 	import type { EmbedTarget } from '$lib/embed/url';
 	import type { IdeSession } from '$lib/ide/session.svelte';
@@ -27,8 +28,6 @@
 	}
 </script>
 
-<svelte:window onkeydown={(event) => event.key === 'Escape' && (open = false)} />
-
 <button
 	onclick={show}
 	title="Embed this project in your own page"
@@ -39,17 +38,11 @@
 </button>
 
 {#if open}
-	<div
-		class="fixed inset-0 z-70 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-		role="presentation"
-		onclick={(event) => event.target === event.currentTarget && (open = false)}
+	<Modal
+		onClose={() => (open = false)}
+		labelledby="embed-title"
+		class="max-h-full w-full max-w-4xl overflow-y-auto rounded-xl border border-bc-border bg-bc-statusbar p-5 shadow-2xl"
 	>
-		<div
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="embed-title"
-			class="max-h-full w-full max-w-4xl overflow-y-auto rounded-xl border border-bc-border bg-bc-statusbar p-5 shadow-2xl"
-		>
 		<div class="mb-5 flex items-start justify-between gap-3">
 			<div>
 				<h3 id="embed-title" class="mb-1 text-[14px] font-semibold text-bc-text">
@@ -77,6 +70,5 @@
 		{#if target}
 			<EmbedBuilder fixed={target} />
 		{/if}
-		</div>
-	</div>
+	</Modal>
 {/if}
