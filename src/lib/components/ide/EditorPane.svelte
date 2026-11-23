@@ -60,6 +60,10 @@
 		dropIndex = null;
 	}
 
+	export function focus(): void {
+		editor?.focus();
+	}
+
 	// Responsive font
 	const FONT_QUERY = '(min-width: 640px)';
 	const fontSizeFor = (desktop: boolean) => (desktop ? 12.8 : 11.5);

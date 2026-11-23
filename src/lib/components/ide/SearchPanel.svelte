@@ -40,6 +40,12 @@
 	function focusInput(el: HTMLInputElement) {
 		el.focus();
 	}
+
+	let input = $state<HTMLInputElement | null>(null);
+
+	export function focus(): void {
+		input?.focus();
+	}
 </script>
 
 <div class="flex h-full min-h-0 flex-col">
@@ -52,6 +58,7 @@
 				class="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-bc-icon"
 			/>
 			<input
+				bind:this={input}
 				use:focusInput
 				value={search.query}
 				oninput={(e) => search.setQuery(e.currentTarget.value)}
