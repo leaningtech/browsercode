@@ -95,7 +95,7 @@ export class AgentSession {
 		window.location.reload();
 	};
 
-	takeOver = (): void => this.tabLock?.takeOver();
+	takeOver = (): Promise<boolean> => this.tabLock?.takeOver() ?? Promise.resolve(false);
 
 	/** Always confirms: there is a live session here to tear down. */
 	switchTo = (id: string): void => {

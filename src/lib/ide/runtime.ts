@@ -65,8 +65,8 @@ export interface IdeRuntime {
 	 * waits until `takeOver` wins it back. Absent where tabs never conflict.
 	 */
 	readonly inUseElsewhere?: string | null;
-	/** Asks the tab or embed holding this runtime to give it up. */
-	takeOver?(): void;
+	/** Asks the tab or embed holding this runtime to give it up; false when it hasn't in time. */
+	takeOver?(): Promise<boolean>;
 	/**
 	 * Brings the machine up and returns the context the source hooks run against; null when the
 	 * boot was cancelled in flight.

@@ -3,11 +3,14 @@ export type TabLock = {
 	acquired: Promise<boolean>;
 	/** Resolves once this tab holds the lock, whether on the first request or after `takeOver`. */
 	held: Promise<void>;
-	/** Asks the tab holding the lock to give it up; `held` resolves once it has. */
-	takeOver: () => void;
+	/** Asks the tab holding the lock to give it up; false when it hasn't in time. */
+	takeOver: () => Promise<boolean>;
 	/** Releases the lock so another tab can claim it. Safe to call even if never acquired. */
 	release: () => void;
 };
+
+/** Long enough for the holder to unload; a request it ignores would otherwise wait until it closes. */
+const TAKE_OVER_TIMEOUT_MS = 5000;
 
 /**
  * Claims an exclusive, tab-lifetime lock so only one browser tab can hold `name` at a time —
@@ -31,7 +34,7 @@ export function requestSingleTabLock(
 		return {
 			acquired: Promise.resolve(true),
 			held: Promise.resolve(),
-			takeOver: () => {},
+			takeOver: () => Promise.resolve(true),
 			release: () => {}
 		};
 	}
@@ -48,7 +51,11 @@ export function requestSingleTabLock(
 
 	async function hold(): Promise<void> {
 		markHeld();
-		channel.onmessage = onTakenOver;
+		const since = Date.now();
+		// A request sent before this tab held the lock was meant for the previous holder.
+		channel.onmessage = (event: MessageEvent<number>) => {
+			if (event.data >= since) onTakenOver();
+		};
 		await released;
 	}
 
@@ -72,19 +79,25 @@ export function requestSingleTabLock(
 			});
 	});
 
-	let takingOver = false;
-
 	return {
 		acquired,
 		held,
-		takeOver: () => {
-			if (takingOver) return;
-			takingOver = true;
-			void navigator.locks.request(name, { mode: 'exclusive' }, () => hold());
-			// query() runs on the same lock queue as the request above, so once it settles this tab
-			// is queued ahead of the holder's reload, which would otherwise race it for the lock.
-			void navigator.locks.query().then(() => channel.postMessage('take-over'));
-		},
+		takeOver: () =>
+			new Promise<boolean>((resolve) => {
+				navigator.locks
+					.request(
+						name,
+						{ mode: 'exclusive', signal: AbortSignal.timeout(TAKE_OVER_TIMEOUT_MS) },
+						() => {
+							resolve(true);
+							return hold();
+						}
+					)
+					.catch(() => resolve(false));
+				// query() runs on the same lock queue as the request above, so once it settles this
+				// tab is queued ahead of the holder's reload, which would otherwise race it for the lock.
+				void navigator.locks.query().then(() => channel.postMessage(Date.now()));
+			}),
 		release: () => {
 			clearTimeout(timeoutId);
 			channel.close();

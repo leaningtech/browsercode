@@ -4,13 +4,17 @@
 	let {
 		message = 'This agent is already running in another tab.',
 		onTakeOver
-	}: { message?: string; onTakeOver: () => void } = $props();
+	}: { message?: string; onTakeOver: () => Promise<boolean> } = $props();
 
 	let takingOver = $state(false);
+	let unanswered = $state(false);
 
-	function takeOver(): void {
+	async function takeOver(): Promise<void> {
 		takingOver = true;
-		onTakeOver();
+		unanswered = false;
+		if (await onTakeOver()) return;
+		takingOver = false;
+		unanswered = true;
 	}
 </script>
 
@@ -37,5 +41,8 @@
 		>
 			{takingOver ? 'Switching…' : 'Use here'}
 		</button>
+		{#if unanswered}
+			<p class="mt-3 text-[12px] text-bc-coral">The other tab isn't responding. Try again.</p>
+		{/if}
 	</div>
 </div>

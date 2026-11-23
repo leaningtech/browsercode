@@ -287,7 +287,7 @@
 	{:else if session.runtime.inUseElsewhere}
 		<DuplicateTabDialog
 			message={session.runtime.inUseElsewhere}
-			onTakeOver={() => session.runtime.takeOver?.()}
+			onTakeOver={() => session.runtime.takeOver?.() ?? Promise.resolve(false)}
 		/>
 	{/if}
 

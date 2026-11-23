@@ -152,7 +152,7 @@ export class CheerpjRuntime implements IdeRuntime {
 		});
 	}
 
-	takeOver = (): void => this.lock?.takeOver();
+	takeOver = (): Promise<boolean> => this.lock?.takeOver() ?? Promise.resolve(false);
 
 	shutdown(): void {
 		this.display?.dispose();
