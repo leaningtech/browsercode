@@ -341,7 +341,7 @@
 				{/if}
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
-			{#if session.source.share}
+			{#if session.source.share && session.fsReady}
 				<ShareButton {session} />
 			{/if}
 		</header>

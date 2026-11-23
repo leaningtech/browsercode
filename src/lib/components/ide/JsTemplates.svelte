@@ -4,7 +4,14 @@
 	import CloneRepoForm from './CloneRepoForm.svelte';
 
 	/** Set when ?framework= carried something we couldn't resolve, so the picker can say so. */
-	let { unknownFramework }: { unknownFramework?: string } = $props();
+	let {
+		unknownFramework,
+		unreadableLink = false
+	}: {
+		unknownFramework?: string;
+		/** Set when the hash held no project we could read, often a link cut short in copying. */
+		unreadableLink?: boolean;
+	} = $props();
 
 	function openFramework(id: string) {
 		window.location.href = `/ide?framework=${id}`;
@@ -22,7 +29,7 @@
 	);
 </script>
 
-{#if unknownFramework}
+{#if unreadableLink || unknownFramework}
 	<div
 		class="mb-4 flex items-start gap-2.5 rounded-lg border border-bc-gold/25 bg-bc-gold/6 px-3 py-2.5 text-left"
 	>
@@ -32,9 +39,14 @@
 			<Icon icon="mingcute:alert-line" width="14" height="14" />
 		</span>
 		<span class="text-[12px] leading-relaxed text-bc-text-muted">
-			There's no template called <span class="font-mono text-bc-text">{shownId}</span>. Pick one
-			below, or use <span class="font-mono text-bc-text">?framework=</span> with one of:
-			<span class="font-mono text-bc-text">{templateIds}</span>.
+			{#if unreadableLink}
+				This link's project couldn't be read. It may have been cut short when it was copied. Pick a
+				template below instead.
+			{:else}
+				There's no template called <span class="font-mono text-bc-text">{shownId}</span>. Pick one
+				below, or use <span class="font-mono text-bc-text">?framework=</span> with one of:
+				<span class="font-mono text-bc-text">{templateIds}</span>.
+			{/if}
 		</span>
 	</div>
 {/if}

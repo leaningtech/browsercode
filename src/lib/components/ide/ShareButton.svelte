@@ -4,7 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { fly } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
-	import { shareLink } from '$lib/ide/share';
+	import { emptiedNote, MAX_LINK_LENGTH, shareLink } from '$lib/ide/share';
 
 	let { session }: { session: IdeSession } = $props();
 
@@ -12,7 +12,9 @@
 	const NOTE_MS = 6000;
 	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	let result = $state<'copied' | 'failed' | null>(null);
+	let result = $state<'copied' | 'too-long' | 'failed' | null>(null);
+	/** Binary files the last link carries empty. */
+	let emptied = $state<string[]>([]);
 	let rootEl = $state<HTMLElement | null>(null);
 	let timer: ReturnType<typeof setTimeout>;
 
@@ -23,13 +25,20 @@
 
 	async function share(): Promise<void> {
 		try {
-			const url = await shareLink(session);
-			if (!url) return;
+			const link = await shareLink(session);
+			if (!link) return;
+			const { url } = link;
+			if (url.length > MAX_LINK_LENGTH) {
+				result = 'too-long';
+				hideLater();
+				return;
+			}
 			// Only where the link opens this same page; an embed keeps the URL its host gave it. The
 			// source builds the link from the site root, so resolve() has no route id to map.
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			if (new URL(url).pathname === location.pathname) replaceState(url, {});
 			await navigator.clipboard.writeText(url);
+			emptied = link.emptied;
 			result = 'copied';
 		} catch (error) {
 			console.error('Failed to share project:', error);
@@ -59,12 +68,7 @@
 
 <!-- Positions the note itself, so it hangs under the button wherever the bar puts it. -->
 <div bind:this={rootEl} class="share-root">
-	<button
-		onclick={share}
-		disabled={!session.fsReady}
-		title="Copy a link that opens this project"
-		class="share-btn"
-	>
+	<button onclick={share} title="Copy a link that opens this project" class="share-btn">
 		<Icon
 			icon={result === 'copied' ? 'mingcute:check-line' : 'mingcute:share-forward-line'}
 			width="13"
@@ -90,7 +94,17 @@
 							height="13"
 							class="note-icon text-bc-azure"
 						/>
-						<strong>Link copied.</strong> It saves the project as it is now; share again after changes.
+						<strong>Link copied.</strong> It saves the project as it is now; share again after
+						changes.
+						{#if emptied.length}{emptiedNote(emptied)} Download keeps them.{/if}
+					{:else if result === 'too-long'}
+						<Icon
+							icon="mingcute:warning-line"
+							width="13"
+							height="13"
+							class="note-icon text-bc-gold"
+						/>
+						<strong>Too large for a link.</strong> Use Download in the files panel to share this project.
 					{:else}
 						<Icon
 							icon="mingcute:warning-line"
@@ -124,13 +138,9 @@
 			color 0.14s ease,
 			background 0.14s ease;
 	}
-	.share-btn:hover:not(:disabled) {
+	.share-btn:hover {
 		background: rgb(var(--bc-tint) / 6%);
 		color: var(--color-bc-text);
-	}
-	.share-btn:disabled {
-		cursor: not-allowed;
-		opacity: 0.4;
 	}
 	.share-btn:focus-visible {
 		outline: 1px solid var(--color-bc-azure);
