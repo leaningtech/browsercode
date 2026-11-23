@@ -6,6 +6,7 @@
 		activeEditorThemeId,
 		setEditorTheme
 	} from '$lib/stores/editor-settings.svelte';
+	import { dismissable } from '$lib/utils/dismissable';
 
 	// Host supplies the classes
 	let {
@@ -22,7 +23,6 @@
 
 	let open = $state(false);
 	const headingId = $props.id();
-	let rootEl = $state<HTMLElement | null>(null);
 
 	let themes = $derived(editorThemesFor(appearance()));
 	let selected = $derived(activeEditorThemeId());
@@ -31,33 +31,9 @@
 		setEditorTheme(id);
 		open = false;
 	}
-
-	// `pointerdown`, not `click`: the row that closes the menu is gone before a click reaches the
-	// window. `blur` catches clicks into the preview iframe, which raise no event here.
-	$effect(() => {
-		if (!open) return;
-		const dismiss = (event: PointerEvent): void => {
-			if (rootEl?.contains(event.target as Node)) return;
-			open = false;
-		};
-		const onKey = (event: KeyboardEvent): void => {
-			if (event.key === 'Escape') open = false;
-		};
-		const onBlur = (): void => {
-			open = false;
-		};
-		window.addEventListener('pointerdown', dismiss);
-		window.addEventListener('keydown', onKey);
-		window.addEventListener('blur', onBlur);
-		return () => {
-			window.removeEventListener('pointerdown', dismiss);
-			window.removeEventListener('keydown', onKey);
-			window.removeEventListener('blur', onBlur);
-		};
-	});
 </script>
 
-<div bind:this={rootEl} class="relative">
+<div use:dismissable={{ open, close: () => (open = false) }} class="relative">
 	<button
 		type="button"
 		onclick={() => (open = !open)}
