@@ -5,6 +5,7 @@
 	import { fly } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { emptiedNote, MAX_LINK_LENGTH, shareLink } from '$lib/ide/share';
+	import { dismissable } from '$lib/utils/dismissable';
 
 	let { session }: { session: IdeSession } = $props();
 
@@ -15,7 +16,6 @@
 	let result = $state<'copied' | 'too-long' | 'failed' | null>(null);
 	/** Binary files the last link carries empty. */
 	let emptied = $state<string[]>([]);
-	let rootEl = $state<HTMLElement | null>(null);
 	let timer: ReturnType<typeof setTimeout>;
 
 	function hideLater(): void {
@@ -47,27 +47,11 @@
 		hideLater();
 	}
 
-	$effect(() => {
-		if (!result) return;
-		const dismiss = (event: PointerEvent): void => {
-			if (!rootEl?.contains(event.target as Node)) result = null;
-		};
-		const onKey = (event: KeyboardEvent): void => {
-			if (event.key === 'Escape') result = null;
-		};
-		window.addEventListener('pointerdown', dismiss);
-		window.addEventListener('keydown', onKey);
-		return () => {
-			window.removeEventListener('pointerdown', dismiss);
-			window.removeEventListener('keydown', onKey);
-		};
-	});
-
 	onDestroy(() => clearTimeout(timer));
 </script>
 
 <!-- Positions the note itself, so it hangs under the button wherever the bar puts it. -->
-<div bind:this={rootEl} class="share-root">
+<div use:dismissable={{ open: !!result, close: () => (result = null) }} class="share-root">
 	<button onclick={share} title="Copy a link that opens this project" class="share-btn">
 		<Icon
 			icon={result === 'copied' ? 'mingcute:check-line' : 'mingcute:share-forward-line'}
