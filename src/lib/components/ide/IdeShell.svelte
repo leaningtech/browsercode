@@ -22,6 +22,7 @@
 	import PodBlockerOverlay from '$lib/components/PodBlockerOverlay.svelte';
 	import DuplicateTabDialog from '$lib/components/DuplicateTabDialog.svelte';
 	import { FULL_SHELL, type ShellOptions } from '$lib/ide/shell-options';
+	import { createShortcutActions, shortcutFor } from '$lib/ide/shortcuts';
 	import { watchIsMobile } from '$lib/utils/viewport';
 	import { bugReportUrl } from '$lib/utils/bug-report';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
@@ -65,6 +66,9 @@
 		untrack(() => (shell.fileTree ? 'files' : shell.search ? 'search' : null))
 	);
 	let fileTree = $state<{ startCreate: (kind: 'file' | 'folder') => void } | null>(null);
+	let searchPanel = $state<{ focus: () => void } | null>(null);
+	let editorPane = $state<{ focus: () => void } | null>(null);
+	let terminalTabs = $state<{ focus: () => void; addTerminal: () => void } | null>(null);
 
 	// ── Mobile state ──────────────────────────────────────────────────────────
 	type Pane = 'editor' | 'terminal' | 'preview';
@@ -234,6 +238,32 @@
 		});
 	}
 
+	let shortcutActions = $derived(
+		createShortcutActions({
+			session,
+			shell,
+			isMobile: () => isMobile,
+			panel: () => activePanel,
+			setPanel: (panel) => (activePanel = panel),
+			togglePreview: collapsiblePreview && !isMobile ? togglePreview : undefined,
+			showPane: showMobileView,
+			focusSearch: () => searchPanel?.focus(),
+			focusEditor: () => editorPane?.focus(),
+			focusTerminal: () => terminalTabs?.focus(),
+			addTerminal: () => terminalTabs?.addTerminal()
+		})
+	);
+
+	function handleShortcut(event: KeyboardEvent): void {
+		const id = shortcutFor(event);
+		const action = id && shortcutActions[id];
+		if (!action) return;
+		// Captured on the window, so Monaco and xterm never see the key.
+		event.preventDefault();
+		event.stopPropagation();
+		action();
+	}
+
 	// ── Mobile detection ──────────────────────────────────────────────────────
 	onMount(() =>
 		watchIsMobile((mobile) => {
@@ -277,6 +307,8 @@
 		session.shutdown();
 	});
 </script>
+
+<svelte:window onkeydowncapture={handleShortcut} />
 
 <div
 	class="bc-page-bg relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden text-bc-mist"
@@ -483,7 +515,11 @@
 						</span>
 					</div>
 					<div class="min-h-0 flex-1">
-						<SearchPanel {session} onFileOpen={() => isMobile && (activePanel = null)} />
+						<SearchPanel
+							bind:this={searchPanel}
+							{session}
+							onFileOpen={() => isMobile && (activePanel = null)}
+						/>
 					</div>
 				{/if}
 			</div>
@@ -518,7 +554,7 @@
 					class:pane-hidden={!shell.editor || (isMobile && activeMobileView !== 'editor')}
 					style={isMobile ? 'height: 100%; flex-shrink: 0;' : 'flex: 1 1 0; min-height: 0;'}
 				>
-					<EditorPane {session} />
+					<EditorPane bind:this={editorPane} {session} />
 				</div>
 
 				<!-- Divider: editor / terminal -->
@@ -543,7 +579,7 @@
 							? `flex: 0 0 auto; height: ${(1 - editorFraction) * 100}%; min-height: 0;`
 							: 'flex: 1 1 0; min-height: 0;'}
 				>
-					<TerminalTabs {session} bind:outputEl />
+					<TerminalTabs bind:this={terminalTabs} {session} bind:outputEl />
 				</div>
 			</div>
 
