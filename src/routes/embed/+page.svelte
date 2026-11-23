@@ -8,7 +8,7 @@
 	import { AgentSession } from '$lib/agents/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
 	import { repoSource } from '$lib/ide/repo-source';
-	import { sharedProjectSource } from '$lib/ide/shared-project-source';
+	import { sharedFilesSource, sharedProjectSource } from '$lib/ide/shared-project-source';
 	import { parseEmbedOptions } from '$lib/embed/options';
 	import { SITE_API_KEY } from '$lib/pod/api-key';
 
@@ -30,7 +30,9 @@
 						? templateSource(source.id)
 						: source.kind === 'shared-project'
 							? sharedProjectSource(source.project)
-							: repoSource(source.ref),
+							: source.kind === 'files'
+								? sharedFilesSource(source.project)
+								: repoSource(source.ref),
 					apiKey
 				)
 			: null;

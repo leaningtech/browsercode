@@ -290,11 +290,23 @@
 				</div>
 			{/if}
 		</div>
-	</nav>
 
-	<div class="mx-3 h-px bg-bc-border"></div>
-
-	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
+		<!-- Embeds cover the IDE and the agents alike, so this sits apart from either group:
+		     pushed to the foot of the nav, above the divider the utilities start under. -->
+		<div class="group relative mt-auto flex items-center justify-center">
+			<button
+				type="button"
+				onclick={() => {
+					trackEvent('Clicked Embed', { from: 'sidebar' });
+					navigate('/embed/builder');
+				}}
+				aria-label="Embed on your site"
+				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
+			>
+				<Icon icon="mingcute:layout-line" width="26" height="26" />
+			</button>
+			{@render tooltip('Embed on your site')}
+		</div>
 		<div class="group relative flex items-center justify-center">
 			<button
 				type="button"
@@ -310,6 +322,11 @@
 			</button>
 			{@render tooltip(themeState.current === 'dark' ? 'Light mode' : 'Dark mode')}
 		</div>
+	</nav>
+
+	<div class="mx-3 h-px bg-bc-border"></div>
+
+	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
 		<div class="group relative flex items-center justify-center">
 			<a
 				href="https://github.com/leaningtech/browsercode"

@@ -2,6 +2,8 @@
 
 BrowserCode runs entirely in the browser. An embed is our page inside your iframe.
 
+The [embed builder](https://browsercode.io/embed/builder) writes the iframe for you: pick a template, Java example, GitHub repo, agent or shared link, choose the panes, and copy the snippet.
+
 What your page has to do depends on what the embed runs on:
 
 | Embed                          | Runs on    | Your page must send             | The iframe must carry           |
@@ -71,7 +73,7 @@ Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
 
 ## Behaviour
 
-- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project.
+- Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project. A template or repo project shared with Share embeds the same way without `runtime`: `/embed#<project>`.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
 - One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog, which can move the session there and close it in the other.

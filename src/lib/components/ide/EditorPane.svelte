@@ -22,6 +22,48 @@
 
 	let activeFile = $derived(session.openFiles.find((file) => file.path === session.selectedFile));
 
+	/** Firefox needs drag data; a type Monaco ignores keeps a dropped tab out of the file. */
+	const TAB_MIME = 'application/x-browsercode-tab';
+
+	let tabStrip = $state<HTMLDivElement | null>(null);
+	let draggedPath = $state<string | null>(null);
+	/** Where the dragged tab would land, as an index into `openFiles`; null when it wouldn't move. */
+	let dropIndex = $state<number | null>(null);
+
+	function startTabDrag(event: DragEvent, path: string): void {
+		if (!event.dataTransfer) return;
+		event.dataTransfer.setData(TAB_MIME, path);
+		event.dataTransfer.effectAllowed = 'move';
+		draggedPath = path;
+	}
+
+	function dragOverTabs(event: DragEvent): void {
+		// Files dragged in from the desktop aren't tabs.
+		if (!draggedPath || !tabStrip) return;
+		event.preventDefault();
+		const index = Array.from(tabStrip.querySelectorAll('[data-tab]')).filter((tab) => {
+			const rect = tab.getBoundingClientRect();
+			return rect.left + rect.width / 2 < event.clientX;
+		}).length;
+		const from = session.openFiles.findIndex((file) => file.path === draggedPath);
+		dropIndex = index === from || index === from + 1 ? null : index;
+	}
+
+	function dropOnTabs(event: DragEvent): void {
+		event.preventDefault();
+		if (draggedPath && dropIndex !== null) session.moveFile(draggedPath, dropIndex);
+		endTabDrag();
+	}
+
+	function endTabDrag(): void {
+		draggedPath = null;
+		dropIndex = null;
+	}
+
+	export function focus(): void {
+		editor?.focus();
+	}
+
 	// Responsive font
 	const FONT_QUERY = '(min-width: 640px)';
 	const fontSizeFor = (desktop: boolean) => (desktop ? 12.8 : 11.5);
@@ -174,21 +216,44 @@
 </script>
 
 <div class="flex h-full min-h-0 flex-col overflow-hidden">
-	<div class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-navy">
+	<div
+		bind:this={tabStrip}
+		ondragover={dragOverTabs}
+		ondrop={dropOnTabs}
+		ondragleave={(event) => {
+			if (!tabStrip?.contains(event.relatedTarget as Node | null)) dropIndex = null;
+		}}
+		role="presentation"
+		class="flex h-8 shrink-0 items-center overflow-x-auto border-b border-bc-border bg-bc-statusbar"
+	>
 		{#if session.openFiles.length === 0}
 			<div class="flex items-center gap-1.5 px-3 text-[11px] text-bc-text-muted">
 				<Icon icon="mingcute:code-line" width="11" height="11" />
 				<span class="font-medium tracking-wide">Editor</span>
 			</div>
 		{/if}
-		{#each session.openFiles as file (file.path)}
+		{#each session.openFiles as file, i (file.path)}
 			{@const active = session.selectedFile === file.path}
 			{@const dirty = file.content !== file.savedContent}
 			<div
-				class="group flex h-8 shrink-0 items-center transition {active
+				data-tab
+				draggable="true"
+				ondragstart={(event) => startTabDrag(event, file.path)}
+				ondragend={endTabDrag}
+				role="presentation"
+				class="group relative flex h-8 shrink-0 items-center transition {active
 					? 'bg-bc-azure/10 text-bc-mist'
 					: 'text-bc-icon hover:text-bc-mist'}"
+				class:opacity-50={draggedPath === file.path}
 			>
+				{#if dropIndex === i || (dropIndex === session.openFiles.length && i === dropIndex - 1)}
+					<span
+						class="pointer-events-none absolute inset-y-1 w-0.5 rounded-full bg-bc-azure {dropIndex ===
+						i
+							? 'left-0'
+							: 'right-0'}"
+					></span>
+				{/if}
 				<!-- Focus as a preview open so clicking a tab never changes its pin state. -->
 				<button
 					onclick={() => void session.openFile(file.path, true)}

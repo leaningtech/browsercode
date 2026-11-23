@@ -3,6 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import QRCode from 'qrcode';
 	import type { PortalState } from '$lib/stores/portals.svelte';
+	import { dismissable } from '$lib/utils/dismissable';
 
 	type Props = {
 		portal: PortalState;
@@ -23,7 +24,6 @@
 
 	let localQrCodeCanvas = $state<HTMLCanvasElement | null>(null);
 	let frameEl = $state<HTMLIFrameElement | null>(null);
-	let toolbarEl = $state<HTMLElement | null>(null);
 	let sweeping = $state(false);
 	let sweepId = $state(0);
 	let sweepTimer: ReturnType<typeof setTimeout>;
@@ -70,28 +70,6 @@
 		}
 	});
 
-	// `pointerdown`, not `click`: a row that closes its own menu is gone from the DOM by the time
-	// a click reaches the window. `blur` catches clicks into the iframe, which raise no event here.
-	$effect(() => {
-		if (!anyOverlay) return;
-		const dismiss = (event: PointerEvent): void => {
-			if (toolbarEl?.contains(event.target as Node)) return;
-			portal.closeOverlays();
-		};
-		const onKey = (event: KeyboardEvent): void => {
-			if (event.key === 'Escape') portal.closeOverlays();
-		};
-		const onBlur = (): void => portal.closeOverlays();
-		window.addEventListener('pointerdown', dismiss);
-		window.addEventListener('keydown', onKey);
-		window.addEventListener('blur', onBlur);
-		return () => {
-			window.removeEventListener('pointerdown', dismiss);
-			window.removeEventListener('keydown', onKey);
-			window.removeEventListener('blur', onBlur);
-		};
-	});
-
 	onDestroy(() => clearTimeout(sweepTimer));
 </script>
 
@@ -99,8 +77,8 @@
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		<!-- Controls stay left so the fixed promo ribbon keeps the corner. -->
 		<div
-			bind:this={toolbarEl}
-			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-border bg-bc-navy px-1"
+			use:dismissable={{ open: anyOverlay, close: () => portal.closeOverlays() }}
+			class="relative flex h-8 shrink-0 items-center gap-0.5 border-b border-bc-border bg-bc-statusbar px-1"
 		>
 			{#if onCollapse}
 				<button

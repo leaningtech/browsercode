@@ -68,6 +68,12 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 			description: 'Use your favorite CLI agents without any installations, sandboxed.'
 		};
 	}
+	if (routeId === '/embed/builder') {
+		return {
+			title: 'Embed BrowserCode',
+			description: 'Build the iframe that puts a BrowserCode project, repo or agent in your page.'
+		};
+	}
 	if (routeId === '/privacy') {
 		return {
 			title: 'Privacy Policy — BrowserCode',
