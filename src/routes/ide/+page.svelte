@@ -5,6 +5,8 @@
 	import IdeLanding from '$lib/components/ide/IdeLanding.svelte';
 	import { IdeSession } from '$lib/ide/session.svelte';
 	import { templateSource } from '$lib/ide/template-source';
+	import { sharedFilesSource } from '$lib/ide/shared-project-source';
+	import { decodeProjectLink } from '$lib/ide/project-link';
 	import { defaultFrameworkId, resolveFrameworkId, type FrameworkId } from '$lib/config/frameworks';
 	import { SITE_API_KEY } from '$lib/pod/api-key';
 
@@ -14,10 +16,17 @@
 	// outcome for a URL somebody generated rather than clicked.
 	const requested = $page.url.searchParams.get('framework');
 	const resolved = resolveFrameworkId(requested);
-	const showLanding = !resolved;
 	const framework: FrameworkId = resolved ?? defaultFrameworkId;
+	// A shared link carries the whole project in the hash; an unreadable one lands on the picker.
+	const hash = $page.url.hash.slice(1);
+	const shared = hash ? decodeProjectLink(hash) : null;
+	const unreadableLink = !!hash && !shared;
+	const showLanding = !shared && (!resolved || unreadableLink);
 
-	const session = new IdeSession(templateSource(framework), SITE_API_KEY);
+	const session = new IdeSession(
+		shared ? sharedFilesSource(shared) : templateSource(framework),
+		SITE_API_KEY
+	);
 
 	// Landing (pre-boot) fades the glass panel in, full coverage from the start. Once booted,
 	// IdeShell keeps the sheet-slide-up entrance instead (see below).
@@ -35,7 +44,10 @@
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 			style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 		>
-			<IdeLanding unknownFramework={requested ?? undefined} />
+			<IdeLanding
+				unknownFramework={resolved || unreadableLink ? undefined : (requested ?? undefined)}
+				{unreadableLink}
+			/>
 		</div>
 	</div>
 {:else}

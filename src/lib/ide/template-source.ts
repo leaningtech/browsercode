@@ -6,6 +6,7 @@ import type { JavaVersion } from '$lib/java/versions';
 import { POD_HOME } from '$lib/pod/fs';
 import { trackEvent } from '$lib/utils/useLazyTracking';
 import { packageManagerCommand } from './native-deps';
+import { projectLink } from './project-link';
 import type { BootContext, ProjectSource } from './project-source';
 
 export function templateSource(framework: FrameworkId): ProjectSource {
@@ -31,7 +32,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 		javaVersion: config.javaVersion,
 		mainClass: config.mainClass,
 		starterFiles: config.olderJava && starterFiles(config.sourceRoot, config.olderJava),
-		share: config.share
+		share: config.share ?? ((files) => projectLink(files, config.appPort))
 	};
 }
 

@@ -96,7 +96,7 @@
 		<div class="panels">
 			{#if active === 'js'}
 				<div id="lang-panel-js" role="tabpanel" aria-labelledby="lang-tab-js">
-					<JsTemplates {unknownFramework} />
+					<JsTemplates {unknownFramework} {unreadableLink} />
 				</div>
 			{:else}
 				<div id="lang-panel-java" role="tabpanel" aria-labelledby="lang-tab-java">
