@@ -21,8 +21,8 @@ export type EmbedSource =
 /** `apiKey` is the raw parameter: empty asks for keyless mode, and a host page's own key is not used yet. */
 export type EmbedOptions = { source: EmbedSource; shell: ShellOptions; apiKey?: string };
 
-const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
-type View = (typeof VIEWS)[number];
+export const VIEWS = ['files', 'search', 'editor', 'terminal', 'preview'] as const;
+export type View = (typeof VIEWS)[number];
 
 /** Narrows a raw `view=` entry, so unknown names fall out of the list rather than throwing. */
 function isView(value: string): value is View {

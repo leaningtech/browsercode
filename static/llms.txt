@@ -45,6 +45,7 @@ Build these directly; they are stable.
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/<dir>` | As above, scoped to a subdirectory |
 | `https://browsercode.io/agents` | Picker for the coding CLIs |
 | `https://browsercode.io/agents/<tool>` | Boots that CLI in a terminal |
+| `https://browsercode.io/embed/builder` | Builds the iframe snippet for an embed: pick what to embed and which panes to show |
 | `https://browsercode.io/embed?…` | Embeddable build, see **Embedding** below |
 
 ### Template ids for `framework=`

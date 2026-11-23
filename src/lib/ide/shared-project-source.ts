@@ -24,6 +24,9 @@ export function sharedProjectSource(project: SharedProject, template?: Framework
 		label: project.title || (template ? base.label : 'Shared project'),
 		listFiles: async () => project.files.map((file) => file.path),
 		hydrate: hydrateFrom(project.files),
+		// The link's files are its own, however close they sit to the template it opened in.
+		pristineFiles: undefined,
+		embedTarget: undefined,
 		javaVersion: project.java ?? 8,
 		// A link from before the key names none; the build then finds the class to start.
 		mainClass: project.main,

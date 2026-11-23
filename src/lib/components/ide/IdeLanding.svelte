@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import { page } from '$app/stores';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import JavaExamples from '$lib/components/java/JavaExamples.svelte';
 	import JsTemplates from './JsTemplates.svelte';
@@ -104,6 +105,18 @@
 				</div>
 			{/if}
 		</div>
+
+		<!-- Outside `.panels`, so its reserved height still measures the taller tab alone. The
+		     sidebar's own Embed button is desktop-only; this is the one that survives a narrow
+		     screen. -->
+		<p class="mt-5 text-center text-[12px] text-bc-text-muted">
+			Want one of these running in your own page?
+			<a
+				href={resolve('/embed/builder')}
+				class="text-bc-text underline decoration-bc-tint/30 underline-offset-2 hover:text-bc-link-hover"
+				>Embed BrowserCode</a
+			>.
+		</p>
 	</div>
 </div>
 

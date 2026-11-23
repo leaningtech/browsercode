@@ -2,6 +2,8 @@
 
 BrowserCode runs entirely in the browser. An embed is our page inside your iframe.
 
+The [embed builder](https://browsercode.io/embed/builder) writes the iframe for you: pick a template, Java example, GitHub repo, agent or shared link, choose the panes, and copy the snippet.
+
 What your page has to do depends on what the embed runs on:
 
 | Embed                          | Runs on    | Your page must send             | The iframe must carry           |
