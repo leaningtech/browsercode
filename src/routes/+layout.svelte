@@ -22,8 +22,8 @@
 	// flyouts) the rest of the time.
 	let ribbonAboveTour = $derived(stepperState.open && stepperState.step === 5);
 
-	// Embeds render inside a host page, where none of the app chrome belongs.
-	let isEmbed = $derived($page.route.id?.startsWith('/embed') ?? false);
+	// Embeds render inside a host page with none of the app chrome; /embed/builder is a normal page.
+	let isEmbed = $derived($page.route.id === '/embed');
 
 	// Shared with Sidebar.svelte, which gates the leave-session warning off the same answer.
 	let opensAProject = $derived(opensProject($page.route.id, $page.url));

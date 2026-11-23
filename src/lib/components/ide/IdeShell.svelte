@@ -12,6 +12,7 @@
 	import { STARTING } from '$lib/ide/runtime';
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
+	import EmbedButton from '$lib/components/ide/EmbedButton.svelte';
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -342,7 +343,12 @@
 			</div>
 			<!-- Right of the bar: free in a booted session, where the GitHub ribbon doesn't render. -->
 			{#if session.source.share && session.fsReady}
-				<ShareButton {session} />
+				<div class="flex shrink-0 items-center gap-1">
+					{#if shell.tools}
+						<EmbedButton {session} />
+					{/if}
+					<ShareButton {session} />
+				</div>
 			{/if}
 		</header>
 	{/if}
