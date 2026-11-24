@@ -2,8 +2,11 @@ import { isEnabledTool, toolItems } from '$lib/config/tools';
 
 export const ORIGIN = 'https://browsercode.io';
 
-/** Static page routes kept out of search. /embed is an iframe widget for host pages. */
-const NOINDEX_ROUTES = ['/embed'];
+/**
+ * Static page routes kept out of search. /embed is an iframe widget for host pages; /learn lists
+ * lessons made for social media, whose own pages are dynamic routes and so unlisted already.
+ */
+const NOINDEX_ROUTES = ['/embed', '/learn'];
 
 /**
  * The pages we want in search results: listed in /sitemap.xml and given a canonical link, while
