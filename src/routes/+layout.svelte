@@ -24,6 +24,7 @@
 
 	// Embeds render inside a host page with none of the app chrome; /embed/builder is a normal page.
 	let isEmbed = $derived($page.route.id === '/embed');
+	let bare = $derived(isEmbed);
 
 	// Shared with Sidebar.svelte, which gates the leave-session warning off the same answer.
 	let opensAProject = $derived(opensProject($page.route.id, $page.url));
@@ -35,7 +36,7 @@
 	// step 6.
 	let showRibbon = $derived(
 		!zenState.on &&
-			!isEmbed &&
+			!bare &&
 			(ribbonAboveTour ||
 				$page.route.id === '/' ||
 				$page.route.id === '/agents' ||
@@ -50,7 +51,7 @@
 	// Everywhere but a booted session (whose vertical space belongs to the terminal and editor),
 	// zen mode and embeds, until dismissed.
 	let showAnnouncement = $derived(
-		!zenState.on && !isEmbed && !isBootedSession && !announcementState.dismissed
+		!zenState.on && !bare && !isBootedSession && !announcementState.dismissed
 	);
 
 	let meta = $derived(pageMeta($page.route.id, $page.params.tool));
@@ -95,11 +96,11 @@
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		<!-- Mounted everywhere: it only auto-opens on a first-ever visit to Home, but the sidebar's
 		     Help flyout and the Home page both need to trigger it from anywhere via stepperState. -->
-		{#if !isEmbed}
+		{#if !bare}
 			<Stepper />
 			<LeaveWarningModal />
 		{/if}
-		{#if !zenState.on && !isEmbed}
+		{#if !zenState.on && !bare}
 			<Sidebar />
 		{/if}
 
@@ -130,7 +131,7 @@
 				</main>
 			</div>
 
-			{#if !zenState.on && !isEmbed}
+			{#if !zenState.on && !bare}
 				<UtilityBar />
 			{/if}
 		</div>
