@@ -24,7 +24,9 @@
 
 	// Embeds render inside a host page with none of the app chrome; /embed/builder is a normal page.
 	let isEmbed = $derived($page.route.id === '/embed');
-	let bare = $derived(isEmbed);
+	// A lesson arrives from a social post, often on a phone: the lesson is the whole page.
+	let isLesson = $derived($page.route.id === '/learn/[id]');
+	let bare = $derived(isEmbed || isLesson);
 
 	// Shared with Sidebar.svelte, which gates the leave-session warning off the same answer.
 	let opensAProject = $derived(opensProject($page.route.id, $page.url));
@@ -49,7 +51,7 @@
 	let isBootedSession = $derived($page.route.id === '/agents/[tool]' || opensAProject);
 
 	// Everywhere but a booted session (whose vertical space belongs to the terminal and editor),
-	// zen mode and embeds, until dismissed.
+	// zen mode, embeds and lessons, until dismissed.
 	let showAnnouncement = $derived(
 		!zenState.on && !bare && !isBootedSession && !announcementState.dismissed
 	);
