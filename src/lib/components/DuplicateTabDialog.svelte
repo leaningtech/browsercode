@@ -2,20 +2,20 @@
 	import Icon from '@iconify/svelte';
 	import Modal from '$lib/components/Modal.svelte';
 
-	let { message = 'Sorry, you can only open one tab of the same agent.' }: { message?: string } =
-		$props();
+	let {
+		message = 'This agent is already running in another tab.',
+		onTakeOver
+	}: { message?: string; onTakeOver: () => Promise<boolean> } = $props();
 
-	let closeFallback = $state(false);
-	// A script can't close the page an embed sits in, so there is nothing to offer there.
-	const framed = window.self !== window.top;
+	let takingOver = $state(false);
+	let unanswered = $state(false);
 
-	function attemptCloseTab(): void {
-		window.close();
-		// Browsers only let scripts close tabs they themselves opened; If we're still here
-		// shortly after, that didn't work, so tell the user to close it manually instead.
-		setTimeout(() => {
-			closeFallback = true;
-		}, 400);
+	async function takeOver(): Promise<void> {
+		takingOver = true;
+		unanswered = false;
+		if (await onTakeOver()) return;
+		takingOver = false;
+		unanswered = true;
 	}
 </script>
 
@@ -30,21 +30,22 @@
 		<Icon icon="mingcute:alert-line" width="22" height="22" />
 	</div>
 	<h3 id="duplicate-tab-title" class="mb-2 text-[14px] font-semibold text-bc-text">
-		Already open in another tab
+		Open in another tab
 	</h3>
-	<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
+	<p class="mb-2 text-[12.5px] leading-relaxed text-bc-text-muted">
 		{message}
 	</p>
-	{#if closeFallback || framed}
-		<p class="text-[12px] text-bc-text-muted">
-			{framed ? 'Close the other one, then reload this page.' : 'You can close this tab.'}
-		</p>
-	{:else}
-		<button
-			onclick={attemptCloseTab}
-			class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-azure"
-		>
-			Close
-		</button>
+	<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
+		Using it here closes the session in the other one, and anything unsaved there is lost.
+	</p>
+	<button
+		onclick={takeOver}
+		disabled={takingOver}
+		class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-azure disabled:opacity-60"
+	>
+		{takingOver ? 'Switching…' : 'Use here'}
+	</button>
+	{#if unanswered}
+		<p class="mt-3 text-[12px] text-bc-coral">The other tab isn't responding. Try again.</p>
 	{/if}
 </Modal>

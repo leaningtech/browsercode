@@ -100,7 +100,7 @@ Sign-in differs per tool, and this trips people up:
   redirects to a `localhost` callback that cannot reach the sandbox. An API key also works.
 
 Only one agent session runs per browser. A second tab of the same agent shows a duplicate-session
-dialog.
+dialog, which can move the session there and close it in the other tab.
 
 Each agent starts with an instructions file describing the sandbox (`CLAUDE.md` for Claude Code,
 `AGENTS.md` for Codex CLI and Pi), but it may try its default behaviour before reading it.
@@ -131,9 +131,10 @@ COEP or the `allow` attribute for it.
 ```
 
 Java runs in one BrowserCode tab or embed at a time, because they share one storage area, so a
-page can hold only one Java embed; a second, or one opened while a browsercode.io tab runs Java,
-shows a dialog instead. Java embeds on different sites do not conflict. Its Share button copies
-a link, which Chrome and Edge allow from an iframe only with `allow="clipboard-write"`. That
+page can run only one Java embed; a second, or one opened while a browsercode.io tab runs Java,
+shows a dialog that can move Java there and close it in the other. Java embeds on different sites
+do not conflict. Its Share button copies a link, which Chrome and Edge allow from an iframe only
+with `allow="clipboard-write"`. That
 attribute is optional and unrelated to isolation.
 
 ### BrowserPod embeds: cross-origin isolation required

@@ -318,7 +318,10 @@
 	{#if blocker}
 		<PodBlockerOverlay {blocker} />
 	{:else if session.runtime.inUseElsewhere}
-		<DuplicateTabDialog message={session.runtime.inUseElsewhere} />
+		<DuplicateTabDialog
+			message={session.runtime.inUseElsewhere}
+			onTakeOver={() => session.runtime.takeOver?.() ?? Promise.resolve(false)}
+		/>
 	{/if}
 
 	<!-- ── Top bar ─────────────────────────────────────────────────────────── -->

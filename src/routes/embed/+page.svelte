@@ -41,7 +41,7 @@
 {#if options && agentSession}
 	<div class="flex h-full min-h-0 w-full min-w-0 flex-col">
 		{#if agentSession.lock === 'taken'}
-			<DuplicateTabDialog />
+			<DuplicateTabDialog onTakeOver={agentSession.takeOver} />
 		{/if}
 		<AgentShell session={agentSession} shell={options.shell} />
 	</div>
