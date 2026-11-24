@@ -58,6 +58,14 @@
 		<p class="more">
 			Want a blank page? Open the <a href={resolve('/java')}>Java Playground</a>.
 		</p>
+		<p class="more">
+			Teachers: every lesson's code is open source (Apache 2.0) and yours to reuse in class.
+			<a
+				href="https://github.com/leaningtech/browsercode/tree/main/src/lib/learn/lessons"
+				target="_blank"
+				rel="noopener">Get it on GitHub</a
+			>.
+		</p>
 	</div>
 </div>
 
