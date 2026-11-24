@@ -1,0 +1,50 @@
+{
+	"id": "008",
+	"series": "guess-the-output",
+	"title": "Computers can't add 0.1 + 0.2",
+	"topic": "floating point",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Is 0.1 + 0.2 equal to 0.3? 🤔",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["true\n0.3", "false\n0.3", "false\n0.30000000000000004", "Error"],
+				"answer": 2,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "false\n0.30000000000000004"
+			}
+		},
+		{
+			"say": "A double is stored in binary, and 0.1 has no exact binary form.",
+			"highlight": [2, 2]
+		},
+		{
+			"say": "Like 1/3 in decimal: 0.3333… never ends, so it gets rounded."
+		},
+		{
+			"say": "So never compare decimals with ==. Check they're close enough.",
+			"highlight": [3, 3]
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  double sum = 0.1 + 0.2;\n  System.out.println(sum == 0.3);\n  System.out.println(sum);\n}\n"
+		}
+	]
+}

@@ -1,0 +1,49 @@
+{
+	"id": "001",
+	"series": "guess-the-output",
+	"title": "When + stops doing math",
+	"topic": "string concatenation",
+	"difficulty": 1,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Guess the output 👇",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["12345", "15", "3345", "339"],
+				"answer": 2,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "3345"
+			}
+		},
+		{
+			"say": "Java reads + from left to right.",
+			"highlight": [2, 2]
+		},
+		{
+			"say": "1 + 2 is math: 3. Then 3 + \"3\" is text: \"33\"."
+		},
+		{
+			"say": "Once it's text, every + just glues: \"3345\"."
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  System.out.println(1 + 2 + \"3\" + 4 + 5);\n}\n"
+		}
+	]
+}

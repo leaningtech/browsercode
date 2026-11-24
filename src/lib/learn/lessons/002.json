@@ -1,0 +1,61 @@
+{
+	"id": "002",
+	"series": "guess-the-output",
+	"title": "Java ate half a pizza",
+	"topic": "integer division",
+	"difficulty": 1,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "7 slices, 2 friends 🍕 How many each?",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["3.5", "3", "4", "Error"],
+				"answer": 1,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "3"
+			}
+		},
+		{
+			"say": "int ÷ int gives an int. Java drops the .5 (it doesn't round!)",
+			"highlight": [4, 4]
+		},
+		{
+			"say": "Make one side a double…"
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "int pizza",
+				"replace": "double pizza"
+			}
+		},
+		{
+			"run": {
+				"expect": "3.5"
+			}
+		},
+		{
+			"say": "…and everyone gets 3.5 🍕"
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  int pizza = 7;\n  int friends = 2;\n  System.out.println(pizza / friends);\n}\n"
+		}
+	]
+}

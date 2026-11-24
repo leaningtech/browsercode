@@ -1,0 +1,82 @@
+{
+	"id": "007",
+	"series": "bug-hunt",
+	"title": "The switch that keeps going",
+	"topic": "switch fall-through, arrow cases",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Day 2 is Tuesday. Easy, right? 🐛",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["Tue", "Tue\nWed\n???", "Mon\nTue", "???"],
+				"answer": 1,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "Tue\nWed\n???"
+			}
+		},
+		{
+			"say": "Without break, a case falls through into the next one…",
+			"highlight": [5, 7]
+		},
+		{
+			"say": "Modern Java has a fix: arrow cases never fall through."
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "case 1:",
+				"replace": "case 1 ->"
+			}
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "case 2:",
+				"replace": "case 2 ->"
+			}
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "case 3:",
+				"replace": "case 3 ->"
+			}
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "default:",
+				"replace": "default ->"
+			}
+		},
+		{
+			"run": {
+				"expect": "Tue"
+			}
+		},
+		{
+			"say": "Just Tuesday ✅ Use -> and forget about break."
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  int day = 2;\n  switch (day) {\n    case 1: System.out.println(\"Mon\");\n    case 2: System.out.println(\"Tue\");\n    case 3: System.out.println(\"Wed\");\n    default: System.out.println(\"???\");\n  }\n}\n"
+		}
+	]
+}
