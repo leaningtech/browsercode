@@ -1,0 +1,61 @@
+{
+	"id": "003",
+	"series": "bug-hunt",
+	"title": "Same text, different strings?",
+	"topic": "== vs equals()",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Same word twice. What could go wrong? 🐛",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["Same!", "Different?!", "Error"],
+				"answer": 1,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "Different?!"
+			}
+		},
+		{
+			"say": "== asks: is it the same object in memory?",
+			"highlight": [4, 4]
+		},
+		{
+			"say": "new String makes a second object, so the answer is no."
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "a == b",
+				"replace": "a.equals(b)"
+			}
+		},
+		{
+			"run": {
+				"expect": "Same!"
+			}
+		},
+		{
+			"say": "Compare text with .equals() ✅"
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  String a = \"java\";\n  String b = new String(\"java\");\n  if (a == b) {\n    System.out.println(\"Same!\");\n  } else {\n    System.out.println(\"Different?!\");\n  }\n}\n"
+		}
+	]
+}

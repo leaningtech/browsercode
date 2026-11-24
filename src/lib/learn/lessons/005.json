@@ -1,0 +1,50 @@
+{
+	"id": "005",
+	"series": "guess-the-output",
+	"title": "Letters are secretly numbers",
+	"topic": "char arithmetic and casts",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "'A' + 1 = ? 🤔",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["B\nB", "66\nB", "A1\nB", "Error"],
+				"answer": 1,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "66\nB"
+			}
+		},
+		{
+			"say": "A char is a number underneath: 'A' is 65.",
+			"highlight": [3, 3]
+		},
+		{
+			"say": "65 + 1 = 66, and math gives you an int."
+		},
+		{
+			"say": "Cast it back to char and 66 is 'B'.",
+			"highlight": [4, 4]
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  char c = 'A';\n  System.out.println(c + 1);\n  System.out.println((char) (c + 1));\n}\n"
+		}
+	]
+}

@@ -1,0 +1,58 @@
+{
+	"id": "006",
+	"series": "build-it",
+	"title": "Write secret messages like Julius Caesar",
+	"topic": "loops over strings, char math, modulo",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Make a secret code in 13 lines 🔐",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [1, 5]
+			}
+		},
+		{
+			"say": "Go through the message one letter at a time…"
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [6, 10]
+			}
+		},
+		{
+			"say": "…and shift each letter 3 places. % 26 wraps z back to a.",
+			"highlight": [8, 8]
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [11, 13]
+			}
+		},
+		{
+			"run": {
+				"stdin": "hello world\n",
+				"expect": "Message: Secret: khoor zruog"
+			}
+		},
+		{
+			"say": "Caesar used this 2,000 years ago 🏛️"
+		},
+		{
+			"say": "Can you write the decoder? Hint: shift the other way."
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  var in = new Scanner(System.in);\n  System.out.print(\"Message: \");\n  String msg = in.nextLine();\n  String out = \"\";\n  for (char c : msg.toCharArray()) {\n    if (c >= 'a' && c <= 'z') {\n      c = (char) ('a' + (c - 'a' + 3) % 26);\n    }\n    out += c;\n  }\n  System.out.println(\"Secret: \" + out);\n}\n"
+		}
+	]
+}

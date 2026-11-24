@@ -1,0 +1,61 @@
+{
+	"id": "010",
+	"series": "bug-hunt",
+	"title": "A 12-year-old can vote?",
+	"topic": "empty statements after if",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "Can a 12-year-old vote? Java says… 🐛",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java"
+			}
+		},
+		{
+			"quiz": {
+				"question": "What does it print?",
+				"options": ["Done", "You can vote!\nDone", "Error"],
+				"answer": 1,
+				"seconds": 3
+			}
+		},
+		{
+			"run": {
+				"expect": "You can vote!\nDone"
+			}
+		},
+		{
+			"say": "Spot the ; after the if. It IS the if's whole body.",
+			"highlight": [3, 3]
+		},
+		{
+			"say": "So the { } block below is just a block. It always runs."
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "(age >= 18);",
+				"replace": "(age >= 18)"
+			}
+		},
+		{
+			"run": {
+				"expect": "Done"
+			}
+		},
+		{
+			"say": "One character, fixed ✅ Never put ; after if (…)"
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "void main() {\n  int age = 12;\n  if (age >= 18); {\n    System.out.println(\"You can vote!\");\n  }\n  System.out.println(\"Done\");\n}\n"
+		}
+	]
+}

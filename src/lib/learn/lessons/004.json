@@ -1,0 +1,74 @@
+{
+	"id": "004",
+	"series": "build-it",
+	"title": "A rainbow spiral from one loop",
+	"topic": "loops, trigonometry, Swing drawing",
+	"difficulty": 2,
+	"java": 25,
+	"main": "Main",
+	"script": [
+		{
+			"say": "A loop + sin & cos = this 🌈",
+			"hold": 1.5
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [1, 9]
+			}
+		},
+		{
+			"say": "A window with something to draw on."
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [10, 16]
+			}
+		},
+		{
+			"say": "300 dots. Each one a bit further round…"
+		},
+		{
+			"type": {
+				"file": "Main.java",
+				"lines": [17, 26]
+			}
+		},
+		{
+			"run": {
+				"display": true
+			},
+			"hold": 2.5
+		},
+		{
+			"say": "Change one number 👇",
+			"highlight": [17, 17]
+		},
+		{
+			"edit": {
+				"file": "Main.java",
+				"find": "i * 0.25",
+				"replace": "i * 2.4"
+			}
+		},
+		{
+			"run": {
+				"display": true
+			},
+			"hold": 2.5
+		},
+		{
+			"say": "A sunflower 🌻 2.4 is close to the golden angle real sunflowers use."
+		},
+		{
+			"say": "Try your own numbers 👇"
+		}
+	],
+	"files": [
+		{
+			"path": "Main.java",
+			"content": "import javax.swing.*;\nimport java.awt.*;\n\nvoid main() {\n  var frame = new JFrame(\"Spiral\");\n  frame.add(new Spiral());\n  frame.setSize(400, 400);\n  frame.setVisible(true);\n}\n\nclass Spiral extends JPanel {\n  Spiral() { setBackground(Color.BLACK); }\n\n  public void paint(Graphics g) {\n    super.paint(g);\n    for (int i = 0; i < 300; i++) {\n      double a = i * 0.25;\n      double r = i * 0.6;\n      int x = (int) (200 + Math.cos(a) * r);\n      int y = (int) (200 + Math.sin(a) * r);\n      float h = i / 300f;\n      var c = Color.getHSBColor(h, 1, 1);\n      g.setColor(c);\n      g.fillOval(x, y, 8, 8);\n    }\n  }\n}\n"
+		}
+	]
+}
