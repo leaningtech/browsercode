@@ -20,6 +20,11 @@ import type { BootContext, ProjectSource } from './project-source';
 import { SETUP, STARTING, type Diagnostic, type IdeRuntime, type RuntimeEnv } from './runtime';
 
 const ROOT = '/files/browsercode';
+/**
+ * Java's storage under `/files/` is one per site, so only one tab at a time may hold it, whichever
+ * page it runs Java for. Whoever holds the lock owns everything under `ROOT`.
+ */
+export const JAVA_TAB_LOCK = `cheerpj:${ROOT}`;
 const PROJECT_DIR = `${ROOT}/project`;
 /** A folder per run, since an earlier program may still be loading classes from its own. */
 const RUNS_DIR = `${ROOT}/runs`;
@@ -162,7 +167,7 @@ export class CheerpjRuntime implements IdeRuntime {
 
 	/** Asked before CheerpJ loads, so a tab that can't run never starts a JVM. */
 	private async claim(): Promise<void> {
-		this.lock ??= requestSingleTabLock(`cheerpj:${ROOT}`, closeOrReloadTab);
+		this.lock ??= requestSingleTabLock(JAVA_TAB_LOCK, closeOrReloadTab);
 		if (!(await this.lock.acquired)) this.inUseElsewhere = IN_USE_ELSEWHERE;
 		await this.lock.held;
 		this.inUseElsewhere = null;
