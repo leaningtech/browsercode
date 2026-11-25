@@ -33,7 +33,8 @@
 	let entered = $state(false);
 	onMount(() => {
 		if (redirecting) {
-			location.replace('/ide?lang=java');
+			// Keep the rest of the query, so RetiredSiteNotice's `from` survives this hop.
+			location.replace(`/ide?lang=java${location.search.replace('?', '&')}`);
 			return;
 		}
 		requestAnimationFrame(() => {

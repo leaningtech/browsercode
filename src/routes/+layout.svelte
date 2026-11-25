@@ -7,6 +7,7 @@
 	import Stepper from '$lib/components/Stepper.svelte';
 	import AnnouncementBar from '$lib/components/AnnouncementBar.svelte';
 	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
+	import RetiredSiteNotice from '$lib/components/RetiredSiteNotice.svelte';
 	import { page } from '$app/stores';
 	import { pageMeta } from '$lib/config/seo';
 	import { stepperState } from '$lib/stores/stepper.svelte';
@@ -101,6 +102,7 @@
 		{#if !bare}
 			<Stepper />
 			<LeaveWarningModal />
+			<RetiredSiteNotice />
 		{/if}
 		{#if !zenState.on && !bare}
 			<Sidebar />
