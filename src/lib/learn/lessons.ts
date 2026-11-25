@@ -10,7 +10,10 @@ export type LineRange = [from: number, to: number];
 /** `hold` is how long the step stays on screen, in seconds; `highlight` marks lines of code. */
 type StepTiming = { hold?: number; highlight?: LineRange };
 
-/** Words between `*stars*` are set in the emphasis colour. */
+/**
+ * Words between `*stars*` are set in the emphasis colour. Between blocks of code and with no
+ * `highlight`, a caption introduces the next block, which types while it shows.
+ */
 export type SayStep = StepTiming & { say: string };
 /** Types `lines` of `file` (all of it when absent) into the editor, as they are in `files`. */
 export type TypeStep = StepTiming & { type: { file: string; lines?: LineRange } };
