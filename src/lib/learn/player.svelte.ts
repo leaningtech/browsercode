@@ -73,6 +73,8 @@ export class LessonPlayer {
 	/** Every file as it stands, edits included; `code` shows a prefix of the one on screen. */
 	private files: Record<string, string> = {};
 	private typed: Record<string, number> = {};
+	/** When the caption on screen has had its reading time; typing may run until then. */
+	private readUntil = 0;
 	private generation = 0;
 	private windowListeners: (() => void)[] = [];
 	private waitingListeners: (() => void)[] = [];
@@ -117,7 +119,7 @@ export class LessonPlayer {
 			for (let i = 0; i < this.lesson.script.length; i++) {
 				this.check(generation);
 				this.stepIndex = i;
-				await this.playStep(this.lesson.script[i], generation);
+				await this.playStep(this.lesson.script[i], this.lesson.script[i + 1], generation);
 			}
 			this.check(generation);
 			this.stepIndex = this.lesson.script.length;
@@ -184,6 +186,7 @@ export class LessonPlayer {
 	private reset(): void {
 		this.files = Object.fromEntries(this.lesson.files.map(({ path, content }) => [path, content]));
 		this.typed = Object.fromEntries(this.lesson.files.map(({ path }) => [path, 0]));
+		this.readUntil = 0;
 		this.file = this.lesson.files[0]?.path ?? '';
 		this.code = '';
 		this.caption = '';
@@ -214,7 +217,7 @@ export class LessonPlayer {
 		if (generation !== this.generation) throw new Cancelled();
 	}
 
-	private async playStep(step: Step, generation: number): Promise<void> {
+	private async playStep(step: Step, next: Step | undefined, generation: number): Promise<void> {
 		const hold = (step.hold ?? 0) * 1000;
 		// A window covers the code; going back to the code puts it away.
 		if ('type' in step || 'edit' in step || ('say' in step && step.highlight)) {
@@ -226,11 +229,19 @@ export class LessonPlayer {
 		if ('say' in step) {
 			this.caption = step.say;
 			this.highlight = step.highlight ?? null;
-			await this.clock.wait(Math.max(hold, sayDuration(step.say)));
+			const reading = Math.max(hold, sayDuration(step.say));
+			// A caption between blocks of code that points at none introduces the next block: it
+			// shows while that types rather than stopping the typing. The opening one doesn't.
+			const started = Object.values(this.typed).some((n) => n > 0);
+			if (started && !step.highlight && next && 'type' in next) {
+				this.readUntil = this.clock.now + reading;
+			} else {
+				await this.clock.wait(reading);
+			}
 		} else if ('type' in step) {
 			this.highlight = step.highlight ?? null;
 			await this.type(step, generation);
-			await this.clock.wait(Math.max(hold, AFTER_TYPING));
+			await this.clock.wait(Math.max(hold, AFTER_TYPING, this.readUntil - this.clock.now));
 		} else if ('edit' in step) {
 			this.highlight = step.highlight ?? null;
 			await this.edit(step, generation);
