@@ -6,6 +6,7 @@ import {
 	setCodexApiKey,
 	CODEX_BIN_PATH
 } from '$lib/agents/codex';
+import { claudeEnv, prepareClaudePod } from '$lib/agents/claude';
 import { openPiUrl, piEnv, preparePiPod, PI_CLI_PATH } from '$lib/agents/pi';
 import opencodeLogoSrc from '$lib/assets/opencode-logo.svg';
 import piLogoSrc from '$lib/assets/pi-logo.svg';
@@ -133,6 +134,8 @@ export const cliConfigs: Record<string, CLIConfig> = {
 		command: 'node',
 		args: ['/home/user/claude-extracted/src/entrypoints/cli.js'],
 		projectFile: '/project/claude/CLAUDE.md',
+		prepare: prepareClaudePod,
+		env: claudeEnv,
 		openCallback: (urlOrPath, hidePortal) => {
 			if (
 				urlOrPath.startsWith('https://claude.com/cai/oauth/authorize') ||
