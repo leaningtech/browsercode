@@ -259,9 +259,16 @@ Cross-Origin-Embedder-Policy: require-corp`;
 
 {#snippet headersBlock()}
 	<p class="mb-2">
-		BrowserPod needs a cross-origin isolated page, so yours must send these two response headers.
-		Set them in a <code class="text-bc-mist">_headers</code> file on Netlify or Cloudflare Pages, or
-		in <code class="text-bc-mist">vercel.json</code> on Vercel.
+		<a
+			href="https://browserpod.io"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+			>BrowserPod</a
+		>
+		needs a cross-origin isolated page, so yours must send these two response headers. Set them in a
+		<code class="text-bc-mist">_headers</code>
+		file on Netlify or Cloudflare Pages, or in <code class="text-bc-mist">vercel.json</code> on Vercel.
 	</p>
 	{@render codeBlock(EMBED_HEADERS, 'headers')}
 {/snippet}
