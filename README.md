@@ -16,7 +16,7 @@
   <h1>Run AI coding CLIs and frameworks in the browser</h1>
 
   <p>
- BrowserCode is a browser-based playground for fast-prototyping full-stack apps and sharing them instantly. It runs on BrowserPod, a multi-language WebAssembly sandbox (Node.js, Rust, and Python in preview), with no installs, no servers, and no cloud compute.
+ BrowserCode is a browser-based playground for fast-prototyping full-stack apps and sharing them instantly. It runs on <a href="https://browserpod.io">BrowserPod</a>, a multi-language WebAssembly sandbox (Node.js, Rust, and Python in preview), with no installs, no servers, and no cloud compute.
   </p>
 </div>
 
@@ -32,7 +32,7 @@
 
 <h2 id="about">What is BrowserCode?</h2>
 
-BrowserCode is a browser-based coding sandbox. It's a working example of [BrowserPod](https://browserpod.io/), and includes:
+BrowserCode is a browser-based coding sandbox. It's a working example of BrowserPod, and includes:
 
 - Node.js v22, Rust and Python (preview) running in the browser via WebAssembly (more runtimes coming)
 - A browser-contained, POSIX-like filesystem
