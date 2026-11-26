@@ -366,7 +366,11 @@
 							class="mr-1 inline-flex h-6 shrink-0 items-center gap-1.5 rounded px-2 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/6 hover:text-bc-link-hover"
 						>
 							<span>Running on</span>
-							<img src={engine.logo} alt="" class="bc-mono-icon h-3.5 w-auto opacity-60 grayscale" />
+							<img
+								src={engine.logo}
+								alt=""
+								class="bc-mono-icon h-3.5 w-auto opacity-60 grayscale"
+							/>
 							<span class="text-bc-text">{engine.name}</span>
 						</a>
 						<span class="mr-1 h-3.5 w-px shrink-0 bg-bc-border"></span>
