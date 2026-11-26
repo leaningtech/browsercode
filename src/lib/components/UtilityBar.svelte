@@ -57,10 +57,10 @@
 		>
 	</span>
 
-	<!-- One "Powered by" for both runtimes, in one group so justify-between still spaces four. Like
+	<!-- One "Built on" for both runtimes, in one group so justify-between still spaces four. Like
 	     llms.txt, CheerpJ waits for lg, where the bar has room for it without wrapping a label. -->
 	<span class="flex items-center gap-1.5 text-[11.5px] whitespace-nowrap">
-		<span>Powered by</span>
+		<span>Built on</span>
 		<a
 			href="https://browserpod.io"
 			target="_blank"
