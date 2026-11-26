@@ -10,7 +10,17 @@ export type FrameworkId =
 	| 'nuxt'
 	| 'express'
 	| 'java'
-	| 'java-swing';
+	| 'java-swing'
+	| 'java-mandelbrot'
+	| 'java-guess'
+	| 'java-words'
+	| 'java-shapes'
+	| 'java-life'
+	| 'java-tictactoe'
+	| 'java-calculator'
+	| 'java-sorting'
+	| 'java-maze'
+	| 'java-reflection';
 
 /** A BrowserPod, or CheerpJ for Java. */
 export type RuntimeId = 'pod' | 'cheerpj';
@@ -150,6 +160,138 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 		runtime: 'cheerpj',
 		section: 'java',
 		example: 'swing',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-mandelbrot': {
+		id: 'java-mandelbrot',
+		label: 'Java Mandelbrot',
+		sourceRoot: '/templates/java-mandelbrot',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'mandelbrot',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-guess': {
+		id: 'java-guess',
+		label: 'Java Guessing Game',
+		sourceRoot: '/templates/java-guess',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'guess',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-words': {
+		id: 'java-words',
+		label: 'Java Word Count',
+		sourceRoot: '/templates/java-words',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'words',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-shapes': {
+		id: 'java-shapes',
+		label: 'Java Shapes',
+		sourceRoot: '/templates/java-shapes',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'shapes',
+		javaVersion: 25,
+		mainClass: 'Main',
+		// Record patterns in `switch` are Java 21.
+		olderJava: { below: 21, sourceRoot: '/templates/java-shapes-classic' },
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-life': {
+		id: 'java-life',
+		label: 'Java Game of Life',
+		sourceRoot: '/templates/java-life',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'life',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-tictactoe': {
+		id: 'java-tictactoe',
+		label: 'Java Tic-Tac-Toe',
+		sourceRoot: '/templates/java-tictactoe',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'tictactoe',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-calculator': {
+		id: 'java-calculator',
+		label: 'Java Calculator',
+		sourceRoot: '/templates/java-calculator',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'calculator',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-sorting': {
+		id: 'java-sorting',
+		label: 'Java Sorting',
+		sourceRoot: '/templates/java-sorting',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'sorting',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-maze': {
+		id: 'java-maze',
+		label: 'Java Maze',
+		sourceRoot: '/templates/java-maze',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'maze',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-reflection': {
+		id: 'java-reflection',
+		label: 'Java Reflection',
+		sourceRoot: '/templates/java-reflection',
+		defaultFile: 'Main.java',
+		icon: 'simple-icons:openjdk',
+		runtime: 'cheerpj',
+		section: 'java',
+		example: 'reflection',
 		javaVersion: 25,
 		mainClass: 'Main',
 		share: (files, java, main) => sharedProjectLink('', files, java, main)
