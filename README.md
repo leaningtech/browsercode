@@ -36,7 +36,7 @@ BrowserCode is a browser-based coding sandbox. It's a working example of [Browse
 
 - Node.js v22, Rust and Python (preview) running in the browser via WebAssembly (more runtimes coming)
 - A browser-contained, POSIX-like filesystem
-- Command line tools: bash, git, npm, pnpm, curl, ripgrep and fd
+- Command line tools: bash, git, node, npm, pnpm, curl, wget, tar, unzip, ripgrep (`rg`), fd and the standard coreutils
 - Browser sandbox isolation from the user's operating system
 - Restricted outbound networking: only to an allowlist that includes the npm registry, Yarn 2+, GitHub (`github.com` and `raw.githubusercontent.com`) and the major AI provider APIs
 - Instant previews over URL via BrowserPod's portal function
@@ -130,7 +130,7 @@ This is BrowserCode beta. Don't be kind to it. Stretch it, bend it, find out wha
 - At launch, each agent is given an instructions file (`CLAUDE.md` for Claude Code, `AGENTS.md` for Codex CLI and Pi) so it understands it is running in a custom environment. However, it may first attempt its default behavior before referencing the file
 - Pi is installed from npm on its first launch. For Anthropic, pick **Copy code login** in `/login`: the default browser login redirects to a `localhost` callback that can't reach the pod
 - BrowserCode doesn't yet support native binaries. For more information, see the [BrowserPod documentation](https://browserpod.io/docs/guides/working-around-native-npm-dependencies)
-- Templates install and run with pnpm. A cloned repo uses pnpm when its `packageManager` names pnpm, a dependency uses the `workspace:` protocol, or `pnpm-workspace.yaml` sits at the clone root, and npm otherwise. Either way, BrowserCode swaps `esbuild` and `rollup` for their WebAssembly builds where that package manager reads overrides: `overrides` in `package.json` for npm, and `overrides` in `pnpm-workspace.yaml` for pnpm, which ignores the `package.json` field. Add your own overrides in the same place
+- Templates install and run with pnpm. A cloned repo uses pnpm when the `package.json` it boots from names pnpm in `packageManager` or declares a `workspace:` dependency; failing that, a repo booted at its root uses pnpm if `pnpm-workspace.yaml` sits there, while one booted into a subdirectory (`/tree/<ref>/<dir>`) ignores the clone root's `pnpm-workspace.yaml` and uses npm. Either way, BrowserCode swaps `esbuild` and `rollup` for their WebAssembly builds where that package manager reads overrides: `overrides` in `package.json` for npm, and `overrides` in `pnpm-workspace.yaml` for pnpm, which ignores the `package.json` field. Add your own overrides in the same place
 - Outbound connections only reach allowlisted hosts; anything else fails to resolve. HTTP, HTTPS, SSH (so `git@github.com` remotes, given a key) and other ports all work to allowed hosts. A pod can reach its own servers on `localhost`, servers must bind `0.0.0.0`. Portals expose servers you start in a pod
 - Agents and Node.js projects require WebAssembly JSPI: Chrome and Edge 137+, Firefox 153+ or Safari 27+. They also don't run on iOS or iPadOS yet, on any browser. Java projects run on CheerpJ and need neither. For maximum compatibility, please use a Chromium browser on the desktop
 
