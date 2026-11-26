@@ -1,3 +1,4 @@
+import { findDocsEntry } from '$lib/config/docs';
 import { isEnabledTool, toolItems } from '$lib/config/tools';
 
 export const ORIGIN = 'https://browsercode.io';
@@ -52,6 +53,18 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 			title: `${label} — BrowserCode`,
 			description: `Run ${label} in your browser, on BrowserCode.`
 		};
+	}
+	// Docs pages are all static routes, so the route id is the path the registry is keyed by.
+	// Checked before /ide so that /docs/ide is read as a docs page, not a playground one.
+	if (routeId?.startsWith('/docs')) {
+		const entry = findDocsEntry(routeId);
+		if (entry) {
+			return {
+				title:
+					routeId === '/docs' ? 'Documentation — BrowserCode' : `${entry.label} — BrowserCode docs`,
+				description: entry.description
+			};
+		}
 	}
 	if (routeId?.startsWith('/ide')) {
 		return {

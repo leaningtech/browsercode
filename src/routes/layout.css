@@ -236,6 +236,211 @@ body {
 	background-color: var(--color-bc-abyss);
 }
 
+/* ── Documentation shell (/docs): three columns, sized so the middle one is centred on the
+   viewport rather than on the scroller it lives in. The app sidebar is a flex sibling of <main>,
+   outside this element, so without subtracting its width the article would sit off-centre by it.
+   Columns are placed explicitly, so a hidden rail or contents list leaves its column empty
+   instead of letting the article slide into it. ── */
+.docs-shell {
+	/* Centring is exact only while the left column has room for the rail, so the article yields
+	   width first and gives up being centred second: the clamp keeps it centred down to the point
+	   where it would become too narrow to read comfortably. */
+	--bc-doc-width: clamp(
+		34rem,
+		calc(100vw - 2 * (var(--bc-rail-width) + var(--bc-sidebar-offset))),
+		44rem
+	);
+	/* Both are zero until the column they size actually appears. */
+	--bc-rail-width: 0rem;
+	--bc-sidebar-offset: 0px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	padding: 2rem 1rem 6rem;
+}
+
+@media (min-width: 768px) {
+	.docs-shell {
+		/* --width-sidebar plus the sidebar's own left margin; it appears at this breakpoint. */
+		--bc-sidebar-offset: 4.625rem;
+		grid-template-columns:
+			max(var(--bc-rail-width), calc((100vw - var(--bc-doc-width)) / 2 - var(--bc-sidebar-offset)))
+			minmax(0, var(--bc-doc-width))
+			minmax(0, 1fr);
+		/* No left padding: the left column's width is what positions the article. */
+		padding: 3.5rem 1.5rem 6rem 0;
+	}
+}
+
+/* The rail and the contents list share one breakpoint: between them there would be a band wide
+   enough for the rail but not the list, where the article could not stay centred. */
+@media (min-width: 1100px) {
+	.docs-shell {
+		--bc-rail-width: 15rem;
+	}
+}
+
+.docs-rail {
+	display: none;
+	grid-column: 1;
+}
+
+/* Right-aligned in its column so it stays beside the article instead of drifting to the far
+   edge as the window widens. Below this width the article would be squeezed against the right
+   of the screen, so the phone disclosure carries the tree instead. */
+@media (min-width: 1100px) {
+	.docs-rail {
+		display: block;
+		justify-self: end;
+		width: var(--bc-rail-width);
+		padding-right: 2rem;
+	}
+}
+
+.docs-main {
+	grid-column: 2;
+	min-width: 0;
+}
+
+/* Held back until there is room for it; its column is empty space until then. */
+.docs-toc {
+	display: none;
+	grid-column: 3;
+}
+
+@media (min-width: 1100px) {
+	.docs-toc {
+		display: block;
+		justify-self: start;
+		width: 14rem;
+		padding-left: 2rem;
+	}
+}
+
+/* Carries the tree wherever the rail is absent, which is every width below the rail's own
+   breakpoint, not just phones. */
+@media (min-width: 1100px) {
+	.docs-compact-nav {
+		display: none;
+	}
+}
+
+/* Both side columns stretch to the full row height, so an inner sticky box rides the scroll.
+   Neither list is long enough to need a scrollbar of its own. */
+.docs-sticky {
+	position: sticky;
+	top: 1.25rem;
+}
+
+/* ── Documentation prose (/docs). Global rather than scoped because the article's markup lives
+   in each page component while the wrapper lives in the section layout, so a scoped rule in
+   either one could never reach the other. ── */
+.docs-prose h2 {
+	margin: 2.75rem 0 0.85rem;
+	font-size: 1.3rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	color: var(--color-bc-text);
+}
+.docs-prose h3 {
+	margin: 1.75rem 0 0.5rem;
+	font-size: 1.02rem;
+	font-weight: 600;
+	color: var(--color-bc-text);
+}
+.docs-prose p,
+.docs-prose li {
+	font-size: 14.5px;
+	line-height: 1.75;
+}
+.docs-prose p {
+	margin-bottom: 0.9rem;
+}
+.docs-prose ul,
+.docs-prose ol {
+	margin: 0 0 0.9rem;
+	padding-left: 1.3rem;
+}
+.docs-prose ul {
+	list-style: disc;
+}
+.docs-prose ol {
+	list-style: decimal;
+}
+.docs-prose li {
+	margin-bottom: 0.4rem;
+}
+.docs-prose strong {
+	font-weight: 600;
+	color: var(--color-bc-text);
+}
+.docs-prose code {
+	border-radius: 4px;
+	/* Flips with the theme the same way Tailwind's `bg-bc-tint/12` does elsewhere. */
+	background: color-mix(in srgb, var(--color-bc-tint) 12%, transparent);
+	padding: 0.1em 0.38em;
+	font-size: 0.88em;
+	color: var(--color-bc-text);
+}
+.docs-prose pre {
+	margin: 0 0 1.1rem;
+	overflow-x: auto;
+	border: 1px solid var(--color-bc-border);
+	border-radius: 10px;
+	padding: 0.9rem 1rem;
+	font-size: 12.8px;
+	line-height: 1.65;
+}
+/* The block already has the border and padding; a second chip inside it reads as a mistake. */
+.docs-prose pre code {
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	color: var(--color-bc-mist);
+}
+.docs-prose a {
+	color: var(--color-bc-text);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.docs-prose a:hover {
+	color: var(--color-bc-link-hover);
+}
+/* The "Next" card and any other link that is a block of its own opt out of the underline. */
+.docs-prose a.no-underline {
+	text-decoration: none;
+}
+.docs-prose table {
+	display: block;
+	overflow-x: auto;
+	margin: 0 0 1.2rem;
+	border-collapse: collapse;
+	font-size: 13.5px;
+}
+.docs-prose th,
+.docs-prose td {
+	border-bottom: 1px solid var(--color-bc-border);
+	padding: 0.5rem 0.9rem 0.5rem 0;
+	text-align: left;
+	vertical-align: top;
+}
+.docs-prose th {
+	font-weight: 600;
+	color: var(--color-bc-text);
+	white-space: nowrap;
+}
+/* An aside that must not be skimmed past: a constraint that will otherwise bite. */
+.docs-note {
+	margin: 0 0 1.1rem;
+	border: 1px solid var(--color-bc-border);
+	border-left: 2px solid var(--color-bc-azure);
+	border-radius: 0 10px 10px 0;
+	padding: 0.8rem 1rem;
+}
+.docs-note p:last-child,
+.docs-note ul:last-child {
+	margin-bottom: 0;
+}
+
 /* ── Brand logo: three stacked mask layers (bottom/middle/top) plus three accent dots, rendered
    by BrowserCodeLogo.svelte. Kept global (that component has no <style> block of its own) so the
    `ra`/`rb` landing-animation variants below live next to the other brand-wide, non-component
