@@ -61,7 +61,7 @@
 				onclick={close}
 				class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-azure"
 			>
-				Close
+				Start coding
 			</button>
 		</div>
 	</div>
