@@ -28,6 +28,21 @@ export type RuntimeId = 'pod' | 'cheerpj';
 /** The part of the app a template is offered in: the Playground IDE, or the Java playground. */
 export type SectionId = 'ide' | 'java';
 
+/**
+ * The heading a template is listed under within its section. Twelve Java examples in one flat
+ * list are a wall of names, so they are sorted by what the code is *about* rather than left in
+ * registry order. The JavaScript section has one list and so needs no groups.
+ */
+export type GroupId = 'basics' | 'graphics' | 'algorithms' | 'language';
+
+/** Group headings, in the order every menu lists them. */
+export const groupLabels: Record<GroupId, string> = {
+	basics: 'Basics',
+	graphics: 'Graphics',
+	algorithms: 'Algorithms',
+	language: 'Language features'
+};
+
 export type FrameworkConfig = {
 	id: FrameworkId;
 	label: string;
@@ -46,6 +61,8 @@ export type FrameworkConfig = {
 	runtime?: RuntimeId;
 	/** Defaults to `ide`. */
 	section?: SectionId;
+	/** Which heading it is listed under. Only the Java section groups its templates. */
+	group?: GroupId;
 	/**
 	 * The name `/java?example=` and `/embed?runtime=` know it by. The embed's `helloworld`
 	 * predates the registry, so the ids alone would break the URL the blog embeds.
@@ -138,12 +155,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	java: {
 		id: 'java',
-		label: 'Java',
+		label: 'Hello World',
 		sourceRoot: '/templates/java-helloworld',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:terminal-box-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'basics',
 		example: 'helloworld',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -153,12 +171,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-swing': {
 		id: 'java-swing',
-		label: 'Java Swing',
+		label: 'Swing',
 		sourceRoot: '/templates/java-swing',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:button-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'graphics',
 		example: 'swing',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -166,12 +185,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-mandelbrot': {
 		id: 'java-mandelbrot',
-		label: 'Java Mandelbrot',
+		label: 'Mandelbrot',
 		sourceRoot: '/templates/java-mandelbrot',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:snowflake-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'graphics',
 		example: 'mandelbrot',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -179,12 +199,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-guess': {
 		id: 'java-guess',
-		label: 'Java Guessing Game',
+		label: 'Guessing Game',
 		sourceRoot: '/templates/java-guess',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:question-2-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'basics',
 		example: 'guess',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -192,12 +213,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-words': {
 		id: 'java-words',
-		label: 'Java Word Count',
+		label: 'Word Count',
 		sourceRoot: '/templates/java-words',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:text-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'basics',
 		example: 'words',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -205,12 +227,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-shapes': {
 		id: 'java-shapes',
-		label: 'Java Shapes',
+		label: 'Shapes',
 		sourceRoot: '/templates/java-shapes',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:triangle-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'graphics',
 		example: 'shapes',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -220,12 +243,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-life': {
 		id: 'java-life',
-		label: 'Java Game of Life',
+		label: 'Game of Life',
 		sourceRoot: '/templates/java-life',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:grid-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'graphics',
 		example: 'life',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -233,12 +257,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-tictactoe': {
 		id: 'java-tictactoe',
-		label: 'Java Tic-Tac-Toe',
+		label: 'Tic-Tac-Toe',
 		sourceRoot: '/templates/java-tictactoe',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:hashtag-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'algorithms',
 		example: 'tictactoe',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -246,12 +271,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-calculator': {
 		id: 'java-calculator',
-		label: 'Java Calculator',
+		label: 'Calculator',
 		sourceRoot: '/templates/java-calculator',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:counter-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'basics',
 		example: 'calculator',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -259,12 +285,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-sorting': {
 		id: 'java-sorting',
-		label: 'Java Sorting',
+		label: 'Sorting',
 		sourceRoot: '/templates/java-sorting',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:sort-ascending-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'algorithms',
 		example: 'sorting',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -272,12 +299,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-maze': {
 		id: 'java-maze',
-		label: 'Java Maze',
+		label: 'Maze',
 		sourceRoot: '/templates/java-maze',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:route-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'algorithms',
 		example: 'maze',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -285,12 +313,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-reflection': {
 		id: 'java-reflection',
-		label: 'Java Reflection',
+		label: 'Reflection',
 		sourceRoot: '/templates/java-reflection',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:mirror-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'language',
 		example: 'reflection',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -368,16 +397,64 @@ export function resolveRuntimeTemplate(
 	return ids.find((id) => id === key || frameworkConfigs[id].example === key);
 }
 
-function railItems(
-	section: SectionId
-): { id: FrameworkId; icon: string; label: string; example: string }[] {
+export type RailItem = {
+	id: FrameworkId;
+	icon: string;
+	label: string;
+	example: string;
+	group?: GroupId;
+};
+
+function railItems(section: SectionId): RailItem[] {
 	return sectionIds(section).map((id) => ({
 		id,
 		icon: frameworkConfigs[id].icon,
 		label: frameworkConfigs[id].label,
-		example: frameworkConfigs[id].example ?? id
+		example: frameworkConfigs[id].example ?? id,
+		group: frameworkConfigs[id].group
 	}));
 }
 
 export const frameworkRailItems = railItems('ide');
 export const javaRailItems = railItems('java');
+
+/**
+ * A heading and the templates under it. `id` is only a render key, so it is a plain string: the
+ * JavaScript section has one heading of its own that is no `GroupId`.
+ */
+export type RailGroup = { id: string; label: string; items: RailItem[] };
+
+/**
+ * The Java examples under their headings, in `groupLabels` order and, within a heading, in
+ * registry order. Shared by the sidebar rail and the picker grid so the two can't drift.
+ *
+ * Grouping by filter means a template with no `group` would silently vanish from both, so a
+ * missing one throws here instead — at module load, which fails the build rather than shipping a
+ * list with a hole in it. `group` can't be required by the type without splitting
+ * `FrameworkConfig` per section, which the other fields don't warrant.
+ */
+export const javaGroups: RailGroup[] = (() => {
+	const ungrouped = javaRailItems.filter((item) => !item.group);
+	if (ungrouped.length > 0) {
+		throw new Error(
+			`Java templates missing a group: ${ungrouped.map((item) => item.id).join(', ')}`
+		);
+	}
+	return (Object.keys(groupLabels) as GroupId[])
+		.map((id) => ({
+			id,
+			label: groupLabels[id],
+			items: javaRailItems.filter((i) => i.group === id)
+		}))
+		.filter((group) => group.items.length > 0);
+})();
+
+/**
+ * The name to use where a label stands on its own, away from its section's heading. Java labels
+ * are short because the menus they live in already say "Java"; the tour's single merged list and
+ * the embed builder's summary line don't, so "Mandelbrot" alone would say nothing there.
+ */
+export function qualifiedLabel(id: FrameworkId): string {
+	const { label, section } = frameworkConfigs[id];
+	return (section ?? 'ide') === 'java' ? `Java ${label}` : label;
+}

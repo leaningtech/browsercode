@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { javaRailItems } from '$lib/config/frameworks';
+	import { javaGroups, javaRailItems } from '$lib/config/frameworks';
 
 	let {
 		unknownExample,
@@ -71,15 +71,23 @@
 	</span>
 </div>
 
-<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">Examples</div>
-<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-	{#each javaRailItems as item (item.id)}
-		<button
-			onclick={() => openExample(item.example)}
-			class="glass-panel flex items-center gap-2 rounded-lg border border-bc-border px-3 py-2 text-left text-[13px] text-bc-mist transition hover:border-bc-tint/30"
-		>
-			<Icon icon={item.icon} width="16" height="16" class="shrink-0" />
-			<span class="truncate">{item.label}</span>
-		</button>
-	{/each}
-</div>
+<!-- One heading per group rather than a single "Examples" wall: twelve buttons in registry order
+     gave nothing to scan by, and every label used to open with the same word. -->
+{#each javaGroups as group (group.id)}
+	<div class="mb-5 last:mb-0">
+		<div class="mb-2 text-[11px] font-medium tracking-widest text-bc-mist/40 uppercase">
+			{group.label}
+		</div>
+		<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+			{#each group.items as item (item.id)}
+				<button
+					onclick={() => openExample(item.example)}
+					class="glass-panel flex items-center gap-2 rounded-lg border border-bc-border px-3 py-2 text-left text-[13px] text-bc-mist transition hover:border-bc-tint/30"
+				>
+					<Icon icon={item.icon} width="16" height="16" class="shrink-0" />
+					<span class="truncate">{item.label}</span>
+				</button>
+			{/each}
+		</div>
+	</div>
+{/each}
