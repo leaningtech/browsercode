@@ -51,12 +51,11 @@
 				<Icon icon="mingcute:information-line" width="22" height="22" />
 			</div>
 			<h3 id="retired-site-title" class="mb-2 text-[14px] font-semibold text-bc-text">
-				JavaFiddle is now part of BrowserCode
+				JavaFiddle has grown into BrowserCode
 			</h3>
 			<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
-				JavaFiddle is being retired. This is the same Java playground: your links still open,
-				everything JavaFiddle did works here, and there is more, from Java 8 to 25 to compiler
-				errors marked in the editor.
+				Same Java playground, new home. Your old links still open and nothing you used has gone
+				away. What’s new: Java 8 to 25, compiler errors marked in the editor, and a redesigned UI.
 			</p>
 			<button
 				onclick={close}
