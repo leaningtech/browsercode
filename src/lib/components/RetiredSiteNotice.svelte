@@ -5,7 +5,10 @@
 	import { replaceState } from '$app/navigation';
 	import Modal from '$lib/components/Modal.svelte';
 
-	/** The redirect rule on javafiddle.leaningtech.com tags every visitor it sends here with this. */
+	/**
+	 * The redirect rule on javafiddle.leaningtech.com tags every visitor it sends here with this,
+	 * except embeds, which get /embed?runtime=cheerpj with no tag.
+	 */
 	const FROM = 'javafiddle';
 	const STORAGE_KEY = 'bc-retired-site-notice-seen';
 
