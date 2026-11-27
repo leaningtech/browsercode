@@ -85,7 +85,7 @@
 		<p>
 			These records do not include your IP address, or the path, query string or content of any
 			request a Pod makes or receives, or anything a Portal serves. Because every Pod in BrowserCode
-			uses our API key, they are not linked to you or to any account of yours.
+			uses our API key, no Pod is linked to you or your accounts.
 		</p>
 		<p>
 			When a Pod starts, BrowserPod counts it against BrowserCode's account. This does not record
@@ -108,7 +108,7 @@
 		</p>
 		<ul>
 			<li>your colour theme, editor settings, and whether you have seen the tour;</li>
-			<li>the OpenAI API key you enter to use Codex CLI;</li>
+			<li>the OpenAI API key you enter to use Codex CLI; and</li>
 			<li>
 				each Pod's files, including your projects, cloned repositories, shell history, and the
 				sign-in credentials an agent stores, such as Claude Code's.
@@ -193,7 +193,7 @@
 		<ul>
 			<li>
 				<strong>legitimate interests</strong>, to operate and secure BrowserCode, measure its use
-				with Plausible, keep Logging Information, and respond to bug reports and enquiries, where
+				with Plausible, keep Logging Information and respond to bug reports and enquiries, where
 				those interests are not overridden by your rights; and
 			</li>
 			<li><strong>legal obligation</strong>, where the law requires us to process information.</li>
@@ -215,8 +215,8 @@
 			<li>
 				<strong
 					>professional advisers, regulators, courts, law enforcement or other authorities</strong
-				> where disclosure is required by law or reasonably necessary to protect rights, property, safety
-				or BrowserCode. This may include Logging Information about traffic generated through BrowserCode;
+				> where disclosure is required by law or reasonably necessary to protect BrowserCode or the rights, property or
+				safety of our users or others. This may include Logging Information about traffic generated through BrowserCode;
 				and
 			</li>
 			<li>
@@ -232,9 +232,9 @@
 		</p>
 		<ul>
 			<li>
-				<strong>Cloudflare, Inc.</strong>, which hosts and delivers BrowserCode, and runs the
-				BrowserPod infrastructure that relays a Pod's network connections and Portals, and stores
-				Logging Information. Logging Information is stored in data centres in the European Union.
+				<strong>Cloudflare, Inc.</strong>, which hosts and delivers BrowserCode, stores Logging
+				Information and runs the BrowserPod infrastructure that relays a Pod's network connections
+				and Portals. Logging Information is stored in data centres in the European Union.
 			</li>
 		</ul>
 		<p>Plausible Analytics runs on our own infrastructure, hosted in the European Union.</p>
