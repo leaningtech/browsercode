@@ -23,19 +23,9 @@
 			? new IdeSession(templateSource(example), SITE_API_KEY)
 			: null;
 
-	// Bare /java has nothing of its own to say: the IDE picker's Java tab is the same page, so send
-	// people there rather than keeping a second landing in step with it. A URL that asked for
-	// something we couldn't resolve keeps its address and explains itself on the picker in place.
-	const askedForSomething = requested !== null || !!hash;
-	const redirecting = !session && !askedForSomething;
-
 	// Same entrances as /ide: the landing fades in, a booted session slides up.
 	let entered = $state(false);
 	onMount(() => {
-		if (redirecting) {
-			location.replace('/ide?lang=java');
-			return;
-		}
 		requestAnimationFrame(() => {
 			entered = true;
 		});
@@ -51,7 +41,9 @@
 	>
 		<IdeShell {session} />
 	</div>
-{:else if !redirecting}
+{:else}
+	<!-- Bare /java is the Java picker in its own right now, not a redirect to a tab on /ide: each
+	     language has its own address, its own sidebar entry and its own title in search results. -->
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">
 		<div
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"

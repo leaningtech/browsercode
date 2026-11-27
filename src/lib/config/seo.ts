@@ -55,8 +55,9 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 	}
 	if (routeId?.startsWith('/ide')) {
 		return {
-			title: 'Playground IDE — BrowserCode',
-			description: 'Build and preview web apps right in your browser, on BrowserCode.'
+			title: 'JavaScript Playground — BrowserCode',
+			description:
+				'Build and preview Node.js web apps, on Vite, React, Svelte, Vue, Next.js, Nuxt or Express, right in your browser, on BrowserCode.'
 		};
 	}
 	if (routeId === '/java') {

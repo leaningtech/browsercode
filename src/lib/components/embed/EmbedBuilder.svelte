@@ -31,8 +31,10 @@
 
 	type Tab = EmbedTarget['kind'];
 
+	// Named for the language, not "Template", so it reads as the pair it is beside the Java tab —
+	// both are templates, and only the language tells them apart.
 	const TABS: { id: Tab; label: string }[] = [
-		{ id: 'framework', label: 'Template' },
+		{ id: 'framework', label: 'JavaScript' },
 		{ id: 'java', label: 'Java' },
 		{ id: 'repo', label: 'GitHub repo' },
 		{ id: 'agent', label: 'Agent' },

@@ -25,7 +25,7 @@ export type FrameworkId =
 /** A BrowserPod, or CheerpJ for Java. */
 export type RuntimeId = 'pod' | 'cheerpj';
 
-/** The part of the app a template is offered in: the Playground IDE, or the Java playground. */
+/** The part of the app a template is offered in: the JavaScript playground, or the Java one. */
 export type SectionId = 'ide' | 'java';
 
 /**
@@ -417,6 +417,43 @@ function railItems(section: SectionId): RailItem[] {
 
 export const frameworkRailItems = railItems('ide');
 export const javaRailItems = railItems('java');
+
+/** A language the IDE offers, as its own page. Not `SectionId`: that names where a template is
+ *  listed, this names the thing a person picks. They happen to line up today. */
+export type LanguageId = 'js' | 'java';
+
+export type Language = {
+	id: LanguageId;
+	label: string;
+	/** What this language calls its templates, for menu footers and accessible names. */
+	noun: string;
+	icon: string;
+	path: '/ide' | '/java';
+};
+
+/**
+ * One page per language, not per runtime: a runtime doesn't line up with what you write, so the
+ * axis wouldn't survive growth (Python and Rust would both be BrowserPod, and nobody wants a page
+ * called CheerpJ).
+ *
+ * Here rather than in either component because both the sidebar's nested rail and the pages' own
+ * switcher draw from it, and a language wearing two different icons would be worse than either.
+ */
+export const languages: Language[] = [
+	{
+		id: 'js',
+		label: 'JavaScript',
+		noun: 'templates',
+		icon: 'simple-icons:nodedotjs',
+		path: '/ide'
+	},
+	{ id: 'java', label: 'Java', noun: 'examples', icon: 'simple-icons:openjdk', path: '/java' }
+];
+
+export const languageById = Object.fromEntries(languages.map((l) => [l.id, l])) as Record<
+	LanguageId,
+	Language
+>;
 
 /**
  * A heading and the templates under it. `id` is only a render key, so it is a plain string: the
