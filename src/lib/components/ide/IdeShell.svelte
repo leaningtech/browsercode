@@ -52,7 +52,11 @@
 
 	/** Credits the engine this project runs on, beside Embed and Share. */
 	const RUNNING_ON: Record<RuntimeId, { name: string; href: string; logo: string }> = {
-		pod: { name: 'BrowserPod', href: 'https://browserpod.io', logo: browserpodLogo },
+		pod: {
+			name: 'BrowserPod',
+			href: 'https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=ide-header',
+			logo: browserpodLogo
+		},
 		cheerpj: { name: 'CheerpJ', href: 'https://cheerpj.com', logo: cheerpjLogo }
 	};
 

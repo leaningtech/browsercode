@@ -3,7 +3,8 @@
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { dismissAnnouncement } from '$lib/stores/announcement.svelte';
 
-	const POST_URL = 'https://browserpod.io/blog/browserpod-40/';
+	const POST_URL =
+		'https://browserpod.io/blog/browserpod-40/?utm_source=browsercode&utm_medium=referral&utm_content=announcement';
 </script>
 
 <!-- The ink has its own token (--color-bc-stripe-ink) because it sits on the lilac, not the page:

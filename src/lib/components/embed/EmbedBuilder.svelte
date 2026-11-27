@@ -260,7 +260,7 @@ Cross-Origin-Embedder-Policy: require-corp`;
 {#snippet headersBlock()}
 	<p class="mb-2">
 		<a
-			href="https://browserpod.io"
+			href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=embed-builder"
 			target="_blank"
 			rel="noopener noreferrer"
 			class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
