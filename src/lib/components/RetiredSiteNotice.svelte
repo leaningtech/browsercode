@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
+	import Modal from '$lib/components/Modal.svelte';
 
 	/** The redirect rule on javafiddle.leaningtech.com tags every visitor it sends here with this. */
 	const FROM = 'javafiddle';
@@ -25,44 +26,32 @@
 			console.warn('Could not persist the retired-site notice flag:', error);
 		}
 	}
-
-	function handleKeydown(event: KeyboardEvent): void {
-		if (open && event.key === 'Escape') close();
-	}
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
 {#if open}
-	<div
-		class="fixed inset-0 z-80 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-		role="presentation"
-		onclick={(e) => e.target === e.currentTarget && close()}
+	<Modal
+		onClose={close}
+		labelledby="retired-site-title"
+		layer="z-[80]"
+		class="glass-panel glass-panel-solid max-w-md rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
 	>
 		<div
-			class="glass-panel glass-panel-solid max-w-md rounded-xl border border-bc-mist/15 px-6 py-7 text-center shadow-2xl"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="retired-site-title"
+			class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-azure/10 text-bc-azure"
 		>
-			<div
-				class="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-bc-azure/10 text-bc-azure"
-			>
-				<Icon icon="mingcute:information-line" width="22" height="22" />
-			</div>
-			<h3 id="retired-site-title" class="mb-2 text-[14px] font-semibold text-bc-text">
-				JavaFiddle has grown into BrowserCode
-			</h3>
-			<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
-				Same Java playground, new home. Your old links still open and nothing you used has gone
-				away. What’s new: Java 8 to 25, compiler errors marked in the editor, and a redesigned UI.
-			</p>
-			<button
-				onclick={close}
-				class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-azure"
-			>
-				Start coding
-			</button>
+			<Icon icon="mingcute:information-line" width="22" height="22" />
 		</div>
-	</div>
+		<h3 id="retired-site-title" class="mb-2 text-[14px] font-semibold text-bc-text">
+			JavaFiddle has grown into BrowserCode
+		</h3>
+		<p class="mb-5 text-[12.5px] leading-relaxed text-bc-text-muted">
+			Same Java playground, new home. Your old links still open and nothing you used has gone away.
+			What’s new: Java 8 to 25, compiler errors marked in the editor, and a redesigned UI.
+		</p>
+		<button
+			onclick={close}
+			class="rounded-md bg-bc-azure/90 px-4 py-2 text-[13px] font-medium text-bc-abyss transition hover:bg-bc-azure"
+		>
+			Start coding
+		</button>
+	</Modal>
 {/if}
