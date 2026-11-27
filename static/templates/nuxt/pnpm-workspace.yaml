@@ -2,6 +2,7 @@
 overrides:
   esbuild: 'npm:esbuild-wasm@*'
   rollup: 'npm:@rollup/wasm-node@*'
+  lightningcss: 'npm:lightningcss-wasm@*'
 # Its install script only compiles from source on request, which the pod cannot do anyway.
 allowBuilds:
   '@parcel/watcher': false

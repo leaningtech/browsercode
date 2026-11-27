@@ -14,8 +14,8 @@ const BLOCK = 'overrides';
 
 /** Explains the file (or block) to whoever opens it in the editor, since we created it. */
 const PREAMBLE = [
-	'# Added by BrowserCode: the pod cannot execute native binaries, so esbuild and rollup',
-	'# resolve to their WebAssembly builds instead.'
+	'# Added by BrowserCode: the pod cannot execute native binaries, so esbuild, rollup and',
+	'# lightningcss resolve to their WebAssembly builds instead.'
 ];
 
 /**

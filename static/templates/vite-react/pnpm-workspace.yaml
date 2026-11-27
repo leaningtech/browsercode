@@ -2,3 +2,4 @@
 overrides:
   esbuild: 'npm:esbuild-wasm@*'
   rollup: 'npm:@rollup/wasm-node@*'
+  lightningcss: 'npm:lightningcss-wasm@*'
