@@ -22,7 +22,6 @@
 </ol>
 
 <p>
-	If you would rather not sign in to an account at all, an API key works instead. Either way the
-	credential stays in your browser, so you are still signed in next time, and clearing site data
+	The credential stays in your browser, so you are still signed in next time, and clearing site data
 	signs you out.
 </p>

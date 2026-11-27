@@ -26,7 +26,8 @@ npm install</code
 <p>
 	Then get a BrowserPod API key from
 	<a href="https://browserpod.io" target="_blank" rel="noopener noreferrer">browserpod.io</a> and
-	put it in a <code>.env</code> file, which is what the app reads at build time:
+	put it in a <code>.env</code> file, which is what the app reads at build time. The key ends up in the
+	built JavaScript, so anyone who opens your copy can read it:
 </p>
 
 <pre><code

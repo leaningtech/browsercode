@@ -62,7 +62,7 @@ export const docsNav: DocsEntry[] = [
 			{
 				path: '/docs/agents/claude',
 				label: 'Claude Code',
-				description: 'Signing in with a code, and what Claude Code can reach.'
+				description: 'Signing in to Claude Code with a code instead of a redirect.'
 			},
 			{
 				path: '/docs/agents/codex',

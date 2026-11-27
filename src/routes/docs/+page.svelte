@@ -6,7 +6,7 @@
 <p>
 	BrowserCode is a development environment that runs inside a browser tab: an editor, a terminal,
 	npm, git and a live preview. Nothing installs on your machine, there is no server, and your code
-	never leaves the browser.
+	never leaves your browser.
 </p>
 
 <h2>Two runtimes, and why it matters</h2>

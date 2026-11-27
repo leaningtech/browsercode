@@ -67,9 +67,9 @@ https://browsercode.io/ide/github/leaningtech/browsercode/tree/main/static</code
 <ul>
 	<li>They are stable. The shapes above are not going to be rearranged under you.</li>
 	<li>
-		A name BrowserCode cannot resolve lands on the picker and says what it rejected. It never boots
-		a different project instead, so a link that goes stale fails visibly rather than quietly showing
-		the wrong thing.
+		A template or Java example name BrowserCode cannot resolve lands on the picker and says what it
+		rejected, rather than booting a different one, and a malformed repo link shows an error. Agent
+		links are the exception: an agent id BrowserCode does not know opens Claude Code.
 	</li>
 	<li>
 		Pin a tag or a commit rather than a branch if you want the reader to see what you saw. A branch

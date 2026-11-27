@@ -42,14 +42,14 @@
 <h2>What you write</h2>
 
 <p>
-	Yours. BrowserCode claims nothing over what you write, run or generate, and none of it reaches our
-	servers in the first place; it sits in your browser until you export it. The
+	Yours. BrowserCode claims nothing over what you write, run or generate, and none of it is stored
+	on our servers; it sits in your browser until you export it. The
 	<a href={resolve('/privacy')}>Privacy Policy</a> covers the limited usage data we do see, which does
 	not include your code.
 </p>
 <p>
-	Anything an AI agent produces falls under that provider's terms, since the request goes from your
-	browser straight to the provider you signed in to.
+	Anything an AI agent produces falls under that provider's terms, since the agent running in your
+	browser sends its requests to the provider you signed in to, not to us.
 </p>
 
 <h2>Dependencies</h2>

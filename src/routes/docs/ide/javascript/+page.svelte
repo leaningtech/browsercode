@@ -24,9 +24,9 @@
 
 <div class="docs-note">
 	<p>
-		The React, Svelte and Vue templates are Vite starters, not Create React App, SvelteKit or Nuxt.
+		The React, Svelte and Vue templates are plain Vite starters, not Create React App or SvelteKit.
 		For one of those, clone a starter repo; BrowserCode will not quietly hand you a different
-		framework.
+		framework. Next.js and Nuxt have templates of their own.
 	</p>
 </div>
 
@@ -74,8 +74,9 @@
 	do nothing, that is usually why.
 </p>
 <p>
-	Some packages have no WebAssembly build and will not work here at all, <code>sharp</code> and
-	<code>bcrypt</code> among them. Pure JavaScript alternatives generally exist.
+	Some native packages will not work here at all, <code>sharp</code> and <code>bcrypt</code> among them,
+	because they ship native binaries and BrowserCode has no WebAssembly build to swap in for them. Pure
+	JavaScript alternatives generally exist.
 </p>
 
 <h2>Seeing your app</h2>

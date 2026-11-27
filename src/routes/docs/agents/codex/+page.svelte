@@ -26,12 +26,16 @@
 
 <div class="docs-note">
 	<p>
-		The key is saved in your browser and sent to OpenAI when Codex runs; it never reaches our
+		The key is saved in your browser and sent to OpenAI when Codex runs; it is not stored on our
 		servers. Usage is billed per token to your OpenAI account, and a ChatGPT subscription does not
 		cover it.
 	</p>
 </div>
 
+<p>
+	To use a different key, for instance after a typo, press the key button in the bottom-left corner
+	of the terminal: it saves the new one and restarts Codex.
+</p>
 <p>
 	To remove the key, clear site data for browsercode.io. If you would rather it had never been used
 	at all, revoke it in the OpenAI console as well.

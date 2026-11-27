@@ -66,7 +66,7 @@ Cross-Origin-Embedder-Policy: require-corp</code
 &gt;&lt;/iframe&gt;</code
 	></pre>
 
-<p>All three are needed; with any missing, the embed tells you which.</p>
+<p>All three are needed; with any missing, the embed tells you what it needs.</p>
 
 <div class="docs-note">
 	<p>
@@ -90,8 +90,9 @@ Cross-Origin-Embedder-Policy: require-corp</code
 </p>
 <p>
 	In a narrow column, which is most blog layouts, the panes turn into tabs and the embed opens on
-	the preview, because a running app explains itself better than an editor does. Every embed carries
-	a small BrowserCode badge linking back.
+	the preview, because a running app explains itself better than an editor does. A Java embed opens
+	on its Output tab instead, since its Display stays empty until the program opens a window. Every
+	embed carries a small BrowserCode badge linking back.
 </p>
 
 <h2>See them running</h2>
