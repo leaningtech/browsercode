@@ -23,22 +23,9 @@
 			? new IdeSession(templateSource(example), SITE_API_KEY)
 			: null;
 
-	// Bare /java has nothing of its own to say: the IDE picker's Java tab is the same page, so send
-	// people there rather than keeping a second landing in step with it. A URL that asked for
-	// something we couldn't resolve keeps its address and explains itself on the picker in place.
-	const askedForSomething = requested !== null || !!hash;
-	const redirecting = !session && !askedForSomething;
-
 	// Same entrances as /ide: the landing fades in, a booted session slides up.
 	let entered = $state(false);
 	onMount(() => {
-		if (redirecting) {
-			// RetiredSiteNotice reads `from`, so it has to survive this hop.
-			const from = $page.url.searchParams.get('from');
-			const query = new URLSearchParams({ lang: 'java', ...(from !== null && { from }) });
-			location.replace(`/ide?${query}`);
-			return;
-		}
 		requestAnimationFrame(() => {
 			entered = true;
 		});
@@ -54,7 +41,9 @@
 	>
 		<IdeShell {session} />
 	</div>
-{:else if !redirecting}
+{:else}
+	<!-- Bare /java renders the picker itself rather than sending people on to /ide's Java tab: it is
+	     the page search engines index for Java, and where javafiddle.leaningtech.com redirects. -->
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">
 		<div
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"

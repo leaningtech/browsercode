@@ -62,7 +62,8 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 	if (routeId === '/java') {
 		return {
 			title: 'Java Playground — BrowserCode',
-			description: 'Compile and run Java, Swing included, right in your browser, on BrowserCode.'
+			description:
+				'Compile and run Java, Swing included, right in your browser, on BrowserCode. Formerly JavaFiddle.'
 		};
 	}
 	if (routeId === '/agents') {
