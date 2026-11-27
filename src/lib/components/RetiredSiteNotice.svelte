@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
+	import { replaceState } from '$app/navigation';
 	import Modal from '$lib/components/Modal.svelte';
 
 	/** The redirect rule on javafiddle.leaningtech.com tags every visitor it sends here with this. */
@@ -16,7 +18,8 @@
 		}
 	}
 
-	let open = $state($page.url.searchParams.get('from') === FROM && !readSeen());
+	const tagged = $page.url.searchParams.get('from') === FROM;
+	let open = $state(tagged && !readSeen());
 
 	function close(): void {
 		open = false;
@@ -26,6 +29,19 @@
 			console.warn('Could not persist the retired-site notice flag:', error);
 		}
 	}
+
+	// Dropped so a copied link doesn't show the notice to someone who never used JavaFiddle. Deferred
+	// a tick: replaceState throws until the router starts, which is after the root layout mounts.
+	onMount(() => {
+		if (!tagged) return;
+		const timer = setTimeout(() => {
+			const url = new URL(location.href);
+			url.searchParams.delete('from');
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			replaceState(url.href, $page.state);
+		});
+		return () => clearTimeout(timer);
+	});
 </script>
 
 {#if open}
