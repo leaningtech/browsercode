@@ -95,7 +95,7 @@ async function prepareManifest(
 
 /**
  * npm installs what package-lock.json pins over package.json's overrides, so a committed lockfile
- * still brings native esbuild and rollup.
+ * still brings native esbuild, rollup and lightningcss.
  */
 async function dropNpmLockfile(ctx: BootContext): Promise<void> {
 	const lockfile = `${ctx.workdir}/${NPM_LOCKFILE}`;
@@ -105,7 +105,7 @@ async function dropNpmLockfile(ctx: BootContext): Promise<void> {
 		ctx.write(`\r\n${ANSI.dim}Removed ${NPM_LOCKFILE} so the overrides apply${ANSI.reset}\r\n`);
 	} catch (error) {
 		ctx.write(
-			`\r\n${ANSI.coral}Could not remove ${NPM_LOCKFILE}; esbuild and rollup may not run in the pod.${ANSI.reset}\r\n`
+			`\r\n${ANSI.coral}Could not remove ${NPM_LOCKFILE}; esbuild, rollup and lightningcss may not run in the pod.${ANSI.reset}\r\n`
 		);
 		console.warn(`Could not remove ${NPM_LOCKFILE}:`, error);
 	}
@@ -132,7 +132,7 @@ async function preparePnpmOverrides(ctx: BootContext, repoDir: string): Promise<
 		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
 	} catch (error) {
 		ctx.write(
-			`\r\n${ANSI.coral}Could not patch ${PNPM_WORKSPACE_FILE}; esbuild and rollup may not run in the pod.${ANSI.reset}\r\n`
+			`\r\n${ANSI.coral}Could not patch ${PNPM_WORKSPACE_FILE}; esbuild, rollup and lightningcss may not run in the pod.${ANSI.reset}\r\n`
 		);
 		console.warn(`Could not patch ${PNPM_WORKSPACE_FILE}:`, error);
 	}

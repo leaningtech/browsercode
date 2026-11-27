@@ -56,7 +56,8 @@ const DEP_SECTIONS = new Set([
 /** Native binaries the pod cannot execute. */
 export const WASM_BUNDLERS = {
 	esbuild: 'npm:esbuild-wasm@*',
-	rollup: 'npm:@rollup/wasm-node@*'
+	rollup: 'npm:@rollup/wasm-node@*',
+	lightningcss: 'npm:lightningcss-wasm@*'
 };
 
 /**
@@ -69,9 +70,9 @@ export const WASM_BUNDLERS = {
 const ROLLDOWN_WASM = { '@rolldown/binding-wasm32-wasi': '*' };
 
 const FRAMEWORK_RULES: FrameworkRule[] = [
-	// Every repo npm installs: esbuild/rollup can end up in the tree transitively (a plugin, a test
-	// runner, a framework CLI) even when nothing at the top level names them, so this isn't
-	// conditional on what the manifest declares. A repo that already depends on either directly
+	// Every repo npm installs: esbuild/rollup/lightningcss can end up in the tree transitively (a
+	// plugin, a test runner, a framework CLI) even when nothing at the top level names them, so this
+	// isn't conditional on what the manifest declares. A repo that already depends on one directly
 	// needs that entry rewritten to match too, or npm rejects the override as conflicting with a
 	// direct dependency. pnpm reads neither field — `pnpm-workspace.ts` writes its overrides to the
 	// one file it does read, and pnpm applies those to direct dependencies as well.
