@@ -55,12 +55,11 @@
 	</figcaption>
 
 	{#if running}
-		<!-- Same attribute the docs tell you to set: this page is cross-origin isolated, which is
-		     exactly what the embed needs from its host. -->
+		<!-- The same attributes the docs tell embedders to set. -->
 		<iframe
 			{src}
 			{title}
-			allow="cross-origin-isolated"
+			allow="cross-origin-isolated; clipboard-write"
 			style="height: {height}px"
 			class="block w-full border-0 bg-bc-abyss"
 		></iframe>

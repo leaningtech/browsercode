@@ -1,7 +1,7 @@
 /**
  * The docs tree, in reading order. One source for the in-page navigation, the sidebar's Docs
- * flyout and every docs page's <title> (seo.ts), so a new page means an entry here plus its
- * route, so the three cannot drift.
+ * flyout and every docs page's <title> (seo.ts): a new page means an entry here plus its route,
+ * so the three cannot drift.
  *
  * `path` is a literal union rather than `string` because `resolve()` only accepts a known route
  * id; a typo here is a type error instead of a dead link.
@@ -25,8 +25,10 @@ export type DocsEntry = {
 	path: DocsPath;
 	/** Nav label, and the page's own <h1>. */
 	label: string;
-	/** The nav's one-line hint, and the page's meta description. */
+	/** Subtitle under the <h1>, and the meta description. */
 	description: string;
+	/** Lives outside /docs. */
+	external?: boolean;
 	/** Rendered indented under their parent, which is itself a page. */
 	children?: DocsEntry[];
 };
@@ -99,7 +101,8 @@ export const docsNav: DocsEntry[] = [
 	{
 		path: '/privacy',
 		label: 'Privacy Policy',
-		description: 'How Leaning Technologies handles your data when you use BrowserCode.'
+		description: 'How Leaning Technologies handles your data when you use BrowserCode.',
+		external: true
 	}
 ];
 

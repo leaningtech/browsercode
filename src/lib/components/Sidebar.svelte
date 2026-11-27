@@ -6,7 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
-	import { docsNav } from '$lib/config/docs';
+	import { docsNav, type DocsEntry } from '$lib/config/docs';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
@@ -23,6 +23,14 @@
 	// Java is one of the IDE's two runtimes, so its pages light the IDE entry.
 	let isIdeSection = $derived(($page.route.id?.startsWith('/ide') ?? false) || isJavaSection);
 	let isDocsSection = $derived($page.route.id?.startsWith('/docs') ?? false);
+
+	// Route id rather than pathname, so a trailing slash cannot break the match.
+	function isCurrentDocsEntry(entry: DocsEntry): boolean {
+		const routeId = $page.route.id;
+		return (
+			entry.path === routeId || (entry.children?.some((child) => child.path === routeId) ?? false)
+		);
+	}
 
 	// Which agent is currently booted, if any — drives the flyout's "active" row badge only;
 	// the main button's color stays the same regardless of which one (or whether any) is running.
@@ -303,7 +311,6 @@
 		>
 			<button
 				onclick={() => navigate('/docs')}
-				data-tour-target="docs"
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isDocsSection
 					? 'bg-bc-azure/15 text-bc-azure'
@@ -333,7 +340,7 @@
 							type="button"
 							onclick={() => navigate(entry.path)}
 							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] transition
-								{$page.url.pathname === entry.path
+								{isCurrentDocsEntry(entry)
 								? 'bg-bc-azure/10 text-bc-text'
 								: 'text-bc-mist hover:bg-bc-border hover:text-bc-text'}"
 						>

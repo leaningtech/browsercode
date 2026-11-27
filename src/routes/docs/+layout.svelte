@@ -105,7 +105,7 @@
 						: 'text-bc-mist hover:bg-bc-tint/10 hover:text-bc-text'}"
 				>
 					<span class="flex-1">{entry.label}</span>
-					{#if entry.path === '/privacy'}
+					{#if entry.external}
 						<Icon icon="mingcute:arrow-right-up-line" width="13" height="13" />
 					{/if}
 				</a>

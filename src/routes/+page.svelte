@@ -256,6 +256,27 @@
 					Useful links
 				</div>
 				<div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+					<!-- The only way into the docs on phones, where the sidebar is hidden. -->
+					<a
+						href={resolve('/docs')}
+						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24 sm:col-span-2 lg:col-span-4"
+					>
+						<div class="flex items-center justify-between">
+							<Icon icon="mingcute:book-2-line" width="20" height="20" class="text-bc-text" />
+							<Icon
+								icon="mingcute:arrow-right-line"
+								width="14"
+								height="14"
+								class="text-bc-text-muted transition-colors duration-150 group-hover:text-bc-mist"
+							/>
+						</div>
+						<div>
+							<div class="text-[13px] font-medium text-bc-text">Documentation</div>
+							<div class="text-[11.5px] text-bc-text-muted">
+								How BrowserCode works, linking, embedding and running your own copy
+							</div>
+						</div>
+					</a>
 					<a
 						href="https://github.com/leaningtech/browsercode"
 						target="_blank"
