@@ -33,8 +33,10 @@
 	let entered = $state(false);
 	onMount(() => {
 		if (redirecting) {
-			// Keep the rest of the query, so RetiredSiteNotice's `from` survives this hop.
-			location.replace(`/ide?lang=java${location.search.replace('?', '&')}`);
+			// RetiredSiteNotice reads `from`, so it has to survive this hop.
+			const from = $page.url.searchParams.get('from');
+			const query = new URLSearchParams({ lang: 'java', ...(from !== null && { from }) });
+			location.replace(`/ide?${query}`);
 			return;
 		}
 		requestAnimationFrame(() => {
