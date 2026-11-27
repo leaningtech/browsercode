@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import favicon from '$lib/assets/favicon.svg';
 	import Icon from '@iconify/svelte';
 	import ToolIcon from '$lib/components/ToolIcon.svelte';
@@ -133,6 +134,9 @@
 	}
 
 	let openFlyout = $state<FlyoutId | null>(null);
+
+	/** The rail's one menu is drawn from whichever language owns the open flyout. */
+	let activeLang = $derived(LANGUAGES.find((lang) => lang.flyout === openFlyout));
 	let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function openFlyoutNow(id: FlyoutId) {
@@ -228,7 +232,8 @@
 						<div
 							class="group relative flex pl-[18px]"
 							role="group"
-							onmouseenter={() => openFlyoutNow(lang.flyout)}
+							onmouseenter={() =>
+								lang.landingOnly() ? closeFlyoutNow() : openFlyoutNow(lang.flyout)}
 							onmouseleave={scheduleCloseFlyout}
 						>
 							<span
@@ -249,53 +254,6 @@
 
 							{#if lang.landingOnly()}
 								{@render tooltip(`${lang.label} ${lang.noun}`)}
-							{:else}
-								<div
-									class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
-									lang.flyout
-										? 'visible opacity-100'
-										: 'invisible'}"
-								>
-									<!-- Java's four headings and twelve rows outgrow a short window, so the list
-									     scrolls rather than running off the bottom of it. The cap leaves room for
-									     this entry's own offset down the rail, so the menu ends clear of the edge. -->
-									<div
-										class="solid-panel max-h-[min(34rem,calc(100vh-13rem))] overflow-y-auto rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
-									>
-										{#each lang.groups as group (group.id)}
-											<div
-												class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase not-first:pt-2.5"
-											>
-												{group.label}
-											</div>
-											{#each group.items as item (item.id)}
-												<button
-													type="button"
-													onclick={() => navigate(lang.open(item))}
-													class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
-												>
-													<span
-														class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
-													>
-														<Icon icon={item.icon} width="14" height="14" />
-													</span>
-													<span class="flex-1 truncate">{item.label}</span>
-												</button>
-											{/each}
-										{/each}
-										<div class="my-1 h-px bg-bc-border"></div>
-										<button
-											type="button"
-											onclick={() => navigate(lang.path)}
-											class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
-										>
-											<span class="flex h-6 w-6 shrink-0 items-center justify-center">
-												<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
-											</span>
-											<span class="flex-1 truncate">See all {lang.noun}</span>
-										</button>
-									</div>
-								</div>
 							{/if}
 						</div>
 					{/each}
@@ -323,6 +281,63 @@
 						</button>
 						{@render tooltip('Clone from GitHub')}
 					</div>
+
+					<!-- One menu for the rail rather than one per entry, anchored to the rail's own top
+					     rather than to the entry you are pointing at. Moving between the languages then
+					     only swaps the rows inside a panel that never leaves the screen: a menu per
+					     entry meant a different box, at a different height, in a different place, all
+					     replaced at once — nothing carried over, so it read as a flicker. The fade is
+					     for arriving and leaving only; this block stays mounted in between. -->
+					{#if activeLang}
+						{@const lang = activeLang}
+						<div
+							class="absolute top-0 left-full z-50 w-56 pl-2"
+							role="group"
+							onmouseenter={() => openFlyoutNow(lang.flyout)}
+							onmouseleave={scheduleCloseFlyout}
+							transition:fade={{ duration: 110 }}
+						>
+							<!-- Java's four headings and twelve rows outgrow a short window, so the list
+							     scrolls rather than running off the bottom of it. The cap leaves room for
+							     the rail's own offset down the sidebar, so the menu ends clear of the edge. -->
+							<div
+								class="solid-panel max-h-[min(34rem,calc(100vh-13rem))] overflow-y-auto rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+							>
+								{#each lang.groups as group (group.id)}
+									<div
+										class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase not-first:pt-2.5"
+									>
+										{group.label}
+									</div>
+									{#each group.items as item (item.id)}
+										<button
+											type="button"
+											onclick={() => navigate(lang.open(item))}
+											class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+										>
+											<span
+												class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
+											>
+												<Icon icon={item.icon} width="14" height="14" />
+											</span>
+											<span class="flex-1 truncate">{item.label}</span>
+										</button>
+									{/each}
+								{/each}
+								<div class="my-1 h-px bg-bc-border"></div>
+								<button
+									type="button"
+									onclick={() => navigate(lang.path)}
+									class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
+								>
+									<span class="flex h-6 w-6 shrink-0 items-center justify-center">
+										<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
+									</span>
+									<span class="flex-1 truncate">See all {lang.noun}</span>
+								</button>
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
