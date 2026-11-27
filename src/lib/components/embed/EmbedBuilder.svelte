@@ -462,8 +462,7 @@ Cross-Origin-Embedder-Policy: require-corp`;
 							rel="noopener noreferrer"
 							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
 							>CheerpJ</a
-						>
-						, which needs nothing from your page: the snippet works on any site.
+						>, which needs nothing from your page: the snippet works on any site.
 					</p>
 				{/if}
 			</div>

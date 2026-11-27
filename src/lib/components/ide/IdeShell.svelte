@@ -358,6 +358,7 @@
 				<div class="flex shrink-0 items-center gap-1">
 					{#if shell.tools}
 						{@const engine = RUNNING_ON[session.source.runtime]}
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
 						<a
 							href={engine.href}
 							target="_blank"
@@ -373,6 +374,7 @@
 							/>
 							<span class="text-bc-text">{engine.name}</span>
 						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						<span class="mr-1 h-3.5 w-px shrink-0 bg-bc-border"></span>
 						<EmbedButton {session} />
 					{/if}
