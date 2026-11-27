@@ -107,7 +107,9 @@
 		{/if}
 
 		<!-- GitHub Ribbon — landing surfaces only (Home, /agents, bare /ide — see showRibbon above);
-		     the sidebar carries the GitHub link on the app surfaces. Fixed, so it doesn't move down
+		     on a booted session the repo is in the sidebar's help menu instead, the sidebar having
+		     no GitHub entry of its own (a mark that now means "clone a repo" there). Fixed, so it
+		     doesn't move down
 		     with the announcement bar on its own: top-[52px] is the bar's ~36px height plus the
 		     usual top-4, and needs revisiting if the bar's copy or padding changes. -->
 		{#if showRibbon}

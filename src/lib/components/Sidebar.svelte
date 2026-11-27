@@ -5,7 +5,14 @@
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { toolItems } from '$lib/config/tools';
-	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
+	import {
+		frameworkRailItems,
+		javaGroups,
+		languageById,
+		type Language,
+		type RailGroup,
+		type RailItem
+	} from '$lib/config/frameworks';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
@@ -18,9 +25,12 @@
 
 	let isHome = $derived($page.route.id === '/');
 	let isAgentsSection = $derived($page.route.id?.startsWith('/agents') ?? false);
+	// /ide is JavaScript, /java is Java, and /ide/github/… is a cloned repo — three destinations
+	// under one IDE entry, which the rail nested beneath it lights one of.
 	let isJavaSection = $derived($page.route.id === '/java');
-	// Java is one of the IDE's two runtimes, so its pages light the IDE entry.
-	let isIdeSection = $derived(($page.route.id?.startsWith('/ide') ?? false) || isJavaSection);
+	let isJsSection = $derived($page.route.id?.startsWith('/ide') ?? false);
+	let isRepoSection = $derived($page.route.id?.startsWith('/ide/github') ?? false);
+	let isIdeSection = $derived(isJsSection || isJavaSection);
 
 	// Which agent is currently booted, if any — drives the flyout's "active" row badge only;
 	// the main button's color stays the same regardless of which one (or whether any) is running.
@@ -35,16 +45,17 @@
 	// the picker too. See route-project.ts.
 	let opensAProject = $derived(opensProject($page.route.id, $page.url));
 
-	// The bare pickers (/agents index, /ide landing) already show the same choices inline, so the
-	// sidebar flyout stays hidden there; once something is actually running, it becomes a handy
-	// shortcut to switch without leaving the session.
+	// A bare picker (the /agents index, the /ide or /java landing) already lists its own choices on
+	// the page, so the matching sidebar menu stays hidden there and shows a plain tooltip instead;
+	// once something is running, it becomes a handy shortcut to switch without leaving the session.
 	let isAgentsIndexOnly = $derived($page.route.id === '/agents');
 	let isIdeLandingOnly = $derived($page.route.id === '/ide' && !opensAProject);
+	let isJavaLandingOnly = $derived(isJavaSection && !opensAProject);
 
 	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 	// A booted framework (/ide?framework=...) or cloned GitHub repo (/ide/github/...) — the bare
 	// landing picker has nothing running yet, so it's excluded.
-	let isActiveIdeSession = $derived(($page.route.id?.startsWith('/ide') ?? false) && opensAProject);
+	let isActiveIdeSession = $derived(isJsSection && opensAProject);
 	let isActiveJavaSession = $derived(isJavaSection && opensAProject);
 
 	// Full reloads are deliberate here: they're the teardown mechanism for a running pod
@@ -59,19 +70,87 @@
 	// gap) so a brief, imperfect mouse path from the icon into a tall menu doesn't close it —
 	// mouseenter/mouseleave fire on this whole wrapper (button + menu together), and closing
 	// waits a beat in case the pointer re-enters.
-	let openFlyout = $state<'agents' | 'ide' | 'help' | null>(null);
+	type FlyoutId = 'agents' | 'ide-js' | 'ide-java' | 'help';
+
+	/** Grace period before a hovered-open rail or menu folds away, shared by both. */
+	const CLOSE_DELAY_MS = 400;
+
+	/**
+	 * The registry's languages, with what this rail needs on top of them: which menu each entry
+	 * owns, what fills it, and where it points. `current` and `landingOnly` are functions rather
+	 * than values because the `$derived` flags above are read at render time, once per language.
+	 */
+	const LANGUAGES: (Language & {
+		flyout: FlyoutId;
+		groups: RailGroup[];
+		open: (item: RailItem) => string;
+		current: () => boolean;
+		landingOnly: () => boolean;
+	})[] = [
+		{
+			...languageById.js,
+			flyout: 'ide-js',
+			// A single heading's worth: the frameworks are one list, where Java's examples are four.
+			groups: [{ id: 'frameworks', label: 'Frameworks', items: frameworkRailItems }],
+			open: (item) => `/ide?framework=${item.id}`,
+			// A cloned repo also lives under /ide, but it lights the rail's GitHub entry instead.
+			current: () => isJsSection && !isRepoSection,
+			landingOnly: () => isIdeLandingOnly
+		},
+		{
+			...languageById.java,
+			flyout: 'ide-java',
+			groups: javaGroups,
+			open: (item) => `/java?example=${item.example}`,
+			current: () => isJavaSection,
+			landingOnly: () => isJavaLandingOnly
+		}
+	];
+
+	/**
+	 * The nested language rail stays put while you are inside the IDE section, and otherwise
+	 * unfolds on hover, so reaching a language never costs a click first.
+	 *
+	 * It opens from the IDE entry but closes on leaving the whole rail, not that entry: unfolding
+	 * pushes everything below it down, so collapsing it the moment the pointer moved on would
+	 * yank Agents back up from under a cursor on its way there. Leaving waits a beat besides, as
+	 * the flyouts do, in case the pointer strays and comes back.
+	 */
+	let railHovered = $state(false);
+	let railTimer: ReturnType<typeof setTimeout> | null = null;
+	let showLanguageRail = $derived(isIdeSection || railHovered);
+
+	function openRail() {
+		if (railTimer) clearTimeout(railTimer);
+		railHovered = true;
+	}
+
+	function scheduleCloseRail() {
+		if (railTimer) clearTimeout(railTimer);
+		railTimer = setTimeout(() => {
+			railHovered = false;
+		}, CLOSE_DELAY_MS);
+	}
+
+	let openFlyout = $state<FlyoutId | null>(null);
 	let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
-	function openFlyoutNow(id: 'agents' | 'ide' | 'help') {
+	function openFlyoutNow(id: FlyoutId) {
 		if (closeTimer) clearTimeout(closeTimer);
 		openFlyout = id;
+	}
+
+	/** For an entry with no menu of its own, which would otherwise sit under the last one. */
+	function closeFlyoutNow() {
+		if (closeTimer) clearTimeout(closeTimer);
+		openFlyout = null;
 	}
 
 	function scheduleCloseFlyout() {
 		if (closeTimer) clearTimeout(closeTimer);
 		closeTimer = setTimeout(() => {
 			openFlyout = null;
-		}, 400);
+		}, CLOSE_DELAY_MS);
 	}
 </script>
 
@@ -107,101 +186,142 @@
 
 	<div class="mx-3 h-px bg-bc-border"></div>
 
-	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
-		<!-- Ide: expands on hover with both languages' templates, grouped and named as /ide's two tabs
-		     are; the flyout is suppressed on the bare /ide landing, which shows the same choices
-		     inline. Bare /java redirects there, so it never needs suppressing on its own. -->
-		<div
-			class="group relative flex items-center justify-center"
-			role="group"
-			onmouseenter={() => openFlyoutNow('ide')}
-			onmouseleave={scheduleCloseFlyout}
-		>
-			<button
-				onclick={() => navigate('/ide')}
-				data-tour-target="ide"
-				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
-					{isIdeSection
-					? 'bg-bc-azure/15 text-bc-azure'
-					: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
-			>
-				<Icon icon="mingcute:code-line" width="26" height="26" />
-			</button>
-
-			{#if isIdeLandingOnly}
-				{@render tooltip('Playground IDE')}
-			{:else}
-				<div
-					class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
-					'ide'
-						? 'visible opacity-100'
-						: 'invisible'}"
+	<nav
+		class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2"
+		onmouseleave={scheduleCloseRail}
+		onfocusout={scheduleCloseRail}
+	>
+		<!-- IDE: one entry, because the landing offers one door and the rail should agree. Its three
+		     destinations — the two languages and a repo clone — nest *under* it rather than hanging
+		     off it in a menu: nested, they also say which one you are in, which a menu can't, and
+		     each language carries its own templates on hover, which is how you get from one example
+		     to the next. A labelled menu beside all that would be the same three things twice, from
+		     one gesture. The button and the rail share a hover group; see `openRail`. -->
+		<div class="flex flex-col gap-0.5" role="group" onmouseenter={openRail} onfocusin={openRail}>
+			<div class="group relative flex items-center justify-center">
+				<button
+					onclick={() => navigate('/ide')}
+					data-tour-target="ide"
+					aria-label="IDE playground"
+					class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
+						{isIdeSection
+						? 'bg-bc-azure/15 text-bc-azure'
+						: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
 				>
-					<div
-						class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
-					>
+					<Icon icon="mingcute:code-line" width="26" height="26" />
+				</button>
+
+				{@render tooltip('IDE playground')}
+			</div>
+
+			<!-- Drawn as a tree, on a rail only 52px wide inside its padding: a spine down x=9px, an
+			     elbow from there to the entries' x=18px indent, and 28px rows. The spine stops half a
+			     row short of the bottom, which is exactly where the last entry's elbow leaves it,
+			     whatever the count. These four figures are what the arbitrary values below are. -->
+			{#if showLanguageRail}
+				<div class="relative flex flex-col gap-0.5 pt-0.5">
+					<span
+						class="pointer-events-none absolute top-0 bottom-[14px] left-[9px] w-px bg-bc-border"
+						aria-hidden="true"
+					></span>
+					{#each LANGUAGES as lang (lang.id)}
 						<div
-							class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
+							class="group relative flex pl-[18px]"
+							role="group"
+							onmouseenter={() => openFlyoutNow(lang.flyout)}
+							onmouseleave={scheduleCloseFlyout}
 						>
-							JavaScript
-						</div>
-						{#each frameworkRailItems as fw (fw.id)}
+							<span
+								class="pointer-events-none absolute top-1/2 left-[9px] h-px w-[9px] bg-bc-border"
+								aria-hidden="true"
+							></span>
 							<button
-								type="button"
-								onclick={() => navigate(`/ide?framework=${fw.id}`)}
-								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+								onclick={() => navigate(lang.path)}
+								aria-label="{lang.label} {lang.noun}"
+								aria-current={lang.current() ? 'page' : undefined}
+								class="flex h-7 w-7 items-center justify-center rounded-md transition-all duration-150
+									{lang.current()
+									? 'bg-bc-azure/15 text-bc-azure'
+									: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
 							>
-								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
-								>
-									<Icon icon={fw.icon} width="14" height="14" />
-								</span>
-								<span class="flex-1 truncate">{fw.label}</span>
+								<Icon icon={lang.icon} width="15" height="15" />
 							</button>
-						{/each}
-						<div
-							class="px-2 pt-2.5 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
-						>
-							Java
+
+							{#if lang.landingOnly()}
+								{@render tooltip(`${lang.label} ${lang.noun}`)}
+							{:else}
+								<div
+									class="absolute top-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
+									lang.flyout
+										? 'visible opacity-100'
+										: 'invisible'}"
+								>
+									<!-- Java's four headings and twelve rows outgrow a short window, so the list
+									     scrolls rather than running off the bottom of it. The cap leaves room for
+									     this entry's own offset down the rail, so the menu ends clear of the edge. -->
+									<div
+										class="solid-panel max-h-[min(34rem,calc(100vh-13rem))] overflow-y-auto rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+									>
+										{#each lang.groups as group (group.id)}
+											<div
+												class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase not-first:pt-2.5"
+											>
+												{group.label}
+											</div>
+											{#each group.items as item (item.id)}
+												<button
+													type="button"
+													onclick={() => navigate(lang.open(item))}
+													class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+												>
+													<span
+														class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
+													>
+														<Icon icon={item.icon} width="14" height="14" />
+													</span>
+													<span class="flex-1 truncate">{item.label}</span>
+												</button>
+											{/each}
+										{/each}
+										<div class="my-1 h-px bg-bc-border"></div>
+										<button
+											type="button"
+											onclick={() => navigate(lang.path)}
+											class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
+										>
+											<span class="flex h-6 w-6 shrink-0 items-center justify-center">
+												<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
+											</span>
+											<span class="flex-1 truncate">See all {lang.noun}</span>
+										</button>
+									</div>
+								</div>
+							{/if}
 						</div>
-						{#each javaRailItems as item (item.id)}
-							<button
-								type="button"
-								onclick={() => navigate(`/java?example=${item.example}`)}
-								class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
-							>
-								<span
-									class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/5"
-								>
-									<Icon icon={item.icon} width="14" height="14" />
-								</span>
-								<span class="flex-1 truncate">{item.label}</span>
-							</button>
-						{/each}
-						<div class="my-1 h-px bg-bc-border"></div>
+					{/each}
+
+					<!-- The third destination. It opens a dialog rather than a page, so it gets a plain
+					     tooltip where the languages get a menu — and dismisses theirs on the way in,
+					     which would otherwise hang beside it for the grace period. A cloned repo,
+					     once open, is what lights it. -->
+					<div class="group relative flex pl-[18px]" role="group" onmouseenter={closeFlyoutNow}>
+						<span
+							class="pointer-events-none absolute top-1/2 left-[9px] h-px w-[9px] bg-bc-border"
+							aria-hidden="true"
+						></span>
 						<button
 							type="button"
-							onclick={() => {
-								showCloneDialog = true;
-								openFlyout = null;
-							}}
-							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
+							onclick={() => (showCloneDialog = true)}
+							aria-label="Clone from GitHub"
+							aria-current={isRepoSection ? 'page' : undefined}
+							class="flex h-7 w-7 items-center justify-center rounded-md transition-all duration-150
+								{isRepoSection
+								? 'bg-bc-azure/15 text-bc-azure'
+								: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
 						>
-							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
-								<Icon icon="simple-icons:github" width="14" height="14" />
-							</span>
-							<span class="flex-1 truncate">Clone from GitHub</span>
+							<Icon icon="simple-icons:github" width="15" height="15" />
 						</button>
-						<button
-							type="button"
-							onclick={() => navigate('/ide')}
-							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-text-muted transition hover:bg-bc-border hover:text-bc-text"
-						>
-							<span class="flex h-6 w-6 shrink-0 items-center justify-center">
-								<Icon icon="mingcute:arrow-right-line" width="14" height="14" />
-							</span>
-							<span class="flex-1 truncate">See all templates</span>
-						</button>
+						{@render tooltip('Clone from GitHub')}
 					</div>
 				</div>
 			{/if}
@@ -218,6 +338,7 @@
 			<button
 				onclick={() => navigate('/agents')}
 				data-tour-target="agents"
+				aria-label="Agents"
 				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
 					{isAgentsSection
 					? 'bg-bc-azure/15 text-bc-azure'
@@ -327,18 +448,10 @@
 	<div class="mx-3 h-px bg-bc-border"></div>
 
 	<div class="flex flex-col items-center justify-center gap-0.5 px-1.5 py-2">
-		<div class="group relative flex items-center justify-center">
-			<a
-				href="https://github.com/leaningtech/browsercode"
-				target="_blank"
-				rel="noopener noreferrer"
-				data-tour-target="github"
-				class="relative flex items-center justify-center rounded-md p-2.5 text-bc-icon transition-all duration-150 hover:bg-bc-tint/10 hover:text-bc-mist"
-			>
-				<Icon icon="simple-icons:github" width="26" height="26" />
-			</a>
-			{@render tooltip('GitHub repository')}
-		</div>
+		<!-- No repo link here: the "Star on GitHub" ribbon already points at it on every landing
+		     surface, and a GitHub mark in this rail now reads as the clone entry in the IDE's own
+		     rail, which is a different thing entirely. It lives in the help menu instead, which is
+		     where the rest of the meta links are. -->
 		<div class="group relative flex items-center justify-center">
 			<a
 				href="https://discord.leaningtech.com"
@@ -392,8 +505,22 @@
 						</span>
 						<span class="flex-1 truncate">UI tour</span>
 					</button>
-					<!-- The tracker is an external URL, so resolve() does not apply here. -->
+					<!-- These are external URLs, so resolve() does not apply here. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					<a
+						href="https://github.com/leaningtech/browsercode"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={() => trackEvent('Clicked Help', { action: 'github' })}
+						class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] text-bc-mist transition hover:bg-bc-border hover:text-bc-text"
+					>
+						<span
+							class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-bc-tint/10 text-bc-mist"
+						>
+							<Icon icon="simple-icons:github" width="14" height="14" />
+						</span>
+						<span class="flex-1 truncate">GitHub repository</span>
+					</a>
 					<a
 						href={NEW_ISSUE_URL}
 						target="_blank"
