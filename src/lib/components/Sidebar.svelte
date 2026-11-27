@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { toolItems } from '$lib/config/tools';
 	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
+	import { docsNav, type DocsEntry } from '$lib/config/docs';
 	import { trackEvent } from '$lib/utils/useLazyTracking';
 	import { openTour } from '$lib/stores/stepper.svelte';
 	import { NEW_ISSUE_URL } from '$lib/utils/bug-report';
@@ -21,6 +22,15 @@
 	let isJavaSection = $derived($page.route.id === '/java');
 	// Java is one of the IDE's two runtimes, so its pages light the IDE entry.
 	let isIdeSection = $derived(($page.route.id?.startsWith('/ide') ?? false) || isJavaSection);
+	let isDocsSection = $derived($page.route.id?.startsWith('/docs') ?? false);
+
+	// Route id rather than pathname, so a trailing slash cannot break the match.
+	function isCurrentDocsEntry(entry: DocsEntry): boolean {
+		const routeId = $page.route.id;
+		return (
+			entry.path === routeId || (entry.children?.some((child) => child.path === routeId) ?? false)
+		);
+	}
 
 	// Which agent is currently booted, if any — drives the flyout's "active" row badge only;
 	// the main button's color stays the same regardless of which one (or whether any) is running.
@@ -59,10 +69,10 @@
 	// gap) so a brief, imperfect mouse path from the icon into a tall menu doesn't close it —
 	// mouseenter/mouseleave fire on this whole wrapper (button + menu together), and closing
 	// waits a beat in case the pointer re-enters.
-	let openFlyout = $state<'agents' | 'ide' | 'help' | null>(null);
+	let openFlyout = $state<'agents' | 'ide' | 'docs' | 'help' | null>(null);
 	let closeTimer: ReturnType<typeof setTimeout> | null = null;
 
-	function openFlyoutNow(id: 'agents' | 'ide' | 'help') {
+	function openFlyoutNow(id: 'agents' | 'ide' | 'docs' | 'help') {
 		if (closeTimer) clearTimeout(closeTimer);
 		openFlyout = id;
 	}
@@ -290,10 +300,60 @@
 				</div>
 			{/if}
 		</div>
+		<!-- Docs and Embed are both about BrowserCode rather than a thing you are building, so they
+		     sit together at the foot of the nav, above the divider the utilities start under. The
+		     mt-auto is here, on the first of the pair, which pushes both of them down. -->
+		<div
+			class="group relative mt-auto flex items-center justify-center"
+			role="group"
+			onmouseenter={() => openFlyoutNow('docs')}
+			onmouseleave={scheduleCloseFlyout}
+		>
+			<button
+				onclick={() => navigate('/docs')}
+				class="relative flex w-full items-center justify-center rounded-md p-2.5 transition-all duration-150
+					{isDocsSection
+					? 'bg-bc-azure/15 text-bc-azure'
+					: 'text-bc-icon hover:bg-bc-tint/12 hover:text-bc-text'}"
+			>
+				<Icon icon="mingcute:book-2-line" width="26" height="26" />
+			</button>
 
-		<!-- Embeds cover the IDE and the agents alike, so this sits apart from either group:
-		     pushed to the foot of the nav, above the divider the utilities start under. -->
-		<div class="group relative mt-auto flex items-center justify-center">
+			<!-- Bottom-anchored, like the Help flyout below: from down here a top-anchored menu
+			     would run off the bottom of the viewport. -->
+			<div
+				class="absolute bottom-0 left-full z-50 w-56 pl-2 opacity-0 transition-opacity duration-100 {openFlyout ===
+				'docs'
+					? 'visible opacity-100'
+					: 'invisible'}"
+			>
+				<div
+					class="solid-panel rounded-lg border border-bc-border p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)]"
+				>
+					<div
+						class="px-2 pt-1 pb-1.5 text-[10px] font-medium tracking-widest text-bc-mist/50 uppercase"
+					>
+						Documentation
+					</div>
+					{#each docsNav as entry (entry.path)}
+						<button
+							type="button"
+							onclick={() => navigate(entry.path)}
+							class="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[12.5px] transition
+								{isCurrentDocsEntry(entry)
+								? 'bg-bc-azure/10 text-bc-text'
+								: 'text-bc-mist hover:bg-bc-border hover:text-bc-text'}"
+						>
+							<span class="flex-1 truncate">{entry.label}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+
+		<!-- Embeds cover the IDE and the agents alike, so this sits apart from either group, under
+		     Docs at the foot of the nav. -->
+		<div class="group relative flex items-center justify-center">
 			<button
 				type="button"
 				onclick={() => {

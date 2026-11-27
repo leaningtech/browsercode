@@ -62,21 +62,21 @@ Java embeds (`runtime=cheerpj`) do not use BrowserPod and ignore `apiKey`.
 
 ## Parameters
 
-| Parameter   | Value                                                                         |
-| ----------- | ----------------------------------------------------------------------------- |
-| `repo`      | Any GitHub URL or `owner/repo`, optionally `.../tree/<ref>/<dir>`             |
-| `framework` | A template id (`vite`, `react`, `svelte`, `vue`, `nextjs`, `nuxt`, `express`) |
-| `agent`     | A CLI agent id (`claude`, `codex`, `pi`)                                      |
-| `runtime`   | `cheerpj`, for a Java project compiled and run in the browser by CheerpJ      |
-| `view`      | Comma separated: `files`, `search`, `editor`, `terminal`, `preview`           |
-| `apiKey`    | Empty (`apiKey=`) for keyless mode. See **Keyless mode**                      |
+| Parameter   | Value                                                                                                                 |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| `repo`      | Any GitHub URL or `owner/repo`, optionally `.../tree/<ref>/<dir>`. With no `/tree/` part, the `main` branch is cloned |
+| `framework` | A template id (`vite`, `react`, `svelte`, `vue`, `nextjs`, `nuxt`, `express`)                                         |
+| `agent`     | A CLI agent id (`claude`, `codex`, `pi`)                                                                              |
+| `runtime`   | `cheerpj`, for a Java project compiled and run in the browser by CheerpJ                                              |
+| `view`      | Comma separated: `files`, `search`, `editor`, `terminal`, `preview`                                                   |
+| `apiKey`    | Empty (`apiKey=`) for keyless mode. See **Keyless mode**                                                              |
 
 ## Behaviour
 
 - Pass one of `agent`, `runtime`, `repo` or `framework`. With none, the default template boots. With `runtime`, `framework` names one of that runtime's templates, and its first when left out. For `cheerpj` those are the Java examples: `helloworld` and `swing`, also known by their ids `java` and `java-swing`. A shared project link's hash takes the place of `framework`: `/embed?runtime=cheerpj#<project>` boots that project. A template or repo project shared with Share embeds the same way without `runtime`: `/embed#<project>`.
 - `view` defaults to every pane.
 - Agents are terminal first, so `view` only decides whether the preview pane comes with it.
-- One agent session per browser. A second embed of the same agent, or the same agent open in another tab, shows the duplicate session dialog, which can move the session there and close it in the other.
+- One session per agent. A second embed of the same agent, or that agent open in another tab, shows the duplicate session dialog, which can move the session there and close it in the other. Two different agents can run at the same time.
 - `codex` asks for an OpenAI API key inside the frame.
 - `claude` opens a new tab for OAuth sign-in.
 - `pi` installs from npm on its first launch and signs in through its own `/login`.

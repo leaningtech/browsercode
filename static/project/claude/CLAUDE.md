@@ -33,7 +33,7 @@ Where the overrides go depends on the package manager:
 - **npm:** the `overrides` field in `package.json`.
 - **pnpm:** the `overrides` key in `pnpm-workspace.yaml` (create the file at the project root if needed). pnpm ignores the `overrides` field in `package.json`.
 
-BrowserCode's own templates install with pnpm, and a cloned repo uses pnpm when its `packageManager` names pnpm, a dependency uses the `workspace:` protocol, or `pnpm-workspace.yaml` sits at its root; otherwise npm. BrowserCode has already added the `esbuild` and `rollup` overrides to templates and cloned repos — check what is there before adding more, and put new overrides in the same place. The reference `package.json` files below use npm; for pnpm, move the `overrides` block into `pnpm-workspace.yaml`:
+BrowserCode's own templates install with pnpm. A cloned repo uses pnpm when the `package.json` it boots from names pnpm in `packageManager` or declares a `workspace:` dependency; failing that, a repo booted at its root uses pnpm if `pnpm-workspace.yaml` sits there, while one booted into a subdirectory ignores the clone root's `pnpm-workspace.yaml` and uses npm. BrowserCode has already added the `esbuild` and `rollup` overrides to templates and cloned repos — check what is there before adding more, and put new overrides in the same place. The reference `package.json` files below use npm; for pnpm, move the `overrides` block into `pnpm-workspace.yaml`:
 
 ```yaml
 overrides:
