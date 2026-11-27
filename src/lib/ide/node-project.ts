@@ -11,6 +11,8 @@ import { PNPM_WORKSPACE_FILE, patchPnpmOverrides } from './pnpm-workspace';
 import { ANSI } from './shell-rc';
 import type { BootContext, ProjectCommand, ProjectSource } from './project-source';
 
+const NPM_LOCKFILE = 'package-lock.json';
+
 /** Installs and starts a Node project as its manifest asks; `repoDir` is the project root. */
 export function nodeProject(
 	repoDir: string
@@ -80,6 +82,7 @@ async function prepareManifest(
 		// Header takes the leading blank line; the changes follow indented under it as one block.
 		ctx.write(`\r\n${ANSI.dim}Modified package.json${ANSI.reset}\r\n`);
 		for (const note of result.notes) ctx.write(`${ANSI.dim}  ${note}${ANSI.reset}\r\n`);
+		if (packageManager === 'npm') await dropNpmLockfile(ctx);
 		return { installArgs: resolveInstallArgs(result.patched, packageManager), packageManager };
 	} catch (error) {
 		ctx.write(
@@ -87,6 +90,24 @@ async function prepareManifest(
 		);
 		console.warn('Could not patch the cloned manifest:', error);
 		return { installArgs: ['install'], packageManager };
+	}
+}
+
+/**
+ * npm installs what package-lock.json pins over package.json's overrides, so a committed lockfile
+ * still brings native esbuild and rollup.
+ */
+async function dropNpmLockfile(ctx: BootContext): Promise<void> {
+	const lockfile = `${ctx.workdir}/${NPM_LOCKFILE}`;
+	try {
+		if (!(await fileExists(ctx, lockfile))) return;
+		await ctx.fs.deleteEntry(lockfile);
+		ctx.write(`\r\n${ANSI.dim}Removed ${NPM_LOCKFILE} so the overrides apply${ANSI.reset}\r\n`);
+	} catch (error) {
+		ctx.write(
+			`\r\n${ANSI.coral}Could not remove ${NPM_LOCKFILE}; esbuild and rollup may not run in the pod.${ANSI.reset}\r\n`
+		);
+		console.warn(`Could not remove ${NPM_LOCKFILE}:`, error);
 	}
 }
 
