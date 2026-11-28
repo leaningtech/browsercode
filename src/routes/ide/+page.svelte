@@ -24,9 +24,11 @@
 	const showLanding = !shared && (!resolved || unreadableLink);
 
 	// `?lang=java` named the Java tab back when both languages shared this page. Java has its own
-	// route now, so the old address still lands where it always did. Only on the bare picker: a
-	// URL that also names a template or carries a project has something to open here.
-	const redirectingToJava = showLanding && $page.url.searchParams.get('lang') === 'java';
+	// route now, so the old address still lands where it always did. Only when it asks for nothing
+	// else: a URL that also names a template or carries a project, even one we can't resolve, stays
+	// here, where the picker can say what was wrong with it.
+	const redirectingToJava =
+		!hash && requested === null && $page.url.searchParams.get('lang') === 'java';
 
 	const session = new IdeSession(
 		shared ? sharedFilesSource(shared) : templateSource(framework),
