@@ -95,11 +95,16 @@
    above) is behind every translucent "glass" surface, hover tint and hairline border in the
    app — white highlights on dark in dark mode, soft near-black shading on light in light mode —
    so those surfaces flip with the rest of the palette instead of staying stuck at a fixed white
-   opacity. */
+   opacity.
+   `color-scheme` follows the app theme rather than the OS, so native controls and scrollbars
+   match, and an SVG shown through <img> (a README's logo) resolves its own
+   `prefers-color-scheme` query against the theme the page is actually in. */
 :root {
+	color-scheme: dark;
 	--bc-tint: 255 255 255;
 }
 :root[data-theme='light'] {
+	color-scheme: light;
 	--bc-tint: 15 23 42;
 	--color-bc-tint: rgb(15 23 42);
 

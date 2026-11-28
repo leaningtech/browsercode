@@ -33,6 +33,31 @@ export function isImagePath(path: string): boolean {
 	return extensionOf(path) in IMAGE_MIME;
 }
 
+/** True when `path` is a Markdown file, which a tab can show rendered. */
+export function isMarkdownPath(path: string): boolean {
+	return ['md', 'markdown', 'mdown', 'mkd'].includes(extensionOf(path));
+}
+
+/**
+ * Reads an image a rendered Markdown file references. Unlike {@link loadImage} this takes SVG
+ * too: inside an `<img>` its scripts never run. Null for anything that is not an image.
+ */
+export async function loadEmbeddedImage(
+	fs: WorkspaceFs,
+	absPath: string
+): Promise<ImagePayload | null> {
+	const ext = extensionOf(absPath);
+	if (ext === 'svg') {
+		const size = await fs.fileSize(absPath);
+		if (size > MAX_IMAGE_BYTES) return null;
+		const blob = new Blob([await fs.readBinaryFile(absPath)], { type: 'image/svg+xml' });
+		return { url: URL.createObjectURL(blob), bytes: size };
+	}
+	if (!(ext in IMAGE_MIME)) return null;
+	const image = await loadImage(fs, absPath);
+	return image.url ? image : null;
+}
+
 /** True when the UTF-8 decode lost bytes, so writing the tab back would destroy the file. */
 export function isBinaryContent(content: string): boolean {
 	return content.includes('\u0000') || content.includes('\uFFFD');
