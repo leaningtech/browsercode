@@ -1,7 +1,12 @@
 /**
  * Project source for the curated framework templates served out of `static/templates/<id>/`.
  */
-import { frameworkConfigs, type FrameworkConfig, type FrameworkId } from '$lib/config/frameworks';
+import {
+	frameworkConfigs,
+	qualifiedLabel,
+	type FrameworkConfig,
+	type FrameworkId
+} from '$lib/config/frameworks';
 import type { EmbedTarget } from '$lib/embed/url';
 import type { JavaVersion } from '$lib/java/versions';
 import { POD_HOME } from '$lib/pod/fs';
@@ -16,12 +21,16 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 	// Held across clicks: Share and Embed both ask whether the project is still as shipped, and
 	// the answer is a fixed set of static files.
 	let shipped: Promise<ProjectFile[]> | undefined;
+	// Qualified, not the menu label: the IDE header, the download's file name, a shared project's
+	// fallback title and the boot event all show it away from any "Java" heading. "Hello World"
+	// alone would also split the analytics series that used to record "Java".
+	const label = qualifiedLabel(framework);
 
 	return {
 		id: 'framework',
 		runtime: config.runtime ?? 'pod',
 		keyless: true,
-		label: config.label,
+		label,
 		hydrateLabel: 'copying project files',
 		workdir: POD_HOME,
 		appPort: config.appPort,
@@ -33,7 +42,7 @@ export function templateSource(framework: FrameworkId): ProjectSource {
 			(config.setupCommandArgs ?? [['install']]).map((args) => packageManagerCommand('pnpm', args)),
 		startCommand: async () =>
 			packageManagerCommand('pnpm', config.devCommandArgs ?? ['run', 'dev']),
-		trackBoot: () => trackEvent('Booted Playground', { framework: config.label }),
+		trackBoot: () => trackEvent('Booted Playground', { framework: label }),
 		javaVersion: config.javaVersion,
 		mainClass: config.mainClass,
 		starterFiles: config.olderJava && starterFiles(config.sourceRoot, config.olderJava),
