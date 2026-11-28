@@ -39,7 +39,7 @@
 	// sidebar flyout stays hidden there; once something is actually running, it becomes a handy
 	// shortcut to switch without leaving the session.
 	let isAgentsIndexOnly = $derived($page.route.id === '/agents');
-	let isIdeLandingOnly = $derived($page.route.id === '/ide' && !opensAProject);
+	let isIdeLandingOnly = $derived(($page.route.id === '/ide' || isJavaSection) && !opensAProject);
 
 	let isActiveAgentSession = $derived($page.route.id === '/agents/[tool]');
 	// A booted framework (/ide?framework=...) or cloned GitHub repo (/ide/github/...) — the bare
@@ -109,8 +109,8 @@
 
 	<nav class="flex flex-1 flex-col gap-0.5 px-1.5 pt-2">
 		<!-- Ide: expands on hover with both languages' templates, grouped and named as /ide's two tabs
-		     are; the flyout is suppressed on the bare /ide landing, which shows the same choices
-		     inline. Bare /java redirects there, so it never needs suppressing on its own. -->
+		     are; the flyout is suppressed on the bare /ide and /java landings, which show the same
+		     choices inline. -->
 		<div
 			class="group relative flex items-center justify-center"
 			role="group"
