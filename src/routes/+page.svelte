@@ -184,8 +184,21 @@
 			</div>
 
 			<p class="mt-6 max-w-md text-[12px] leading-relaxed text-bc-text-muted">
-				Everything runs in WebAssembly in this tab: Node.js on BrowserPod (Rust and Python in
-				preview) and Java on CheerpJ. No installs, no servers, no cloud compute.
+				Everything runs in WebAssembly in this tab: Node.js on <a
+					href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=home-hero"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+					>BrowserPod</a
+				>
+				(Rust and Python in preview) and Java on
+				<a
+					href="https://cheerpj.com/"
+					target="_blank"
+					rel="noopener noreferrer"
+					class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
+					>CheerpJ</a
+				>. No installs, no servers, no cloud compute.
 			</p>
 		</div>
 
@@ -241,7 +254,7 @@
 				<p class="mb-10 text-[14.5px] leading-relaxed text-bc-mist">
 					Both are built on
 					<a
-						href="https://browserpod.io"
+						href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=home-agents"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="font-medium text-bc-text underline decoration-bc-tint/20 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
@@ -301,7 +314,7 @@
 						</div>
 					</a>
 					<a
-						href="https://browserpod.io"
+						href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=home-links"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="glass-panel group flex flex-col gap-2 rounded-lg border border-bc-border px-4 py-3.5 transition hover:border-bc-tint/24"

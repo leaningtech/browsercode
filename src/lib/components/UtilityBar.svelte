@@ -57,12 +57,12 @@
 		>
 	</span>
 
-	<!-- One "Powered by" for both runtimes, in one group so justify-between still spaces four. Like
+	<!-- One "Built on" for both runtimes, in one group so justify-between still spaces four. Like
 	     llms.txt, CheerpJ waits for lg, where the bar has room for it without wrapping a label. -->
 	<span class="flex items-center gap-1.5 text-[11.5px] whitespace-nowrap">
-		<span>Powered by</span>
+		<span>Built on</span>
 		<a
-			href="https://browserpod.io"
+			href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=footer"
 			target="_blank"
 			rel="noopener noreferrer"
 			class="group flex items-center gap-1.5 text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"
@@ -99,7 +99,7 @@
 	</span>
 
 	<a
-		href="https://browserpod.io/blog/browserpod-40/"
+		href="https://browserpod.io/blog/browserpod-40/?utm_source=browsercode&utm_medium=referral&utm_content=footer-blog"
 		target="_blank"
 		rel="noopener noreferrer"
 		class="flex items-center gap-1 text-[11.5px] text-bc-text-muted transition-colors duration-150 hover:text-bc-link-hover"

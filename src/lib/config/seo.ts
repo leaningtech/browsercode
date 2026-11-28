@@ -40,6 +40,11 @@ const HOME: PageMeta = {
 		'BrowserCode runs a multi-language WebAssembly sandbox in your browser tab. No installs, no servers, no cloud compute.'
 };
 
+export const NOT_FOUND: PageMeta = {
+	title: 'Page not found — BrowserCode',
+	description: 'There is no BrowserCode page at this address.'
+};
+
 /**
  * Title and description for a route. The single source for both the static head written at
  * prerender time (hooks.server.ts) and the one +layout.svelte keeps current on client-side
@@ -78,7 +83,8 @@ export function pageMeta(
 	if (routeId === '/java') {
 		return {
 			title: 'Java Playground — BrowserCode',
-			description: 'Compile and run Java, Swing included, right in your browser, on BrowserCode.'
+			description:
+				'Compile and run Java, Swing included, right in your browser, on BrowserCode. Formerly JavaFiddle.'
 		};
 	}
 	if (routeId === '/agents') {

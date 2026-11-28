@@ -7,8 +7,9 @@
 	import Stepper from '$lib/components/Stepper.svelte';
 	import AnnouncementBar from '$lib/components/AnnouncementBar.svelte';
 	import LeaveWarningModal from '$lib/components/LeaveWarningModal.svelte';
+	import RetiredSiteNotice from '$lib/components/RetiredSiteNotice.svelte';
 	import { page } from '$app/stores';
-	import { pageMeta } from '$lib/config/seo';
+	import { NOT_FOUND, pageMeta } from '$lib/config/seo';
 	import { stepperState } from '$lib/stores/stepper.svelte';
 	import { opensProject } from '$lib/ide/route-project';
 	import { zenState } from '$lib/stores/zen.svelte';
@@ -56,7 +57,7 @@
 		!zenState.on && !bare && !isBootedSession && !announcementState.dismissed
 	);
 
-	let meta = $derived(pageMeta($page.route.id, $page.params));
+	let meta = $derived($page.status === 404 ? NOT_FOUND : pageMeta($page.route.id, $page.params));
 	let pageTitle = $derived(meta.title);
 	let pageDescription = $derived(meta.description);
 
@@ -101,6 +102,7 @@
 		{#if !bare}
 			<Stepper />
 			<LeaveWarningModal />
+			<RetiredSiteNotice />
 		{/if}
 		{#if !zenState.on && !bare}
 			<Sidebar />

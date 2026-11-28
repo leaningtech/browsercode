@@ -13,6 +13,9 @@
 	import SettingsMenu from '$lib/components/ide/SettingsMenu.svelte';
 	import ShareButton from '$lib/components/ide/ShareButton.svelte';
 	import EmbedButton from '$lib/components/ide/EmbedButton.svelte';
+	import browserpodLogo from '$lib/assets/browserpod.svg';
+	import cheerpjLogo from '$lib/assets/cheerpj.png';
+	import type { RuntimeId } from '$lib/config/frameworks';
 	import { fade } from 'svelte/transition';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { downloadProject } from '$lib/ide/download';
@@ -46,6 +49,16 @@
 	// The runtime names its own boot steps; the session tracks which one is under way.
 	let bootLines = $derived(session.runtime.stages);
 	const LoadingScene = LOADING_SCENES[untrack(() => session.source.runtime)];
+
+	/** Credits the engine this project runs on, beside Embed and Share. */
+	const RUNNING_ON: Record<RuntimeId, { name: string; href: string; logo: string }> = {
+		pod: {
+			name: 'BrowserPod',
+			href: 'https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=ide-header',
+			logo: browserpodLogo
+		},
+		cheerpj: { name: 'CheerpJ', href: 'https://cheerpj.com', logo: cheerpjLogo }
+	};
 
 	let blocker = $state<PodBlocker | null>(null);
 	let downloading = $state(false);
@@ -348,6 +361,25 @@
 			{#if session.source.share && session.fsReady}
 				<div class="flex shrink-0 items-center gap-1">
 					{#if shell.tools}
+						{@const engine = RUNNING_ON[session.source.runtime]}
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
+						<a
+							href={engine.href}
+							target="_blank"
+							rel="noopener noreferrer"
+							title="This project runs on {engine.name}"
+							class="mr-1 inline-flex h-6 shrink-0 items-center gap-1.5 rounded px-2 text-[11px] text-bc-text-muted transition hover:bg-bc-tint/6 hover:text-bc-link-hover"
+						>
+							<span>Running on</span>
+							<img
+								src={engine.logo}
+								alt=""
+								class="bc-mono-icon h-3.5 w-auto opacity-60 grayscale"
+							/>
+							<span class="text-bc-text">{engine.name}</span>
+						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
+						<span class="mr-1 h-3.5 w-px shrink-0 bg-bc-border"></span>
 						<EmbedButton {session} />
 					{/if}
 					<ShareButton {session} />

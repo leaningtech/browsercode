@@ -195,7 +195,7 @@
 					<p class="text-sm leading-relaxed text-bc-text-muted">
 						BrowserCode is built on
 						<a
-							href="https://browserpod.io"
+							href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=onboarding"
 							target="_blank"
 							rel="noopener noreferrer"
 							class="font-medium text-bc-text underline decoration-bc-orchid/40 underline-offset-2 transition-colors hover:text-bc-link-hover hover:decoration-bc-link-hover"
@@ -213,7 +213,7 @@
 
 					<div class="mt-6 flex flex-col gap-2">
 						<a
-							href="https://browserpod.io"
+							href="https://browserpod.io/?utm_source=browsercode&utm_medium=referral&utm_content=onboarding"
 							target="_blank"
 							rel="noopener noreferrer"
 							class="glass-panel flex items-center gap-3 rounded-lg border border-bc-mist/10 px-4 py-3 transition-colors duration-150 hover:border-bc-mist/25"

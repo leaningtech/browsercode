@@ -59,7 +59,7 @@
 		<Icon icon="mingcute:cube-3d-line" width="14" height="14" />
 	</span>
 	<span class="text-[12px] leading-relaxed text-bc-text-muted">
-		Compiled and run in this tab by <a
+		Formerly JavaFiddle, whose links open here. Compiled and run in this tab by <a
 			href="https://cheerpj.com"
 			target="_blank"
 			rel="noopener noreferrer"
