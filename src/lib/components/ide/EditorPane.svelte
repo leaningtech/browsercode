@@ -4,6 +4,8 @@
 	import Icon from '@iconify/svelte';
 	import { fileIcon } from '$lib/ide/file-icons';
 	import ImageViewer from '$lib/components/ide/ImageViewer.svelte';
+	import MarkdownViewer from '$lib/components/ide/MarkdownViewer.svelte';
+	import { isMarkdownPath } from '$lib/ide/media';
 	import type * as Monaco from 'monaco-editor';
 	import type { IdeSession } from '$lib/ide/session.svelte';
 	import { activeEditorThemeId } from '$lib/stores/editor-settings.svelte';
@@ -291,6 +293,10 @@
 			<div class="absolute inset-0 z-10">
 				<ImageViewer path={activeFile.path} image={activeFile.image} />
 			</div>
+		{:else if activeFile?.rendered && !activeFile.binary}
+			<div class="absolute inset-0 z-10">
+				<MarkdownViewer {session} path={activeFile.path} content={activeFile.content} />
+			</div>
 		{:else if activeFile?.binary}
 			<div
 				class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-bc-abyss px-6 text-center"
@@ -300,6 +306,21 @@
 					This file is not shown in the editor because its contents are not text
 				</span>
 			</div>
+		{/if}
+		{#if activeFile && !activeFile.binary && isMarkdownPath(activeFile.path)}
+			<button
+				onclick={() => session.toggleRendered(activeFile.path)}
+				title={activeFile.rendered ? 'Edit source' : 'Show rendered Markdown'}
+				aria-label={activeFile.rendered ? 'Edit source' : 'Show rendered Markdown'}
+				class="absolute top-2 right-4 z-20 inline-flex items-center gap-1.5 rounded-md border border-bc-border bg-bc-statusbar/90 px-2 py-1 text-[11px] font-medium text-bc-icon transition hover:text-bc-mist"
+			>
+				<Icon
+					icon={activeFile.rendered ? 'mingcute:code-line' : 'mingcute:eye-2-line'}
+					width="11"
+					height="11"
+				/>
+				{activeFile.rendered ? 'Source' : 'Preview'}
+			</button>
 		{/if}
 		{#if session.openFiles.length === 0 && !session.loading && editor}
 			<div class="absolute inset-0 z-10 flex items-center justify-center bg-bc-abyss">

@@ -1,6 +1,13 @@
 import { SvelteSet } from 'svelte/reactivity';
 import type { PortalUpdate } from '$lib/pod/portals';
-import { isBinaryContent, isImagePath, loadImage, releaseImage, type ImagePayload } from './media';
+import {
+	isBinaryContent,
+	isImagePath,
+	isMarkdownPath,
+	loadImage,
+	releaseImage,
+	type ImagePayload
+} from './media';
 import type { ProjectSource } from './project-source';
 import { BOOTING, HYDRATING, type IdeRuntime } from './runtime';
 import { RUNTIMES } from './runtimes';
@@ -19,6 +26,8 @@ export type OpenFile = {
 	image?: ImagePayload;
 	/** Set when `content` is a lossy decode of non-text bytes; the tab never saves. */
 	binary?: boolean;
+	/** Set on a Markdown tab showing its rendered view instead of the editor. */
+	rendered?: boolean;
 };
 
 /**
@@ -132,7 +141,8 @@ export class IdeSession {
 			if (this.cancelled(token)) return;
 
 			const initialFile = this.source.initialFile(this.projectFiles);
-			if (initialFile) await this.openFile(initialFile);
+			// A Markdown file, typically a repo's README, greets the user rendered.
+			if (initialFile) await this.openFile(initialFile, false, isMarkdownPath(initialFile));
 			else this.loading = false;
 
 			this.source.trackBoot();
@@ -254,9 +264,10 @@ export class IdeSession {
 	 * Opens `path` as a tab (or focuses its existing tab) and makes it the active
 	 * file. A preview open reuses the current preview tab's slot instead of adding
 	 * a tab; a permanent open pins the tab. An already-open tab keeps its pin
-	 * state on a preview open, so focusing tabs never re-previews them.
+	 * state on a preview open, so focusing tabs never re-previews them. `rendered` opens a
+	 * Markdown file in its rendered view; it has no effect on a tab that is already open.
 	 */
-	async openFile(path: string, preview = false): Promise<void> {
+	async openFile(path: string, preview = false, rendered = false): Promise<void> {
 		if (!this.fsReady || this.unmounted) return;
 		const existing = this.openFiles.find((file) => file.path === path);
 		if (existing) {
@@ -284,7 +295,8 @@ export class IdeSession {
 				savedContent: content,
 				preview: preview && !this.pendingPins.delete(path),
 				image,
-				binary: !image && isBinaryContent(content)
+				binary: !image && isBinaryContent(content),
+				rendered: rendered && isMarkdownPath(path)
 			};
 			const previewIndex = entry.preview ? this.openFiles.findIndex((file) => file.preview) : -1;
 			if (previewIndex >= 0) {
@@ -316,6 +328,12 @@ export class IdeSession {
 		const entry = this.openFiles.find((file) => file.path === path);
 		if (entry) entry.preview = false;
 		else this.pendingPins.add(path);
+	}
+
+	/** Switches a Markdown tab between its rendered view and the source editor. */
+	toggleRendered(path: string): void {
+		const entry = this.openFiles.find((file) => file.path === path);
+		if (entry && isMarkdownPath(entry.path)) entry.rendered = !entry.rendered;
 	}
 
 	/** Moves a tab so it sits before the tab now at `before`; `openFiles.length` moves it to the end. */

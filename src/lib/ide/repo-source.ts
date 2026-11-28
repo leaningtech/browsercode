@@ -33,9 +33,15 @@ export function repoSource({ owner, repo, ref, dir }: RepoRef): ProjectSource {
 				cwd: POD_HOME,
 				color: false
 			}),
-		initialFile: (files: string[]) => files[0],
+		initialFile: (files: string[]) => findReadme(files) ?? files[0],
 		...nodeProject(repoDir),
 		trackBoot: () => trackEvent('Booted Playground GitHub', { repo: `${owner}/${repo}` }),
 		share: (files) => projectLink(files)
 	};
+}
+
+/** The top-level README the repo page on GitHub would show, preferring Markdown. */
+function findReadme(files: string[]): string | undefined {
+	const readmes = files.filter((path) => /^readme(\.[^/]*)?$/i.test(path));
+	return readmes.find((path) => /\.(md|markdown)$/i.test(path)) ?? readmes[0];
 }
