@@ -15,8 +15,13 @@ const escapeAttr = (s: string) =>
  * Cloudflare answers unmatched URLs with index.html rather than the 200.html fallback, so only
  * hosts that honour 200.html ever serve that copy. See $lib/config/seo.ts.
  */
-function fillHead(html: string, routeId: string | null, tool: string | undefined, path: string) {
-	const { title, description } = pageMeta(routeId, tool);
+function fillHead(
+	html: string,
+	routeId: string | null,
+	params: Partial<Record<string, string>>,
+	path: string
+) {
+	const { title, description } = pageMeta(routeId, params);
 	const indexable = INDEXABLE_PATHS.includes(path);
 	const url = `${ORIGIN}${indexable ? path : '/'}`;
 	const robots = indexable
@@ -33,7 +38,7 @@ function fillHead(html: string, routeId: string | null, tool: string | undefined
 export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event, {
 		transformPageChunk: ({ html }) =>
-			fillHead(html, event.route.id, event.params.tool, event.url.pathname)
+			fillHead(html, event.route.id, event.params, event.url.pathname)
 	});
 	response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
 	response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp');

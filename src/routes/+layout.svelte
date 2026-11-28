@@ -56,7 +56,7 @@
 		!zenState.on && !bare && !isBootedSession && !announcementState.dismissed
 	);
 
-	let meta = $derived(pageMeta($page.route.id, $page.params.tool));
+	let meta = $derived(pageMeta($page.route.id, $page.params));
 	let pageTitle = $derived(meta.title);
 	let pageDescription = $derived(meta.description);
 
