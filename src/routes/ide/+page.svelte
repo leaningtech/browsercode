@@ -23,6 +23,13 @@
 	const unreadableLink = !!hash && !shared;
 	const showLanding = !shared && (!resolved || unreadableLink);
 
+	// `?lang=java` named the Java tab back when both languages shared this page. Java has its own
+	// route now, so the old address still lands where it always did. Only when it asks for nothing
+	// else: a URL that also names a template or carries a project, even one we can't resolve, stays
+	// here, where the picker can say what was wrong with it.
+	const redirectingToJava =
+		!hash && requested === null && $page.url.searchParams.get('lang') === 'java';
+
 	const session = new IdeSession(
 		shared ? sharedFilesSource(shared) : templateSource(framework),
 		SITE_API_KEY
@@ -32,19 +39,26 @@
 	// IdeShell keeps the sheet-slide-up entrance instead (see below).
 	let entered = $state(false);
 	onMount(() => {
+		if (redirectingToJava) {
+			location.replace('/java');
+			return;
+		}
 		requestAnimationFrame(() => {
 			entered = true;
 		});
 	});
 </script>
 
-{#if showLanding}
+{#if redirectingToJava}
+	<!-- Nothing to draw: onMount replaces the URL. -->
+{:else if showLanding}
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">
 		<div
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"
 			style="opacity: {entered ? 1 : 0}; transition: opacity 0.5s ease;"
 		>
 			<IdeLanding
+				lang="js"
 				unknownFramework={resolved || unreadableLink ? undefined : (requested ?? undefined)}
 				{unreadableLink}
 			/>

@@ -42,8 +42,8 @@
 		<IdeShell {session} />
 	</div>
 {:else}
-	<!-- Bare /java renders the picker itself rather than sending people on to /ide's Java tab: it is
-	     the page search engines index for Java, and where javafiddle.leaningtech.com redirects. -->
+	<!-- Bare /java is the Java picker in its own right, not a redirect to a tab on /ide: it is the
+	     page search engines index for Java, and where javafiddle.leaningtech.com redirects. -->
 	<div class="bc-page-bg relative h-full w-full overflow-hidden">
 		<div
 			class="panel-sheet absolute inset-0 flex flex-col overflow-hidden"

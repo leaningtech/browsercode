@@ -10,13 +10,38 @@ export type FrameworkId =
 	| 'nuxt'
 	| 'express'
 	| 'java'
-	| 'java-swing';
+	| 'java-swing'
+	| 'java-mandelbrot'
+	| 'java-guess'
+	| 'java-words'
+	| 'java-shapes'
+	| 'java-life'
+	| 'java-tictactoe'
+	| 'java-calculator'
+	| 'java-sorting'
+	| 'java-maze'
+	| 'java-reflection';
 
 /** A BrowserPod, or CheerpJ for Java. */
 export type RuntimeId = 'pod' | 'cheerpj';
 
-/** The part of the app a template is offered in: the Playground IDE, or the Java playground. */
+/** The part of the app a template is offered in: the JavaScript playground, or the Java one. */
 export type SectionId = 'ide' | 'java';
+
+/**
+ * The heading a template is listed under within its section. Twelve Java examples in one flat
+ * list are a wall of names, so they are sorted by what the code is *about* rather than left in
+ * registry order. The JavaScript section has one list and so needs no groups.
+ */
+export type GroupId = 'basics' | 'graphics' | 'algorithms' | 'language';
+
+/** Group headings, in the order every menu lists them. */
+export const groupLabels: Record<GroupId, string> = {
+	basics: 'Basics',
+	graphics: 'Graphics',
+	algorithms: 'Algorithms',
+	language: 'Language features'
+};
 
 export type FrameworkConfig = {
 	id: FrameworkId;
@@ -36,6 +61,8 @@ export type FrameworkConfig = {
 	runtime?: RuntimeId;
 	/** Defaults to `ide`. */
 	section?: SectionId;
+	/** Which heading it is listed under. Only the Java section groups its templates. */
+	group?: GroupId;
 	/**
 	 * The name `/java?example=` and `/embed?runtime=` know it by. The embed's `helloworld`
 	 * predates the registry, so the ids alone would break the URL the blog embeds.
@@ -128,12 +155,13 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	java: {
 		id: 'java',
-		label: 'Java',
+		label: 'Hello World',
 		sourceRoot: '/templates/java-helloworld',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:terminal-box-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'basics',
 		example: 'helloworld',
 		javaVersion: 25,
 		mainClass: 'Main',
@@ -143,13 +171,156 @@ export const frameworkConfigs: Record<FrameworkId, FrameworkConfig> = {
 	},
 	'java-swing': {
 		id: 'java-swing',
-		label: 'Java Swing',
+		label: 'Swing',
 		sourceRoot: '/templates/java-swing',
 		defaultFile: 'Main.java',
-		icon: 'simple-icons:openjdk',
+		icon: 'mingcute:button-line',
 		runtime: 'cheerpj',
 		section: 'java',
+		group: 'graphics',
 		example: 'swing',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-mandelbrot': {
+		id: 'java-mandelbrot',
+		label: 'Mandelbrot',
+		sourceRoot: '/templates/java-mandelbrot',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:snowflake-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'graphics',
+		example: 'mandelbrot',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-guess': {
+		id: 'java-guess',
+		label: 'Guessing Game',
+		sourceRoot: '/templates/java-guess',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:question-2-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'basics',
+		example: 'guess',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-words': {
+		id: 'java-words',
+		label: 'Word Count',
+		sourceRoot: '/templates/java-words',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:text-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'basics',
+		example: 'words',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-shapes': {
+		id: 'java-shapes',
+		label: 'Shapes',
+		sourceRoot: '/templates/java-shapes',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:triangle-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'graphics',
+		example: 'shapes',
+		javaVersion: 25,
+		mainClass: 'Main',
+		// Record patterns in `switch` are Java 21.
+		olderJava: { below: 21, sourceRoot: '/templates/java-shapes-classic' },
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-life': {
+		id: 'java-life',
+		label: 'Game of Life',
+		sourceRoot: '/templates/java-life',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:grid-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'graphics',
+		example: 'life',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-tictactoe': {
+		id: 'java-tictactoe',
+		label: 'Tic-Tac-Toe',
+		sourceRoot: '/templates/java-tictactoe',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:hashtag-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'algorithms',
+		example: 'tictactoe',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-calculator': {
+		id: 'java-calculator',
+		label: 'Calculator',
+		sourceRoot: '/templates/java-calculator',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:counter-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'basics',
+		example: 'calculator',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-sorting': {
+		id: 'java-sorting',
+		label: 'Sorting',
+		sourceRoot: '/templates/java-sorting',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:sort-ascending-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'algorithms',
+		example: 'sorting',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-maze': {
+		id: 'java-maze',
+		label: 'Maze',
+		sourceRoot: '/templates/java-maze',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:route-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'algorithms',
+		example: 'maze',
+		javaVersion: 25,
+		mainClass: 'Main',
+		share: (files, java, main) => sharedProjectLink('', files, java, main)
+	},
+	'java-reflection': {
+		id: 'java-reflection',
+		label: 'Reflection',
+		sourceRoot: '/templates/java-reflection',
+		defaultFile: 'Main.java',
+		icon: 'mingcute:mirror-line',
+		runtime: 'cheerpj',
+		section: 'java',
+		group: 'language',
+		example: 'reflection',
 		javaVersion: 25,
 		mainClass: 'Main',
 		share: (files, java, main) => sharedProjectLink('', files, java, main)
@@ -226,16 +397,101 @@ export function resolveRuntimeTemplate(
 	return ids.find((id) => id === key || frameworkConfigs[id].example === key);
 }
 
-function railItems(
-	section: SectionId
-): { id: FrameworkId; icon: string; label: string; example: string }[] {
+export type RailItem = {
+	id: FrameworkId;
+	icon: string;
+	label: string;
+	example: string;
+	group?: GroupId;
+};
+
+function railItems(section: SectionId): RailItem[] {
 	return sectionIds(section).map((id) => ({
 		id,
 		icon: frameworkConfigs[id].icon,
 		label: frameworkConfigs[id].label,
-		example: frameworkConfigs[id].example ?? id
+		example: frameworkConfigs[id].example ?? id,
+		group: frameworkConfigs[id].group
 	}));
 }
 
 export const frameworkRailItems = railItems('ide');
 export const javaRailItems = railItems('java');
+
+/** A language the IDE offers, as its own page. Not `SectionId`: that names where a template is
+ *  listed, this names the thing a person picks. They happen to line up today. */
+export type LanguageId = 'js' | 'java';
+
+export type Language = {
+	id: LanguageId;
+	label: string;
+	/** What this language calls its templates, for menu footers and accessible names. */
+	noun: string;
+	icon: string;
+	path: '/ide' | '/java';
+};
+
+/**
+ * One page per language, not per runtime: a runtime doesn't line up with what you write, so the
+ * axis wouldn't survive growth (Python and Rust would both be BrowserPod, and nobody wants a page
+ * called CheerpJ).
+ *
+ * Here rather than in either component because both the sidebar's nested rail and the pages' own
+ * switcher draw from it, and a language wearing two different icons would be worse than either.
+ */
+export const languages: Language[] = [
+	{
+		id: 'js',
+		label: 'JavaScript',
+		noun: 'templates',
+		icon: 'simple-icons:nodedotjs',
+		path: '/ide'
+	},
+	{ id: 'java', label: 'Java', noun: 'examples', icon: 'simple-icons:openjdk', path: '/java' }
+];
+
+export const languageById = Object.fromEntries(languages.map((l) => [l.id, l])) as Record<
+	LanguageId,
+	Language
+>;
+
+/**
+ * A heading and the templates under it. `id` is only a render key, so it is a plain string: the
+ * JavaScript section has one heading of its own that is no `GroupId`.
+ */
+export type RailGroup = { id: string; label: string; items: RailItem[] };
+
+/**
+ * The Java examples under their headings, in `groupLabels` order and, within a heading, in
+ * registry order. Shared by the sidebar rail and the picker grid so the two can't drift.
+ *
+ * Grouping by filter means a template with no `group` would silently vanish from both, so a
+ * missing one throws here instead — at module load, which fails the build rather than shipping a
+ * list with a hole in it. `group` can't be required by the type without splitting
+ * `FrameworkConfig` per section, which the other fields don't warrant.
+ */
+export const javaGroups: RailGroup[] = (() => {
+	const ungrouped = javaRailItems.filter((item) => !item.group);
+	if (ungrouped.length > 0) {
+		throw new Error(
+			`Java templates missing a group: ${ungrouped.map((item) => item.id).join(', ')}`
+		);
+	}
+	return (Object.keys(groupLabels) as GroupId[])
+		.map((id) => ({
+			id,
+			label: groupLabels[id],
+			items: javaRailItems.filter((i) => i.group === id)
+		}))
+		.filter((group) => group.items.length > 0);
+})();
+
+/**
+ * The name to use where a label stands on its own, away from its section's heading. Java labels
+ * are short because the menus they live in already say "Java"; the tour's single merged list and
+ * the embed builder's summary line don't, so "Mandelbrot" alone would say nothing there.
+ */
+export function qualifiedLabel(id: FrameworkId): string {
+	const { label, section } = frameworkConfigs[id];
+	return (section ?? 'ide') === 'java' ? `Java ${label}` : label;
+}

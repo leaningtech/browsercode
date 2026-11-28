@@ -1,7 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import ToolIcon from '$lib/components/ToolIcon.svelte';
-	import { frameworkRailItems, javaRailItems, type FrameworkId } from '$lib/config/frameworks';
+	import {
+		frameworkRailItems,
+		javaRailItems,
+		qualifiedLabel,
+		type FrameworkId
+	} from '$lib/config/frameworks';
 	import { defaultToolId, toolItems, type ToolId } from '$lib/config/tools';
 	import { VIEWS, type View } from '$lib/embed/options';
 	import {
@@ -26,8 +31,10 @@
 
 	type Tab = EmbedTarget['kind'];
 
+	// Named for the language, not "Template", so it reads as the pair it is beside the Java tab —
+	// both are templates, and only the language tells them apart.
 	const TABS: { id: Tab; label: string }[] = [
-		{ id: 'framework', label: 'Template' },
+		{ id: 'framework', label: 'JavaScript' },
 		{ id: 'java', label: 'Java' },
 		{ id: 'repo', label: 'GitHub repo' },
 		{ id: 'agent', label: 'Agent' },
@@ -105,8 +112,10 @@ Cross-Origin-Embedder-Policy: require-corp`;
 		if (!chosen) return '';
 		if (chosen.kind === 'framework')
 			return frameworkRailItems.find((item) => item.id === chosen.id)?.label ?? chosen.id;
-		if (chosen.kind === 'java')
-			return javaRailItems.find((item) => item.example === chosen.example)?.label ?? chosen.example;
+		if (chosen.kind === 'java') {
+			const item = javaRailItems.find((entry) => entry.example === chosen.example);
+			return item ? qualifiedLabel(item.id) : chosen.example;
+		}
 		if (chosen.kind === 'agent')
 			return agents.find((item) => item.id === chosen.id)?.label ?? chosen.id;
 		if (chosen.kind === 'repo') return `${chosen.repo.owner}/${chosen.repo.repo}`;

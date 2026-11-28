@@ -35,11 +35,11 @@ Build these directly; they are stable.
 | URL | Result |
 | --- | --- |
 | `https://browsercode.io/` | Landing page |
-| `https://browsercode.io/ide` | Template picker plus a GitHub clone form |
+| `https://browsercode.io/ide` | JavaScript template picker plus a GitHub clone form |
 | `https://browsercode.io/ide?framework=<id>` | Boots that template straight into the IDE |
 | `https://browsercode.io/ide#<project>` | Opens a project shared with the Share button from a template or repo; the hash carries every file except lockfiles, with images left empty |
 | `https://browsercode.io/java` | Java Playground: picker for the Java examples |
-| `https://browsercode.io/java?example=<name>` | Boots a Java example, on Java 25: `helloworld` or `swing` |
+| `https://browsercode.io/java?example=<name>` | Boots a Java example, on Java 25: `helloworld`, `swing`, `mandelbrot`, `guess`, `words`, `shapes`, `life`, `tictactoe`, `calculator`, `sorting`, `maze` or `reflection` |
 | `https://browsercode.io/java#<project>` | Opens a Java project shared with the Share button; the hash carries its files and Java version (8 when it names none) |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/` | Clones a repo and boots it |
 | `https://browsercode.io/ide/github/<owner>/<repo>/tree/<ref>/<dir>` | As above, scoped to a subdirectory |
@@ -169,7 +169,7 @@ cannot set headers or accept that, only a Java embed will work on their page.
 | `framework` | A template id from the list above |
 | `repo` | A GitHub URL or `owner/repo`, optionally `…/tree/<ref>/<dir>` |
 | `agent` | `claude`, `codex` or `pi` |
-| `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default) or `swing`, also `java` and `java-swing` |
+| `runtime` | `cheerpj`, for Java. `framework` then names a Java example: `helloworld` (the default), `swing`, `mandelbrot`, `guess`, `words`, `shapes`, `life`, `tictactoe`, `calculator`, `sorting`, `maze` or `reflection`, or its id, such as `java` or `java-swing` |
 | `view` | Comma-separated: `files`, `search`, `editor`, `terminal`, `preview` |
 | `apiKey` | Empty (`apiKey=`) for keyless mode; see below |
 

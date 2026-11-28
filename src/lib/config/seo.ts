@@ -50,7 +50,11 @@ export const NOT_FOUND: PageMeta = {
  * prerender time (hooks.server.ts) and the one +layout.svelte keeps current on client-side
  * navigation, so the two can't drift.
  */
-export function pageMeta(routeId: string | null, tool?: string): PageMeta {
+export function pageMeta(
+	routeId: string | null,
+	params: Partial<Record<string, string>> = {}
+): PageMeta {
+	const { tool, owner, repo } = params;
 	if (routeId === '/agents/[tool]' && isEnabledTool(tool)) {
 		const { label } = toolItems.find((t) => t.id === tool)!;
 		return {
@@ -58,10 +62,22 @@ export function pageMeta(routeId: string | null, tool?: string): PageMeta {
 			description: `Run ${label} in your browser, on BrowserCode.`
 		};
 	}
+	// Before /ide, whose JavaScript title would otherwise claim a repo that may be in any language.
+	// Named for the repo, so several open in tabs can be told apart.
+	if (routeId?.startsWith('/ide/github/')) {
+		const name = owner && repo ? `${owner}/${repo}` : undefined;
+		return {
+			title: `${name ?? 'GitHub repo'} — BrowserCode`,
+			description: name
+				? `Run the GitHub repo ${name} in your browser, on BrowserCode.`
+				: 'Clone a GitHub repo and run it in your browser, on BrowserCode.'
+		};
+	}
 	if (routeId?.startsWith('/ide')) {
 		return {
-			title: 'Playground IDE — BrowserCode',
-			description: 'Build and preview web apps right in your browser, on BrowserCode.'
+			title: 'JavaScript Playground — BrowserCode',
+			description:
+				'Build and preview Node.js web apps, on Vite, React, Svelte, Vue, Next.js, Nuxt or Express, right in your browser, on BrowserCode.'
 		};
 	}
 	if (routeId === '/java') {

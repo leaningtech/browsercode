@@ -6,7 +6,7 @@
 	import { page } from '$app/stores';
 	import { stepperState, openTour } from '$lib/stores/stepper.svelte';
 	import { toolItems } from '$lib/config/tools';
-	import { frameworkRailItems, javaRailItems } from '$lib/config/frameworks';
+	import { frameworkRailItems, javaRailItems, qualifiedLabel } from '$lib/config/frameworks';
 	import { navigateWithLeaveGuard } from '$lib/stores/leaveWarning.svelte';
 
 	const totalSteps = 6;
@@ -264,7 +264,7 @@
 								class="glass-panel flex items-center gap-1.5 rounded-md border border-bc-mist/10 px-2.5 py-1.5 text-xs text-bc-text-muted"
 							>
 								<Icon icon={fw.icon} width="14" height="14" />
-								{fw.label}
+								{qualifiedLabel(fw.id)}
 							</span>
 						{/each}
 					</div>
